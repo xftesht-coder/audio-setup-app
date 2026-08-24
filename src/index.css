@@ -1,0 +1,59 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+:root {
+  --paper: #EDF1EF;
+  --card: #FFFFFF;
+  --ink: #11171A;
+  --muted: #5A6A6B;
+  --faint: #8A9997;
+  --rule: #CBD6D2;
+  --rule-soft: #E1E8E5;
+  --signal: #00595B;
+  --signal-wash: #E2EDED;
+  --go: #2A6B4A;
+  --go-wash: #E3EFE8;
+  --stop: #9C1F36;
+  --stop-wash: #F4E4E7;
+  --amber: #8A5A00;
+  --amber-wash: #F7EFDF;
+  --display: 'Golos Text', -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+a {
+  color: var(--signal);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
