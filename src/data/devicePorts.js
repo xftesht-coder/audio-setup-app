@@ -747,6 +747,45 @@ export const DEVICE_SPECS = {
     ],
     sourceDoc: 'WiiM official specs + User Manual + FCC filing + SoundPath Lab',
   },
+
+  // ---------------- СТРИМЕР: MacBook ----------------
+  macbook: {
+    id: 'macbook',
+    name: 'MacBook',
+    fullName: 'MacBook (as digital streamer)',
+    category: 'streamer',
+    manufacturer: 'Apple',
+    width: 90,
+    height: 50,
+    color: '#B8BCC0',
+    hasBack: false,
+    photoQuery: 'MacBook laptop',
+    ports: [
+      {
+        id: 'mb_optical',
+        type: 'OPTICAL',
+        direction: 'output',
+        label: 'Optical Out (3.5mm combo jack + mini-Toslink адаптер)',
+        position: 'side',
+        count: 1,
+        notes: 'Комбинированный аудио-разъём MacBook поддерживает цифровой optical (Toslink) выход через переходник mini-jack → Toslink. До 24bit/96kHz.',
+      },
+      {
+        id: 'mb_coaxial',
+        type: 'COAXIAL',
+        direction: 'output',
+        label: 'Coaxial Out (через USB-DAC/USB-Coax адаптер)',
+        position: 'side',
+        count: 1,
+        notes: 'У MacBook нет нативного coaxial выхода - требуется USB-to-S/PDIF (coax) конвертер, подключаемый через USB-C.',
+      },
+    ],
+    warnings: [
+      'macOS выводит звук только на ОДНО устройство одновременно - выбери правильный выход в System Settings → Sound перед прослушиванием.',
+      'Optical и Coaxial выходы не могут использоваться одновременно - это два разных физических адаптера.',
+    ],
+    sourceDoc: 'Apple audio combo jack spec (optical via mini-Toslink) + generic USB-to-S/PDIF adapter behavior',
+  },
 };
 
 // ============================================================

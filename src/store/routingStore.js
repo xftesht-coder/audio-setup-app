@@ -40,6 +40,15 @@ const RIGS = {
       { id: 'c1', from: { device: 'streamer_wiim', port: 'wiim_out_rca' }, to: { device: 'a90', port: 'a90_in_rca' }, connectorType: 'RCA', length: 0.5 },
     ],
   },
+  '05': {
+    id: '05',
+    name: 'MacBook (стриминг)',
+    sourceDevices: ['macbook', 'dac_fiio', 'a90'],
+    sourceCables: [
+      { id: 'c1', from: { device: 'macbook', port: 'mb_optical' }, to: { device: 'dac_fiio', port: 'fiio_optical' }, connectorType: 'OPTICAL', length: 1 },
+      { id: 'c2', from: { device: 'dac_fiio', port: 'fiio_out_xlr' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'XLR', length: 0.5 },
+    ],
+  },
 };
 
 // ============================================================

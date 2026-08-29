@@ -70,6 +70,30 @@ export const CRITICAL_RULES = [
     severity: 'info',
     message: 'ℹ️ WiiM Pro Plus выводит звук только через ОДИН порт одновременно (RCA/Optical/Coaxial) — переключается в приложении WiiM Home. Убедись, что выбран правильный выход перед прослушиванием.',
   },
+  {
+    id: 'macbook_optical_default',
+    check: (fromDeviceId, fromPortId) => {
+      return fromDeviceId === 'macbook' && fromPortId === 'mb_optical';
+    },
+    severity: 'info',
+    message: 'ℹ️ MacBook подключён по Optical в FiiO WARMER R2R (пресет по умолчанию). Хочешь Coaxial — удали этот кабель (кнопка "Удалить" в патч-листе) и вручную соедини порт "Coaxial Out" на MacBook с "Coaxial In" на FiiO кликом.',
+  },
+  {
+    id: 'macbook_coaxial_selected',
+    check: (fromDeviceId, fromPortId) => {
+      return fromDeviceId === 'macbook' && fromPortId === 'mb_coaxial';
+    },
+    severity: 'info',
+    message: 'ℹ️ MacBook подключён по Coaxial (обычно чуть выше качеством передачи, чем Optical, но требует USB-to-S/PDIF адаптер). Убедись, что выбран правильный выход звука в System Settings → Sound на Mac.',
+  },
+  {
+    id: 'macbook_output_switch',
+    check: (fromDeviceId) => {
+      return fromDeviceId === 'macbook';
+    },
+    severity: 'warning',
+    message: '⚠️ macOS выводит звук только на ОДНО устройство одновременно — выбери правильный цифровой выход (Optical или Coaxial adapter) в System Settings → Sound перед прослушиванием.',
+  },
 ];
 
 // Проверка всех правил для конкретного соединения
