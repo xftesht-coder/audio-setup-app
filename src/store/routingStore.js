@@ -2,69 +2,106 @@ import { create } from 'zustand';
 import { DEVICE_SPECS, checkCompatibility } from '../data/devicePorts';
 import { checkSystemRules, getCableLengthWarning } from '../data/systemRules';
 
-// Пресеты трактов - теперь ссылаются на реальные ID портов
-const PRESET_SETUPS = {
+// ============================================================
+// СЕТАПЫ (источники) — общая часть цепи до преампа A90
+// ============================================================
+const RIGS = {
   '01': {
     id: '01',
     name: 'Винил',
-    devices: ['turntable', 'phono', 'a90', 'arcam', 'speakers', 'headphones'],
-    cables: [
+    sourceDevices: ['turntable', 'phono', 'a90'],
+    sourceCables: [
       { id: 'c1', from: { device: 'turntable', port: 'tt_out' }, to: { device: 'phono', port: 'phono_in_rca' }, connectorType: 'RCA', length: 0.5 },
       { id: 'c1g', from: { device: 'turntable', port: 'tt_ground' }, to: { device: 'phono', port: 'phono_ground' }, connectorType: 'GROUND', length: 0.3 },
       { id: 'c2', from: { device: 'phono', port: 'phono_out_rca' }, to: { device: 'a90', port: 'a90_in_rca' }, connectorType: 'RCA', length: 0.5 },
-      { id: 'c3', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'arcam', port: 'arcam_cd' }, connectorType: 'RCA', length: 0.5 },
-      { id: 'c4', from: { device: 'arcam', port: 'arcam_speaker' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
-      { id: 'c5', from: { device: 'a90', port: 'a90_hp_44' }, to: { device: 'headphones', port: 'hd650_plug' }, connectorType: 'JACK_4_4', length: 1.5 },
     ],
   },
   '02': {
     id: '02',
     name: 'FiiO WARMER R2R',
-    devices: ['dac_fiio', 'a90', 'arcam', 'speakers', 'headphones'],
-    cables: [
+    sourceDevices: ['dac_fiio', 'a90'],
+    sourceCables: [
       { id: 'c1', from: { device: 'dac_fiio', port: 'fiio_out_xlr' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'XLR', length: 0.5 },
-      { id: 'c2', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'arcam', port: 'arcam_cd' }, connectorType: 'RCA', length: 0.5 },
-      { id: 'c3', from: { device: 'arcam', port: 'arcam_speaker' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
-      { id: 'c4', from: { device: 'a90', port: 'a90_hp_44' }, to: { device: 'headphones', port: 'hd650_plug' }, connectorType: 'JACK_4_4', length: 1.5 },
     ],
   },
   '03': {
     id: '03',
     name: 'Cayin RU7',
-    devices: ['dac_cayin', 'a90', 'arcam', 'speakers', 'headphones'],
-    cables: [
+    sourceDevices: ['dac_cayin', 'a90'],
+    sourceCables: [
       { id: 'c1', from: { device: 'dac_cayin', port: 'cayin_out_44' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'ADAPTER_44_XLR', length: 0.3 },
-      { id: 'c2', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'arcam', port: 'arcam_cd' }, connectorType: 'RCA', length: 0.5 },
-      { id: 'c3', from: { device: 'arcam', port: 'arcam_speaker' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
-      { id: 'c4', from: { device: 'a90', port: 'a90_hp_44' }, to: { device: 'headphones', port: 'hd650_plug' }, connectorType: 'JACK_4_4', length: 1.5 },
+    ],
+  },
+  '04': {
+    id: '04',
+    name: 'WiiM Pro Plus (стриминг)',
+    sourceDevices: ['streamer_wiim', 'a90'],
+    sourceCables: [
+      { id: 'c1', from: { device: 'streamer_wiim', port: 'wiim_out_rca' }, to: { device: 'a90', port: 'a90_in_rca' }, connectorType: 'RCA', length: 0.5 },
     ],
   },
 };
 
+// ============================================================
+// РЕЖИМЫ ПРОСЛУШИВАНИЯ — либо колонки, либо наушники (не одновременно)
+// ============================================================
+const LISTENING_MODES = {
+  speakers: {
+    id: 'speakers',
+    name: '🔊 Колонки',
+    devices: ['arcam', 'speakers'],
+    cables: [
+      { id: 'm1', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'arcam', port: 'arcam_cd' }, connectorType: 'RCA', length: 0.5 },
+      { id: 'm2', from: { device: 'arcam', port: 'arcam_speaker' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
+    ],
+  },
+  headphones: {
+    id: 'headphones',
+    name: '🎧 Наушники',
+    devices: ['headphones'],
+    cables: [
+      { id: 'm1', from: { device: 'a90', port: 'a90_hp_44' }, to: { device: 'headphones', port: 'hd650_plug' }, connectorType: 'JACK_4_4', length: 1.5 },
+    ],
+  },
+};
+
+function buildConfig(rigId, modeId) {
+  const rig = RIGS[rigId];
+  const mode = LISTENING_MODES[modeId];
+  return {
+    devices: [...rig.sourceDevices, ...mode.devices],
+    cables: [...rig.sourceCables, ...mode.cables],
+    rigName: rig.name,
+    modeName: mode.name,
+  };
+}
+
 export const useRoutingStore = create((set, get) => ({
   selectedRig: '01',
+  selectedMode: 'speakers', // 'speakers' | 'headphones'
   selectedView: 'front',
   selectedDevice: null,
-  selectedPort: null, // { device, port } - для drag-and-drop подключения
-  customCables: {}, // переопределения кабелей по rigId, если юзер редактировал
+  selectedPort: null,
+  customCables: {}, // ключ: `${rigId}_${modeId}`
 
   setSelectedRig: (rigId) => set({ selectedRig: rigId, selectedDevice: null, selectedPort: null }),
+  setSelectedMode: (modeId) => set({ selectedMode: modeId, selectedDevice: null, selectedPort: null }),
   setSelectedView: (view) => set({ selectedView: view }),
   setSelectedDevice: (deviceId) => set({ selectedDevice: deviceId }),
 
-  // Начать подключение кабеля с порта
   startCableFrom: (device, port) => set({ selectedPort: { device, port } }),
   cancelCable: () => set({ selectedPort: null }),
 
-  // Завершить подключение - проверить совместимость и добавить кабель
+  getComboKey: (rigId, modeId) => `${rigId}_${modeId}`,
+
   finishCableTo: (toDevice, toPort) => {
     const state = get();
     if (!state.selectedPort) return { success: false, error: 'Нет активного соединения' };
 
     const fromDeviceSpec = DEVICE_SPECS[state.selectedPort.device];
     const toDeviceSpec = DEVICE_SPECS[toDevice];
-    const fromPortSpec = fromDeviceSpec.ports.find(p => p.id === state.selectedPort.port);
-    const toPortSpec = toDeviceSpec.ports.find(p => p.id === toPort);
+    const fromPortSpec = fromDeviceSpec.ports.find((p) => p.id === state.selectedPort.port);
+    const toPortSpec = toDeviceSpec.ports.find((p) => p.id === toPort);
 
     const compat = checkCompatibility(fromPortSpec, toPortSpec);
     if (!compat.compatible) {
@@ -72,7 +109,7 @@ export const useRoutingStore = create((set, get) => ({
     }
 
     const rules = checkSystemRules(state.selectedPort.device, state.selectedPort.port, toDevice, toPort);
-    const criticalIssues = rules.filter(r => r.severity === 'critical');
+    const criticalIssues = rules.filter((r) => r.severity === 'critical');
     if (compat.isAdapter) {
       rules.push({
         id: 'adapter_used',
@@ -89,12 +126,12 @@ export const useRoutingStore = create((set, get) => ({
       length: 1,
     };
 
-    const rigId = state.selectedRig;
-    const existingCustom = state.customCables[rigId] || [];
+    const key = state.getComboKey(state.selectedRig, state.selectedMode);
+    const existingCustom = state.customCables[key] || [];
     set({
       customCables: {
         ...state.customCables,
-        [rigId]: [...existingCustom, newCable],
+        [key]: [...existingCustom, newCable],
       },
       selectedPort: null,
     });
@@ -102,82 +139,82 @@ export const useRoutingStore = create((set, get) => ({
     return { success: true, warnings: rules, hasCritical: criticalIssues.length > 0, cable: newCable };
   },
 
-  removeCable: (rigId, cableId) => {
+  removeCable: (rigId, modeId, cableId) => {
     const state = get();
-    const preset = PRESET_SETUPS[rigId];
-    const presetCableIds = preset.cables.map(c => c.id);
+    const key = state.getComboKey(rigId, modeId);
+    const preset = buildConfig(rigId, modeId);
+    const presetCableIds = preset.cables.map((c) => c.id);
     if (presetCableIds.includes(cableId)) {
-      // помечаем как удалённый пресетный кабель
-      const removedPresets = state.customCables[`${rigId}_removed`] || [];
+      const removedPresets = state.customCables[`${key}_removed`] || [];
       set({
         customCables: {
           ...state.customCables,
-          [`${rigId}_removed`]: [...removedPresets, cableId],
+          [`${key}_removed`]: [...removedPresets, cableId],
         },
       });
     } else {
-      const existing = state.customCables[rigId] || [];
+      const existing = state.customCables[key] || [];
       set({
         customCables: {
           ...state.customCables,
-          [rigId]: existing.filter(c => c.id !== cableId),
+          [key]: existing.filter((c) => c.id !== cableId),
         },
       });
     }
   },
 
-  updateCableLength: (rigId, cableId, newLength) => {
+  updateCableLength: (rigId, modeId, cableId, newLength) => {
     const state = get();
-    const existing = state.customCables[rigId] || [];
-    const isCustom = existing.find(c => c.id === cableId);
+    const key = state.getComboKey(rigId, modeId);
+    const existing = state.customCables[key] || [];
+    const isCustom = existing.find((c) => c.id === cableId);
     if (isCustom) {
       set({
         customCables: {
           ...state.customCables,
-          [rigId]: existing.map(c => c.id === cableId ? { ...c, length: newLength } : c),
+          [key]: existing.map((c) => (c.id === cableId ? { ...c, length: newLength } : c)),
         },
       });
     } else {
-      // override length пресетного кабеля
-      const overrides = state.customCables[`${rigId}_lengthOverrides`] || {};
+      const overrides = state.customCables[`${key}_lengthOverrides`] || {};
       set({
         customCables: {
           ...state.customCables,
-          [`${rigId}_lengthOverrides`]: { ...overrides, [cableId]: newLength },
+          [`${key}_lengthOverrides`]: { ...overrides, [cableId]: newLength },
         },
       });
     }
   },
 
-  // Получить полный список активных кабелей для текущего рига (пресет + кастом - удалённые)
-  getActiveCables: (rigId) => {
+  getActiveCables: (rigId, modeId) => {
     const state = get();
-    const preset = PRESET_SETUPS[rigId];
-    const removed = state.customCables[`${rigId}_removed`] || [];
-    const lengthOverrides = state.customCables[`${rigId}_lengthOverrides`] || {};
-    const custom = state.customCables[rigId] || [];
+    const preset = buildConfig(rigId, modeId);
+    const key = state.getComboKey(rigId, modeId);
+    const removed = state.customCables[`${key}_removed`] || [];
+    const lengthOverrides = state.customCables[`${key}_lengthOverrides`] || {};
+    const custom = state.customCables[key] || [];
 
     const presetCables = preset.cables
-      .filter(c => !removed.includes(c.id))
-      .map(c => ({ ...c, length: lengthOverrides[c.id] ?? c.length }));
+      .filter((c) => !removed.includes(c.id))
+      .map((c) => ({ ...c, length: lengthOverrides[c.id] ?? c.length }));
 
     return [...presetCables, ...custom];
   },
 
-  getPreset: (rigId) => PRESET_SETUPS[rigId],
-  getAllPresets: () => PRESET_SETUPS,
+  getConfig: (rigId, modeId) => buildConfig(rigId, modeId),
+  getAllRigs: () => RIGS,
+  getAllModes: () => LISTENING_MODES,
   getDeviceSpec: (deviceId) => DEVICE_SPECS[deviceId],
   getAllDeviceSpecs: () => DEVICE_SPECS,
 
-  // Валидация всей текущей конфигурации - собрать все warnings
-  validateRig: (rigId) => {
+  validateRig: (rigId, modeId) => {
     const state = get();
-    const cables = state.getActiveCables(rigId);
+    const cables = state.getActiveCables(rigId, modeId);
     const allWarnings = [];
 
-    cables.forEach(cable => {
+    cables.forEach((cable) => {
       const rules = checkSystemRules(cable.from.device, cable.from.port, cable.to.device, cable.to.port);
-      rules.forEach(r => allWarnings.push({ ...r, cableId: cable.id }));
+      rules.forEach((r) => allWarnings.push({ ...r, cableId: cable.id }));
 
       const lengthCheck = getCableLengthWarning(cable.connectorType, cable.length);
       if (lengthCheck.warning) {

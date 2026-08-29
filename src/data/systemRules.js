@@ -62,6 +62,14 @@ export const CRITICAL_RULES = [
     severity: 'warning',
     message: '⚠️ Gain Staging: WARMER R2R выдаёт 3.8Vrms по XLR - это довольно горячий уровень. На A90 рекомендуется Gain = Low при этом источнике, иначе диапазон регулировки громкости будет слишком узким сверху.',
   },
+  {
+    id: 'wiim_single_output',
+    check: (fromDeviceId, fromPortId) => {
+      return fromDeviceId === 'streamer_wiim';
+    },
+    severity: 'info',
+    message: 'ℹ️ WiiM Pro Plus выводит звук только через ОДИН порт одновременно (RCA/Optical/Coaxial) — переключается в приложении WiiM Home. Убедись, что выбран правильный выход перед прослушиванием.',
+  },
 ];
 
 // Проверка всех правил для конкретного соединения

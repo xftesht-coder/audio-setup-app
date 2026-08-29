@@ -692,6 +692,61 @@ export const DEVICE_SPECS = {
     ],
     sourceDoc: 'User system reference',
   },
+
+  // ---------------- СТРИМЕР: WiiM Pro Plus ----------------
+  streamer_wiim: {
+    id: 'streamer_wiim',
+    name: 'WiiM Pro Plus',
+    fullName: 'WiiM Pro Plus Hi-Res Audio Streamer',
+    category: 'streamer',
+    manufacturer: 'WiiM (Linkplay)',
+    width: 90,
+    height: 50,
+    color: '#C9C0B8',
+    hasBack: true,
+    photoQuery: 'WiiM Pro Plus streamer',
+    ports: [
+      {
+        id: 'wiim_out_rca',
+        type: 'RCA',
+        direction: 'output',
+        label: 'RCA Line Out',
+        position: 'rear',
+        count: 2,
+        voltage: 'до 2Vrms (переменный) / фиксированный в режиме Fixed Volume',
+        notes: 'Использует встроенный ЦАП AKM AK4493SEQ. Громкость регулируется либо с самого WiiM (App), либо через "Fixed Volume" для управления с амплифайера.',
+      },
+      {
+        id: 'wiim_out_optical',
+        type: 'OPTICAL',
+        direction: 'output',
+        label: 'Optical (SPDIF) Out',
+        position: 'rear',
+        count: 1,
+        notes: 'До 192kHz/24-bit. Для вывода в отдельный ЦАП (например FiiO WARMER).',
+      },
+      {
+        id: 'wiim_out_coax',
+        type: 'COAXIAL',
+        direction: 'output',
+        label: 'Coaxial Out',
+        position: 'rear',
+        count: 1,
+        notes: 'До 192kHz/24-bit. Обычно чуть выше качеством передачи, чем optical.',
+      },
+    ],
+    warnings: [
+      '⚠️ По официальному мануалу WiiM Pro Plus выводит звук ТОЛЬКО через один порт одновременно (RCA / Optical / Coaxial) — переключается в приложении WiiM Home, не работает параллельно на все три.',
+      'Если используешь Optical/Coaxial в другой ЦАП — включи "Fixed Volume" и отключи EQ в приложении, чтобы не было двойной обработки сигнала.',
+    ],
+    verifiedSources: [
+      { name: 'WiiM (официальные характеристики)', url: 'https://wiimhome.com/WiiMPro/specs' },
+      { name: 'WiiM Pro Plus User Manual (PDF)', url: 'https://www.wiimhome.com/pdf/WiiM%20Pro%20Plus%20User%20Manual.pdf' },
+      { name: 'FCC Filing (полная тех. документация)', url: 'https://fcc.report/FCC-ID/2BABF-ASR003/6687668.pdf' },
+      { name: 'SoundPath Lab (независимый разбор портов)', url: 'https://www.soundpathlab.com/wiim-pro-plus-explained-inputs-outputs-streaming-dsp-and-who-it-is-for/' },
+    ],
+    sourceDoc: 'WiiM official specs + User Manual + FCC filing + SoundPath Lab',
+  },
 };
 
 // ============================================================

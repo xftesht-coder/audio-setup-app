@@ -3,8 +3,8 @@ import { useRoutingStore } from '../store/routingStore';
 import { CABLE_LENGTHS, getCableLengthWarning } from '../data/systemRules';
 import { getCableStyle } from '../data/cableStyles';
 
-export default function CableTable({ rigId }) {
-  const activeCables = useRoutingStore((s) => s.getActiveCables(rigId));
+export default function CableTable({ rigId, modeId }) {
+  const activeCables = useRoutingStore((s) => s.getActiveCables(rigId, modeId));
   const deviceSpecs = useRoutingStore((s) => s.getAllDeviceSpecs());
   const removeCable = useRoutingStore((s) => s.removeCable);
   const updateCableLength = useRoutingStore((s) => s.updateCableLength);
@@ -30,7 +30,7 @@ export default function CableTable({ rigId }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `patch-list-${rigId}.csv`;
+    a.download = `patch-list-${rigId}-${modeId}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -95,7 +95,7 @@ export default function CableTable({ rigId }) {
                   <td className="py-2 pr-2">
                     <select
                       value={cable.length}
-                      onChange={(e) => updateCableLength(rigId, cable.id, parseFloat(e.target.value))}
+                      onChange={(e) => updateCableLength(rigId, modeId, cable.id, parseFloat(e.target.value))}
                       className="border border-rule rounded px-1 py-0.5 text-xs bg-white"
                     >
                       {CABLE_LENGTHS.map(len => (
@@ -108,7 +108,7 @@ export default function CableTable({ rigId }) {
                   </td>
                   <td className="py-2 pr-2">
                     <button
-                      onClick={() => removeCable(rigId, cable.id)}
+                      onClick={() => removeCable(rigId, modeId, cable.id)}
                       className="text-stop hover:bg-stop-wash rounded px-2 py-1 text-[10px] font-medium"
                     >
                       Удалить

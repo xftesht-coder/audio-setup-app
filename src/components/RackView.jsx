@@ -3,19 +3,11 @@ import { useRoutingStore } from '../store/routingStore';
 import { CONNECTOR_TYPES } from '../data/devicePorts';
 import { getCableStyle } from '../data/cableStyles';
 
-// Порядок устройств в "патч-панели" слева направо
-const DEVICE_ORDER = {
-  '01': ['turntable', 'phono', 'a90', 'arcam', 'speakers', 'headphones'],
-  '02': ['dac_fiio', 'a90', 'arcam', 'speakers', 'headphones'],
-  '03': ['dac_cayin', 'a90', 'arcam', 'speakers', 'headphones'],
-};
-
 const ROW_H = 22;
 const HEADER_H = 34;
 const COL_W = 230;
 const COL_GAP = 40;
 
-// React-версия рендера "наконечника" кабеля (мимика реального разъёма)
 function Cap({ x, y, capStyle, color }) {
   if (capStyle === 'rca') {
     return (
@@ -61,16 +53,17 @@ function Cap({ x, y, capStyle, color }) {
   return <circle cx={x} cy={y} r={3.5} fill={color} />;
 }
 
-export default function RackView({ rigId }) {
+export default function RackView({ rigId, modeId }) {
   const deviceSpecs = useRoutingStore((s) => s.getAllDeviceSpecs());
-  const activeCables = useRoutingStore((s) => s.getActiveCables(rigId));
+  const config = useRoutingStore((s) => s.getConfig(rigId, modeId));
+  const activeCables = useRoutingStore((s) => s.getActiveCables(rigId, modeId));
   const selectedPort = useRoutingStore((s) => s.selectedPort);
   const startCableFrom = useRoutingStore((s) => s.startCableFrom);
   const finishCableTo = useRoutingStore((s) => s.finishCableTo);
   const setSelectedDevice = useRoutingStore((s) => s.setSelectedDevice);
   const [feedback, setFeedback] = useState(null);
 
-  const order = DEVICE_ORDER[rigId] || [];
+  const order = config.devices;
   const columns = order.map((deviceId, colIdx) => ({
     deviceId,
     x: colIdx * (COL_W + COL_GAP) + 20,
@@ -121,7 +114,9 @@ export default function RackView({ rigId }) {
   return (
     <div className="bg-card border border-rule rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-bold text-ink">Патч-панель — все входы и выходы</p>
+        <p className="text-sm font-bold text-ink">
+          {config.rigName} · {config.modeName}
+        </p>
         {feedback && (
           <div
             className={`text-xs px-3 py-1.5 rounded font-medium ${
@@ -139,14 +134,12 @@ export default function RackView({ rigId }) {
 
       <div className="overflow-x-auto">
         <svg width={svgWidth} height={svgHeight} style={{ minWidth: '100%' }}>
-          {/* Кабели — ортогональная трассировка (прямые углы), как в проф. AV-схемах */}
           {activeCables.map((cable, cableIdx) => {
             const style = getCableStyle(cable.connectorType);
             const fromX = getColX(cable.from.device) + COL_W;
             const fromY = getPortY(cable.from.device, cable.from.port);
             const toX = getColX(cable.to.device);
             const toY = getPortY(cable.to.device, cable.to.port);
-            // Разносим кабели по "дорожкам" в среднем коридоре, чтобы не накладывались друг на друга
             const corridorKey = Math.round((fromX + toX) / 2 / 20);
             const laneIndex = activeCables
               .slice(0, cableIdx)
@@ -176,7 +169,6 @@ export default function RackView({ rigId }) {
             );
           })}
 
-          {/* Колонки устройств */}
           {columns.map(({ deviceId, x }) => {
             const spec = deviceSpecs[deviceId];
             return (

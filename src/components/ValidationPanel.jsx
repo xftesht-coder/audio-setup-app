@@ -8,9 +8,9 @@ const severityStyles = {
   tip: { bg: 'bg-go-wash', border: 'border-l-go', text: 'text-go', icon: '💡' },
 };
 
-export default function ValidationPanel({ rigId }) {
-  const warnings = useRoutingStore((s) => s.validateRig(rigId));
-  const preset = useRoutingStore((s) => s.getPreset(rigId));
+export default function ValidationPanel({ rigId, modeId }) {
+  const warnings = useRoutingStore((s) => s.validateRig(rigId, modeId));
+  const config = useRoutingStore((s) => s.getConfig(rigId, modeId));
 
   const critical = warnings.filter(w => w.severity === 'critical');
   const others = warnings.filter(w => w.severity !== 'critical');
@@ -18,8 +18,8 @@ export default function ValidationPanel({ rigId }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="bg-card border border-rule rounded-lg p-4">
-        <p className="text-sm font-bold text-ink mb-1">{preset.name}</p>
-        <p className="text-xs text-muted">{preset.devices.length} устройств в тракте</p>
+        <p className="text-sm font-bold text-ink mb-1">{config.rigName} · {config.modeName}</p>
+        <p className="text-xs text-muted">{config.devices.length} устройств в тракте</p>
       </div>
 
       {critical.length > 0 && (
