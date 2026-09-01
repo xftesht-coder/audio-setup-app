@@ -30,7 +30,7 @@ module.exports = {
       // react-three-fiber renders three.js objects as JSX intrinsics
       // (mesh, position, args, castShadow, ...) — eslint-plugin-react
       // doesn't know about them, so this rule fires false positives here.
-      files: ['src/components/CabinetView3D.jsx', 'src/components/EquipmentBox.jsx', 'src/components/ShelfMesh.jsx'],
+      files: ['src/components/CabinetView3D.jsx', 'src/components/EquipmentBox.jsx', 'src/components/ShelfMesh.jsx', 'src/components/PhysicalCable.jsx'],
       rules: {
         'react/no-unknown-property': 'off',
       },

@@ -1,42 +1,52 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, CatmullRomLine } from '@react-three/drei';
-import * as THREE from 'three';
-import EquipmentBox from './EquipmentBox';
+import { OrbitControls, Environment } from '@react-three/drei';
+import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import ShelfMesh from './ShelfMesh';
+import EquipmentBox from './EquipmentBox';
+import PhysicalCable from './PhysicalCable';
+import PhysicsDebugHUD from './PhysicsDebugHUD';
 import { MAIN_RACK, EQUIPMENT_PHYSICAL, RACK_CABLES } from '../data/cabinetSpecs';
+import { getPortLocalAnchor } from '../data/portGeometry';
 
 const MM_TO_M = 0.001;
 
-// Рассчитывает Y-координату (низ полки) каждого яруса снизу вверх,
-// возвращает также абсолютную Y верхней грани техники на ярусе (для кабелей).
-function computeLayout() {
-  let y = (MAIN_RACK.legHeight + MAIN_RACK.plinthHeight) * MM_TO_M; // низ первого яруса
-  const layout = [];
+// Считает ЦЕЛЕВУЮ (не обязательную) позицию каждого яруса и точку сброса
+// (drop position) для каждого устройства — несколько сантиметров НАД
+// расчётной высотой полки. RigidBody падает под гравитацией и физически
+// упирается в Collider полки (см. ShelfMesh) — реальная итоговая Y
+// определяется контактом, а не этим расчётом. Расчёт здесь только даёт
+// (а) X-позицию на полке (из брифа v2, MAIN_RACK.tiers[].items[].x)
+// и (б) стартовую высоту сброса, чтобы устройство упало на СВОЮ полку,
+// а не на соседнюю.
+function computeShelfPositions() {
+  let y = (MAIN_RACK.legHeight + MAIN_RACK.plinthHeight) * MM_TO_M;
+  const shelves = [];
+  const drops = []; // { equipmentId, position: [x,y,z] }
+
   MAIN_RACK.tiers.forEach((tier) => {
     const shelfTopY = y + MAIN_RACK.shelfThickness * MM_TO_M;
-    const itemPositions = tier.items.map(({ equipmentId, x }) => {
+    shelves.push({ tierId: tier.id, y });
+
+    tier.items.forEach(({ equipmentId, x }) => {
       const phys = EQUIPMENT_PHYSICAL[equipmentId];
-      const h = phys.dims.h * MM_TO_M;
-      const centerY = shelfTopY + h / 2;
-      // x: 0 в центре MAIN_RACK.innerWidth, конвертируем из мм-офсета в метры относительно центра
       const centerX = (x - MAIN_RACK.innerWidth / 2) * MM_TO_M;
-      return { equipmentId, position: [centerX, centerY, 0], topY: centerY + h / 2 };
+      // Сброс СОВСЕМ немного (1см) выше расчётного положения на СВОЕЙ
+      // полке — не "с большим запасом сверху". С реальными (тесными)
+      // зазорами из брифа (40мм на некоторых ярусах) высокий сброс
+      // спавнил устройство уже ВНУТРИ полки следующего яруса, и Rapier
+      // "решал" это неверно — устройство проваливалось или зависало.
+      const restY = shelfTopY + phys.dims.h * MM_TO_M / 2;
+      const dropY = restY + 0.01;
+      drops.push({ equipmentId, position: [centerX, dropY, 0] });
     });
-    layout.push({
-      tierId: tier.id,
-      shelfY: y,
-      items: itemPositions,
-    });
-    const tierHeight = Math.max(
-      ...tier.items.map(({ equipmentId }) => EQUIPMENT_PHYSICAL[equipmentId].dims.h),
-      0
-    );
+
+    const tierHeight = Math.max(...tier.items.map(({ equipmentId }) => EQUIPMENT_PHYSICAL[equipmentId].dims.h), 0);
     y = shelfTopY + tierHeight * MM_TO_M + tier.clearanceAbove * MM_TO_M;
   });
-  // финальная (верхняя) полка-крышка
-  layout.push({ tierId: 'top_cap', shelfY: y, items: [] });
-  return { layout, totalHeight: y + MAIN_RACK.shelfThickness * MM_TO_M };
+  shelves.push({ tierId: 'top_cap', y });
+
+  return { shelves, drops, totalHeight: y + MAIN_RACK.shelfThickness * MM_TO_M };
 }
 
 function Legs() {
@@ -50,40 +60,40 @@ function Legs() {
     [halfW, legHeight / 2, halfD],
   ];
   return positions.map((p, i) => (
-    <mesh key={i} position={p} castShadow>
-      <cylinderGeometry args={[0.012, 0.012, legHeight, 12]} />
-      <meshStandardMaterial color="#8A8D91" metalness={0.8} roughness={0.35} />
-    </mesh>
+    <RigidBody key={i} type="fixed" position={p} colliders={false}>
+      <CuboidCollider args={[0.012, legHeight / 2, 0.012]} />
+      <mesh castShadow>
+        <cylinderGeometry args={[0.012, 0.012, legHeight, 12]} />
+        <meshStandardMaterial color="#8A8D91" metalness={0.8} roughness={0.35} />
+      </mesh>
+    </RigidBody>
   ));
 }
 
-function Cables({ layout, xray }) {
-  const posByEquip = useMemo(() => {
-    const m = {};
-    layout.forEach((tier) => tier.items.forEach((it) => { m[it.equipmentId] = it.position; }));
-    return m;
-  }, [layout]);
-
-  if (xray) return null;
-
-  return RACK_CABLES.map((cable) => {
-    const from = posByEquip[cable.from];
-    const to = posByEquip[cable.to];
-    if (!from || !to) return null;
-    const midY = Math.min(from[1], to[1]) - 0.06; // провисание вниз к задней стенке
-    const points = [
-      new THREE.Vector3(from[0], from[1] - 0.02, from[2] + 0.05),
-      new THREE.Vector3((from[0] + to[0]) / 2, midY, 0.15),
-      new THREE.Vector3(to[0], to[1] - 0.02, to[2] + 0.05),
-    ];
-    return (
-      <CatmullRomLine key={cable.id} points={points} color="#1a1a1a" lineWidth={2} />
-    );
-  });
+function Floor() {
+  return (
+    <RigidBody type="fixed" position={[0, -0.01, 0]} colliders={false}>
+      <CuboidCollider args={[1.5, 0.01, 1.5]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[3, 3]} />
+        <shadowMaterial opacity={0.25} />
+      </mesh>
+    </RigidBody>
+  );
 }
 
 export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
-  const { layout, totalHeight } = useMemo(() => computeLayout(), []);
+  const { shelves, drops, totalHeight } = useMemo(() => computeShelfPositions(), []);
+  const bodyRefs = useRef({}); // equipmentId -> RigidBody API ref
+  const [bodiesReady, setBodiesReady] = useState(false);
+
+  // RigidBody рефы крепятся ПОСЛЕ первого коммита (стандартное поведение
+  // React ref attach). Без этого триггера кабели молча не рендерились бы
+  // на первом кадре, потому что bodyRefs.current[id].current был бы null
+  // в момент, когда PhysicalCable впервые проверяет готовность тел.
+  useEffect(() => {
+    setBodiesReady(true);
+  }, []);
 
   return (
     <div className="bg-card border border-rule rounded-lg" style={{ height: 560 }}>
@@ -92,37 +102,67 @@ export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
         <directionalLight position={[2, 3, 2]} intensity={1.1} castShadow />
         <Suspense fallback={null}>
           <Environment preset="apartment" />
-          <group>
+          <Physics gravity={[0, -9.81, 0]} colliders={false}>
+            <PhysicsDebugHUD bodyRefs={bodyRefs} cableCount={RACK_CABLES.length} />
+            <Floor />
             <Legs />
-            {layout.map((tier) => (
+            {shelves.map((s) => (
               <ShelfMesh
-                key={tier.tierId}
+                key={s.tierId}
                 width={MAIN_RACK.innerWidth}
                 depth={MAIN_RACK.shelfDepth}
                 thickness={MAIN_RACK.shelfThickness}
-                y={tier.shelfY}
+                position={[0, s.y, 0]}
                 xray={xray}
               />
             ))}
-            {layout.flatMap((tier) =>
-              tier.items.map((item) => (
+            {drops.map(({ equipmentId, position }) => {
+              if (!bodyRefs.current[equipmentId]) bodyRefs.current[equipmentId] = React.createRef();
+              return (
                 <EquipmentBox
-                  key={item.equipmentId}
-                  equipmentId={item.equipmentId}
-                  position={item.position}
+                  key={equipmentId}
+                  ref={bodyRefs.current[equipmentId]}
+                  equipmentId={equipmentId}
+                  dropPosition={position}
                   exploded={exploded}
-                  selected={selected === item.equipmentId}
+                  selected={selected === equipmentId}
                   onSelect={onSelect}
                 />
-              ))
-            )}
-            <Cables layout={layout} xray={xray} />
-          </group>
-          {/* пол для тени и масштаба */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-            <planeGeometry args={[3, 3]} />
-            <shadowMaterial opacity={0.25} />
-          </mesh>
+              );
+            })}
+            {!xray && bodiesReady && RACK_CABLES.map((cable) => {
+              const fromBody = bodyRefs.current[cable.from];
+              const toBody = bodyRefs.current[cable.to];
+              const fromDrop = drops.find((d) => d.equipmentId === cable.from);
+              const toDrop = drops.find((d) => d.equipmentId === cable.to);
+              if (!fromBody || !toBody || !fromDrop || !toDrop) return null;
+              const fromLocal = getPortLocalAnchor(cable.from, cable.fromPort);
+              const toLocal = getPortLocalAnchor(cable.to, cable.toPort);
+              const fromWorld = [
+                fromDrop.position[0] + fromLocal[0],
+                fromDrop.position[1] + fromLocal[1],
+                fromDrop.position[2] + fromLocal[2],
+              ];
+              const toWorld = [
+                toDrop.position[0] + toLocal[0],
+                toDrop.position[1] + toLocal[1],
+                toDrop.position[2] + toLocal[2],
+              ];
+              return (
+                <PhysicalCable
+                  key={cable.id}
+                  cable={cable}
+                  fromBody={fromBody}
+                  toBody={toBody}
+                  fromLocal={fromLocal}
+                  toLocal={toLocal}
+                  fromWorld={fromWorld}
+                  toWorld={toWorld}
+                  xray={xray}
+                />
+              );
+            })}
+          </Physics>
         </Suspense>
         <OrbitControls target={[0, totalHeight / 2, 0]} minDistance={0.8} maxDistance={5} />
       </Canvas>

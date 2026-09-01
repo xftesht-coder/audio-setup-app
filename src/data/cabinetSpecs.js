@@ -4,6 +4,8 @@
 // Размеры мм: Ш×В×Г (внешние габариты корпуса устройства).
 // ============================================================
 
+import { DEVICE_SPECS as DEVICE_SPECS_REF } from './devicePorts.js';
+
 export const MATERIALS = {
   alder: {
     id: 'alder',
@@ -216,17 +218,37 @@ export const VINYL_TOWER = {
 };
 
 // ============================================================
-// ПАТЧ-ЛИСТ ДЛЯ 3D-СЦЕНЫ (упрощённая проекция кабелей рэка,
-// используется для визуализации проводки на модели тумбы)
+// ПАТЧ-ЛИСТ ДЛЯ 3D-СЦЕНЫ — зеркалит дефолтный пресет патч-панели
+// (rig '01' Винил + mode 'speakers' из routingStore.js), но с явными
+// portId, чтобы кабели в 3D могли крепиться к реальным координатам
+// разъёмов (см. portGeometry.js), а не к центру бокса устройства.
+// ⚠️ Если патч-лист в routingStore.js меняется — синхронизируй вручную,
+// validateCablePorts() ниже упадёт в dev-консоль, если portId устарел.
 // ============================================================
 export const RACK_CABLES = [
-  { id: 'r1', from: 'turntable', to: 'phono', type: 'RCA', length: 0.5 },
-  { id: 'r1g', from: 'turntable', to: 'phono', type: 'GROUND', length: 0.3 },
-  { id: 'r2', from: 'streamer_wiim', to: 'dac_fiio', type: 'OPTICAL', length: 0.5 },
-  { id: 'r3', from: 'dac_fiio', to: 'a90', type: 'XLR', length: 0.4 },
-  { id: 'r4', from: 'phono', to: 'a90', type: 'RCA', length: 0.4 },
-  { id: 'r5', from: 'a90', to: 'arcam', type: 'RCA', length: 0.5 },
+  { id: 'r1', from: 'turntable', fromPort: 'tt_out', to: 'phono', toPort: 'phono_in_rca', type: 'RCA', length: 0.5 },
+  { id: 'r1g', from: 'turntable', fromPort: 'tt_ground', to: 'phono', toPort: 'phono_ground', type: 'GROUND', length: 0.3 },
+  { id: 'r4', from: 'phono', fromPort: 'phono_out_rca', to: 'a90', toPort: 'a90_in_rca', type: 'RCA', length: 0.5 },
+  { id: 'r2', from: 'streamer_wiim', fromPort: 'wiim_out_optical', to: 'dac_fiio', toPort: 'fiio_optical', type: 'OPTICAL', length: 0.5 },
+  { id: 'r3', from: 'dac_fiio', fromPort: 'fiio_out_xlr', to: 'a90', toPort: 'a90_in_xlr', type: 'XLR', length: 0.4 },
+  { id: 'r5', from: 'a90', fromPort: 'a90_out_rca', to: 'arcam', toPort: 'arcam_cd', type: 'RCA', length: 0.5 },
 ];
+
+// Дефолтная проверка целостности (не выдумывать — падать явно при рассинхроне)
+export function validateCablePorts() {
+  const issues = [];
+  RACK_CABLES.forEach((cable) => {
+    const fromSpec = DEVICE_SPECS_REF[cable.from];
+    const toSpec = DEVICE_SPECS_REF[cable.to];
+    if (!fromSpec || !fromSpec.ports.find((p) => p.id === cable.fromPort)) {
+      issues.push(`Кабель ${cable.id}: порт ${cable.fromPort} не найден на ${cable.from}`);
+    }
+    if (!toSpec || !toSpec.ports.find((p) => p.id === cable.toPort)) {
+      issues.push(`Кабель ${cable.id}: порт ${cable.toPort} не найден на ${cable.to}`);
+    }
+  });
+  return issues;
+}
 
 // ============================================================
 // ВАЛИДАЦИЯ КОНСТРЕЙНТОВ ДЛЯ MAIN_RACK
