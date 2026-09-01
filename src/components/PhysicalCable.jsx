@@ -29,13 +29,15 @@ const RopeSegment = React.forwardRef(function RopeSegment({ position, radius, le
       ref={ref}
       position={position}
       colliders={false}
-      collisionGroups={CABLE_GROUP}
       mass={0.004}
       linearDamping={1.4}
       angularDamping={0.95}
       ccd
     >
-      <CapsuleCollider args={[length / 2, radius]} />
+      {/* collisionGroups — проп КОЛЛАЙДЕРА (в @react-three/rapier он
+          реализован как collider setter), НЕ RigidBody: на <RigidBody>
+          он молча игнорировался, и a90 продолжал висеть на кабеле. */}
+      <CapsuleCollider args={[length / 2, radius]} collisionGroups={CABLE_GROUP} />
       <mesh castShadow>
         <capsuleGeometry args={[radius, length, 4, 8]} />
         <meshStandardMaterial color="#1a1a1a" roughness={0.7} />
