@@ -6,8 +6,8 @@
 export const CRITICAL_RULES = [
   {
     id: 'phono_line_level',
-    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => {
-      return toDeviceId === 'arcam' && toPortId === 'arcam_phono' &&
+    check: (fromDeviceId, fromPortId, toDeviceId, _toPortId) => {
+      return toDeviceId === 'arcam' && _toPortId === 'arcam_phono' &&
         fromDeviceId !== 'turntable';
     },
     severity: 'critical',
@@ -32,23 +32,23 @@ export const CRITICAL_RULES = [
   },
   {
     id: 'a90_input_switch',
-    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => {
-      return toDeviceId === 'a90' && (toPortId === 'a90_in_rca' || toPortId === 'a90_in_xlr');
+    check: (fromDeviceId, fromPortId, toDeviceId, _toPortId) => {
+      return toDeviceId === 'a90' && (_toPortId === 'a90_in_rca' || _toPortId === 'a90_in_xlr');
     },
     severity: 'info',
     message: 'ℹ️ Topping A90 переключает вход (RCA/XLR) кнопкой на передней панели - используется только один источник за раз, даже если оба физически подключены.',
   },
   {
     id: 'ground_wire_needed',
-    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => {
-      return fromDeviceId === 'turntable' && toDeviceId === 'phono' && fromPortId === 'tt_out';
+    check: (fromDeviceId, _fromPortId, toDeviceId, _toPortId) => {
+      return fromDeviceId === 'turntable' && toDeviceId === 'phono' && _fromPortId === 'tt_out';
     },
     severity: 'tip',
     message: '💡 Не забудь также подключить земляной провод (Ground Wire) от проигрывателя к Ground терминалу на Schiit Skoll F для минимизации фона/гула.',
   },
   {
     id: 'speaker_no_biwire',
-    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => {
+    check: (_fromDeviceId, _fromPortId, toDeviceId, _toPortId) => {
       return toDeviceId === 'speakers';
     },
     severity: 'info',
@@ -64,7 +64,7 @@ export const CRITICAL_RULES = [
   },
   {
     id: 'wiim_single_output',
-    check: (fromDeviceId, fromPortId) => {
+    check: (fromDeviceId, _fromPortId) => {
       return fromDeviceId === 'streamer_wiim';
     },
     severity: 'info',

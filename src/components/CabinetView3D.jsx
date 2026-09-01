@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, CatmullRomLine } from '@react-three/drei';
 import * as THREE from 'three';
@@ -39,7 +39,7 @@ function computeLayout() {
   return { layout, totalHeight: y + MAIN_RACK.shelfThickness * MM_TO_M };
 }
 
-function Legs({ totalHeight }) {
+function Legs() {
   const legHeight = MAIN_RACK.legHeight * MM_TO_M;
   const halfW = (MAIN_RACK.innerWidth * MM_TO_M) / 2 - 0.02;
   const halfD = (MAIN_RACK.shelfDepth * MM_TO_M) / 2 - 0.02;
@@ -58,12 +58,13 @@ function Legs({ totalHeight }) {
 }
 
 function Cables({ layout, xray }) {
-  if (xray) return null;
   const posByEquip = useMemo(() => {
     const m = {};
     layout.forEach((tier) => tier.items.forEach((it) => { m[it.equipmentId] = it.position; }));
     return m;
   }, [layout]);
+
+  if (xray) return null;
 
   return RACK_CABLES.map((cable) => {
     const from = posByEquip[cable.from];
@@ -92,7 +93,7 @@ export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
         <Suspense fallback={null}>
           <Environment preset="apartment" />
           <group>
-            <Legs totalHeight={totalHeight} />
+            <Legs />
             {layout.map((tier) => (
               <ShelfMesh
                 key={tier.tierId}
