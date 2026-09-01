@@ -45,7 +45,9 @@ const EquipmentBox = forwardRef(function EquipmentBox(
       position={dropPosition}
       colliders="cuboid"
       mass={Math.max(phys.weight, 0.1)}
-      friction={0.9}
+      friction={2.0} // высокие резиновые опоры реально держат корпус на месте;
+                     // без этого лёгкие устройства (a90 2кг) перетягиваются
+                     // вверх тяжёлыми кабелями к устройствам на ярус выше
       restitution={0.02}
       linearDamping={0.6}
       angularDamping={0.95}

@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import CabinetView3D from './CabinetView3D';
-import { computeBOM, validateRackConstraints, MAIN_RACK, VINYL_TOWER, ROBOT_VACUUM_CLEARANCE } from '../data/cabinetSpecs';
+import MaterialPicker from './MaterialPicker';
+import { useCabinetStore } from '../stores/useCabinetStore';
+import { computeBOM, validateRackConstraints, MAIN_RACK, VINYL_TOWER, ROBOT_VACUUM_CLEARANCE, MATERIALS } from '../data/cabinetSpecs';
 import { DEVICE_SPECS } from '../data/devicePorts';
 
 export default function CabinetPanel() {
-  const [xray, setXray] = useState(false);
-  const [exploded, setExploded] = useState(false);
-  const [selected, setSelected] = useState(null);
-
+  const { xray, exploded, selected, materialId, setXray, setExploded, setSelected, setMaterial } = useCabinetStore();
   const bom = computeBOM();
   const issues = validateRackConstraints();
   const critical = issues.filter((i) => i.severity === 'critical');
@@ -21,13 +20,13 @@ export default function CabinetPanel() {
           <p className="text-sm font-bold text-ink">Hi-Fi тумба — 3D конфигуратор (реальные размеры)</p>
           <div className="flex gap-2">
             <button
-              onClick={() => setXray((v) => !v)}
+              onClick={() => setXray()}
               className={`text-xs px-3 py-1.5 rounded font-medium border ${xray ? 'bg-signal-wash border-signal text-signal' : 'border-rule text-muted'}`}
             >
               X-ray {xray ? '✓' : ''}
             </button>
             <button
-              onClick={() => setExploded((v) => !v)}
+              onClick={() => setExploded()}
               className={`text-xs px-3 py-1.5 rounded font-medium border ${exploded ? 'bg-go-wash border-go text-go' : 'border-rule text-muted'}`}
             >
               Exploded {exploded ? '✓' : ''}
@@ -35,7 +34,13 @@ export default function CabinetPanel() {
           </div>
         </div>
 
-        <CabinetView3D xray={xray} exploded={exploded} selected={selected} onSelect={setSelected} />
+        <MaterialPicker
+          materials={MATERIALS}
+          selectedId={materialId}
+          onSelect={setMaterial}
+        />
+
+        <CabinetView3D />
 
         <div className="bg-card border border-rule rounded-lg p-4">
           <p className="text-xs font-bold uppercase tracking-widest text-muted mb-2">Габариты корпуса (MAIN RACK)</p>

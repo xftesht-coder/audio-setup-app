@@ -1,10 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { RigidBody, CapsuleCollider, useSphericalJoint } from '@react-three/rapier';
+import { RigidBody, CapsuleCollider, useSphericalJoint, interactionGroups } from '@react-three/rapier';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getCableStyle } from '../data/cableStyles';
 
 const SEGMENTS = 6;
+
+// Кабельные сегменты — отдельная collision-группа, которая НЕ
+// взаимодействует с устройствами/полками (группа 0). Причина найдена
+// числами, а не глазами: a90 (2кг, три кабеля с обоих ярусов)
+// физически вывешивался на r5 к arcam на 8.4кг — сегменты верёвки
+// упирались в крышку лёгкого устройства как в подставку и тянули его
+// вверх; никакое трение/масса не спасали. В реальности провода лежат
+// НА аппаратах и держатся за заднюю стенку, а не толкаются с крышками:
+// joints к портам устройств работают независимо от collision filtering,
+// поэтому изоляция сегментов даёт корректное провисание без вывешивания
+// техники.
+const CABLE_GROUP = interactionGroups([1], [1]);
 
 // Один физический сегмент верёвки — маленькая динамическая капсула.
 // Соседние сегменты соединены useSphericalJoint (шаровой шарнир,
@@ -17,9 +29,10 @@ const RopeSegment = React.forwardRef(function RopeSegment({ position, radius, le
       ref={ref}
       position={position}
       colliders={false}
-      mass={0.015}
-      linearDamping={0.85}
-      angularDamping={0.9}
+      collisionGroups={CABLE_GROUP}
+      mass={0.004}
+      linearDamping={1.4}
+      angularDamping={0.95}
       ccd
     >
       <CapsuleCollider args={[length / 2, radius]} />

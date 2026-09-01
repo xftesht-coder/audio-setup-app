@@ -5,8 +5,9 @@ import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import ShelfMesh from './ShelfMesh';
 import EquipmentBox from './EquipmentBox';
 import PhysicalCable from './PhysicalCable';
-import PhysicsDebugHUD from './PhysicsDebugHUD';
-import { MAIN_RACK, EQUIPMENT_PHYSICAL, RACK_CABLES } from '../data/cabinetSpecs';
+import ShelfValidator from './ShelfValidator';
+import { useCabinetStore } from '../stores/useCabinetStore';
+import { MAIN_RACK, EQUIPMENT_PHYSICAL, RACK_CABLES, MATERIALS } from '../data/cabinetSpecs';
 import { getPortLocalAnchor } from '../data/portGeometry';
 
 const MM_TO_M = 0.001;
@@ -32,10 +33,10 @@ function computeShelfPositions() {
       const phys = EQUIPMENT_PHYSICAL[equipmentId];
       const centerX = (x - MAIN_RACK.innerWidth / 2) * MM_TO_M;
       // Сброс СОВСЕМ немного (1см) выше расчётного положения на СВОЕЙ
-      // полке — не "с большим запасом сверху". С реальными (тесными)
+      // полке — не «с большим запасом сверху». С реальными (тесными)
       // зазорами из брифа (40мм на некоторых ярусах) высокий сброс
       // спавнил устройство уже ВНУТРИ полки следующего яруса, и Rapier
-      // "решал" это неверно — устройство проваливалось или зависало.
+      // «решал» это неверно — устройство проваливалось или зависало.
       const restY = shelfTopY + phys.dims.h * MM_TO_M / 2;
       const dropY = restY + 0.01;
       drops.push({ equipmentId, position: [centerX, dropY, 0] });
@@ -82,7 +83,16 @@ function Floor() {
   );
 }
 
-export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
+/**
+ * CabinetView3D — центральная 3D-сцена тумбы.
+ *
+ * Подписывается на Zustand store (useCabinetStore) вместо собственного
+ * локального состояния для xray/exploded/selected — так UI в CabinetPanel
+ * и 3D синхронизированы через один источник правды, а MaterialPicker
+ * live-меняет цвет деревянных частей тумбы без перезагрузки.
+ */
+export default function CabinetView3D() {
+  const { xray, exploded, selected, onSelect, materialId } = useCabinetStore();
   const { shelves, drops, totalHeight } = useMemo(() => computeShelfPositions(), []);
   const bodyRefs = useRef({}); // equipmentId -> RigidBody API ref
   const [bodiesReady, setBodiesReady] = useState(false);
@@ -95,6 +105,24 @@ export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
     setBodiesReady(true);
   }, []);
 
+  // Теоретическая центральная Y для каждого юнита, чтобы ShelfValidator
+  // сравнивал с реальной осевшей world-Y (см. ShelfValidator.jsx).
+  // НЕ dropY (start+0.01): сравниваем с истинной точкой покоя restY —
+  // иначе все юниты "опрокидываются" на 1см выше из-за стартового
+  // приподнятого спавна, и валидатор ложно помечает их как settling.
+  const expectedYByUnit = useMemo(() => {
+    const map = {};
+    drops.forEach((d) => {
+      const phys = EQUIPMENT_PHYSICAL[d.equipmentId];
+      if (phys) {
+        map[d.equipmentId] = d.position[1] - 0.01; // обратный dropY -> restY
+      }
+    });
+    return map;
+  }, [drops]);
+
+  const matColor = useMemo(() => MATERIALS[materialId]?.color ?? MATERIALS.alder.color, [materialId]);
+
   return (
     <div className="bg-card border border-rule rounded-lg" style={{ height: 560 }}>
       <Canvas shadows camera={{ position: [1.6, 1.1, 1.8], fov: 40 }}>
@@ -103,7 +131,7 @@ export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
         <Suspense fallback={null}>
           <Environment preset="apartment" />
           <Physics gravity={[0, -9.81, 0]} colliders={false}>
-            <PhysicsDebugHUD bodyRefs={bodyRefs} cableCount={RACK_CABLES.length} />
+            <ShelfValidator bodyRefs={bodyRefs} expectedYByUnit={expectedYByUnit} />
             <Floor />
             <Legs />
             {shelves.map((s) => (
@@ -113,6 +141,7 @@ export default function CabinetView3D({ xray, exploded, selected, onSelect }) {
                 depth={MAIN_RACK.shelfDepth}
                 thickness={MAIN_RACK.shelfThickness}
                 position={[0, s.y, 0]}
+                materialColor={matColor}
                 xray={xray}
               />
             ))}

@@ -8,7 +8,7 @@ const MM_TO_M = 0.001;
 // с этим коллайдером определяет, где реально "стоит" устройство — а не
 // заранее посчитанный Y, который рассинхронизируется при любых
 // изменениях сцены.
-export default function ShelfMesh({ width, depth, thickness, position, xray = false }) {
+export default function ShelfMesh({ width, depth, thickness, position, materialColor = '#C9A876', xray = false }) {
   const w = width * MM_TO_M;
   const d = depth * MM_TO_M;
   const t = thickness * MM_TO_M;
@@ -28,7 +28,7 @@ export default function ShelfMesh({ width, depth, thickness, position, xray = fa
       <CuboidCollider args={[w / 2, coreT / 2, d / 2]} position={[0, dampingT + coreT / 2, 0]} />
       <mesh position={[0, dampingT + coreT / 2, 0]} castShadow receiveShadow>
         <boxGeometry args={[w, coreT, d]} />
-        <meshStandardMaterial color="#C9A876" roughness={0.75} transparent={xray} opacity={xray ? 0.35 : 1} />
+        <meshStandardMaterial color={materialColor} roughness={0.75} transparent={xray} opacity={xray ? 0.35 : 1} />
       </mesh>
       <mesh position={[0, dampingT / 2, 0]}>
         <boxGeometry args={[w, dampingT, d]} />
