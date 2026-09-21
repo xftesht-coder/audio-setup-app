@@ -238,13 +238,14 @@ export const DEVICE_SPECS = {
     sourceDoc: 'Schiit Skoll F Manual + Tracking Angle forum + Future Audiophile review',
   },
 
-  // ---------------- ЦАП: FiiO WARMER R2R ----------------
+  // ---------------- ЦАП: Schiit Bifrost 3 ----------------
+  // Stable legacy IDs preserve saved projects and cable connections.
   dac_fiio: {
     id: 'dac_fiio',
-    name: 'FiiO WARMER R2R',
-    fullName: 'FiiO WARMER R2R Tube DAC',
+    name: 'Schiit Bifrost 3',
+    fullName: 'Schiit Bifrost 3 Mesh DAC',
     category: 'dac',
-    manufacturer: 'FiiO',
+    manufacturer: 'Schiit',
     width: 90,
     height: 55,
     color: '#C4A5A0',
@@ -257,7 +258,7 @@ export const DEVICE_SPECS = {
         label: 'USB-C In',
         position: 'rear',
         count: 1,
-        notes: 'UAC 1.0/2.0, up to 32bit/384kHz PCM, DSD256.',
+        notes: 'Unison 384: PCM до 32 бит / 384 кГц.',
       },
       {
         id: 'fiio_optical',
@@ -266,7 +267,7 @@ export const DEVICE_SPECS = {
         label: 'Optical In',
         position: 'rear',
         count: 1,
-        notes: 'Up to 24bit/96kHz.',
+        notes: 'PCM до 24 бит / 192 кГц.',
       },
       {
         id: 'fiio_coaxial',
@@ -284,8 +285,8 @@ export const DEVICE_SPECS = {
         label: 'RCA Out',
         position: 'rear',
         count: 2,
-        voltage: '1.8Vrms',
-        notes: 'Fixed level, no volume control. Simultaneous with XLR.',
+        voltage: '2.0Vrms',
+        notes: 'Максимальный уровень; громкость и EQ через Forkbeard.',
       },
       {
         id: 'fiio_out_xlr',
@@ -294,23 +295,14 @@ export const DEVICE_SPECS = {
         label: 'XLR Out (Balanced)',
         position: 'rear',
         count: 2,
-        voltage: '3.8Vrms',
-        notes: 'Fixed level, no volume control. Simultaneous with RCA. HOT signal!',
+        voltage: '4.0Vrms',
+        notes: 'Максимальный балансный уровень; громкость через Forkbeard.',
       },
     ],
-    warnings: [
-      'Нет регулировки громкости - выход всегда фиксированный уровень!',
-      'XLR выход 3.8V - довольно горячий сигнал, учитывай Gain на следующем устройстве.',
-    ],
-    verifiedSources: [
-      { name: 'FiiO (официальный сайт)', url: 'https://www.fiio.com/WARMERR2R' },
-      { name: 'FiiO Parameters (тех. специф.)', url: 'https://www.fiio.com/WARMERR2R_parameters' },
-      { name: 'Headfonics (обзор + фото задней панели)', url: 'https://headfonics.com/fiio-warmer-r2r-review/' },
-      { name: 'Darko.Audio (независимый обзор)', url: 'https://darko.audio/2025/11/fiios-r2r-warmer-dac-houses-the-holy-trinity-of-audiophile-catnip/' },
-      { name: 'Neowin (обзор, ограничение: только 1 XLR выход)', url: 'https://www.neowin.net/reviews/review-fiios-warmer-r2r-tube-buffer-dac-hits-all-the-musical-notes-at-a-great-price/' },
-    ],
-    photoQuery: 'FiiO WARMER R2R DAC',
-    sourceDoc: 'FiiO official specs + Headfonics + Darko.Audio + Neowin reviews',
+    warnings: ['Громкость и EQ доступны через Forkbeard. Перед прослушиванием проверь уровень на Bifrost и усилителе.'],
+    verifiedSources: [{ name: 'Schiit Bifrost 3 — официальные характеристики', url: 'https://www.schiit.com/products/bifrost-3' }],
+    photoQuery: 'Schiit Bifrost 3 DAC',
+    sourceDoc: 'Schiit Bifrost 3 official specifications',
   },
 
   // ---------------- ЦАП: Cayin RU7 ----------------
@@ -723,7 +715,7 @@ export const DEVICE_SPECS = {
         label: 'Optical (SPDIF) Out',
         position: 'rear',
         count: 1,
-        notes: 'До 192kHz/24-bit. Для вывода в отдельный ЦАП (например FiiO WARMER).',
+        notes: 'До 192kHz/24-bit. Для вывода в отдельный ЦАП (например Schiit Bifrost 3).',
       },
       {
         id: 'wiim_out_coax',

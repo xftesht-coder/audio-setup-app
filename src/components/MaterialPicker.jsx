@@ -15,31 +15,26 @@ export default function MaterialPicker({ materials, selectedId, onSelect }) {
   const entries = Object.entries(materials);
 
   return (
-    <div className="bg-card border border-rule rounded-lg p-4">
-      <p className="text-xs font-bold uppercase tracking-widest text-muted mb-3">Материал тумбы</p>
-      <div className="flex flex-wrap gap-2">
+    <div className="cabinet-info">
+      <p className="cabinet-eyebrow">Отделка полок</p>
+      <div className="cabinet-finishes">
         {entries.map(([id, mat]) => {
           const selected = id === selectedId;
           return (
             <button
               key={id}
               onClick={() => onSelect(id)}
-              className={
-                `flex items-center gap-2 px-3 py-1.5 rounded font-medium text-xs border ` +
-                (selected
-                  ? 'bg-signal-wash border-signal text-signal'
-                  : 'border-rule text-muted hover:bg-faint/5 hover:border-rule')
-              }
+              aria-pressed={selected}
+              className="cabinet-finish"
               title={mat.note || mat.name}
             >
               <span
-                className="w-4 h-4 rounded-sm"
+                className="cabinet-swatch"
                 style={{
                   backgroundColor: mat.color,
-                  boxShadow: selected ? '0 0 0 2px var(--signal)' : '0 0 0 1px var(--rule)',
                 }}
               />
-              {mat.name}
+              {id === 'alder' ? 'Ольха' : mat.name}
             </button>
           );
         })}

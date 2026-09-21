@@ -20,7 +20,7 @@ export const CRITICAL_RULES = [
       return fromDeviceId === 'dac_fiio' && (fromPortId === 'fiio_out_rca' || fromPortId === 'fiio_out_xlr');
     },
     severity: 'info',
-    message: 'ℹ️ FiiO WARMER R2R не имеет регулировки громкости - выход всегда фиксированного уровня (1.8Vrms RCA / 3.8Vrms XLR). Убедись, что следующее устройство в цепи (например A90) имеет регулировку громкости.',
+    message: 'ℹ️ Schiit Bifrost 3: максимальный выход 2Vrms RCA / 4Vrms XLR. Громкость и EQ доступны через Forkbeard; проверь уровни на ЦАПе и усилителе.',
   },
   {
     id: 'cayin_mode_switch',
@@ -60,7 +60,7 @@ export const CRITICAL_RULES = [
       return fromDeviceId === 'dac_fiio' && toDeviceId === 'a90' && toPortId === 'a90_in_xlr';
     },
     severity: 'warning',
-    message: '⚠️ Gain Staging: WARMER R2R выдаёт 3.8Vrms по XLR - это довольно горячий уровень. На A90 рекомендуется Gain = Low при этом источнике, иначе диапазон регулировки громкости будет слишком узким сверху.',
+    message: '⚠️ Gain Staging: Bifrost 3 выдаёт до 4Vrms по XLR - это довольно горячий уровень. На A90 рекомендуется Gain = Low при этом источнике, иначе диапазон регулировки громкости будет слишком узким сверху.',
   },
   {
     id: 'wiim_single_output',
@@ -76,7 +76,7 @@ export const CRITICAL_RULES = [
       return fromDeviceId === 'macbook' && fromPortId === 'mb_optical';
     },
     severity: 'info',
-    message: 'ℹ️ MacBook подключён по Optical в FiiO WARMER R2R (пресет по умолчанию). Хочешь Coaxial — удали этот кабель (кнопка "Удалить" в патч-листе) и вручную соедини порт "Coaxial Out" на MacBook с "Coaxial In" на FiiO кликом.',
+    message: 'ℹ️ MacBook подключён по Optical в Schiit Bifrost 3 (пресет по умолчанию). Хочешь Coaxial — удали этот кабель (кнопка "Удалить" в патч-листе) и вручную соедини порт "Coaxial Out" на MacBook с "Coaxial In" на Bifrost кликом.',
   },
   {
     id: 'macbook_coaxial_selected',

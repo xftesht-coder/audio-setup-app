@@ -11,8 +11,8 @@
 // панели, где обычно сосредоточены разъёмы), а не выдуманная точность.
 // ============================================================
 
-import { DEVICE_SPECS } from './devicePorts';
-import { EQUIPMENT_PHYSICAL } from './cabinetSpecs';
+import { DEVICE_SPECS } from './devicePorts.js';
+import { EQUIPMENT_PHYSICAL } from './cabinetSpecs.js';
 
 const MM_TO_M = 0.001;
 

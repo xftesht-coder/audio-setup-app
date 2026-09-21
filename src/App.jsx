@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRoutingStore } from './store/routingStore';
 import Sidebar from './components/Sidebar';
 import RackView from './components/RackView';
@@ -6,17 +6,27 @@ import CableTable from './components/CableTable';
 import ValidationPanel from './components/ValidationPanel';
 import DeviceDetailPanel from './components/DeviceDetailPanel';
 import CabinetPanel from './components/CabinetPanel';
+import PowerDistribution from './components/PowerDistribution';
 
 export default function App() {
   const selectedRig = useRoutingStore((s) => s.selectedRig);
   const selectedMode = useRoutingStore((s) => s.selectedMode);
   const selectedDevice = useRoutingStore((s) => s.selectedDevice);
-  const [section, setSection] = useState('patch'); // 'patch' | 'cabinet'
+  const [section, setSectionState] = useState(() => window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
+  useEffect(() => {
+    const update = () => setSectionState(window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
+    window.addEventListener('hashchange', update);
+    return () => window.removeEventListener('hashchange', update);
+  }, []);
+  const setSection = (next) => {
+    setSectionState(next);
+    window.history.replaceState(null, '', `#${next}`);
+  };
 
   return (
     <div className="min-h-screen flex bg-paper">
-      <Sidebar section={section} setSection={setSection} />
-      <main className="flex-1 p-4">
+      {section === 'patch' && <Sidebar />}
+      <main className="flex-1 min-w-0 p-4">
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setSection('patch')}
@@ -32,6 +42,7 @@ export default function App() {
           </button>
         </div>
 
+        <PowerDistribution />
         {section === 'patch' ? (
           <div className="grid grid-cols-[1fr_340px] gap-4">
             <div className="flex flex-col gap-4">

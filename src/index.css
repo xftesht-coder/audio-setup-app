@@ -57,3 +57,149 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+.cabinet-workspace { max-width: 1600px; margin: 0 auto; color: #292c2b; }
+.cabinet-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 10px 0 22px; }
+.cabinet-eyebrow { font-size: 10px; font-weight: 650; letter-spacing: .14em; color: #74766d; text-transform: uppercase; margin: 0 0 10px; }
+.cabinet-heading h1 { font-size: 32px; letter-spacing: -.04em; font-weight: 600; margin: 0; line-height: 1.2; }
+.cabinet-heading > div > p:last-child { color: #6b706b; font-size: 13px; margin: 9px 0 0; }
+.cabinet-toolbar { display: flex; flex-wrap: wrap; gap: 7px; }
+.cabinet-toolbar button { padding: 9px 13px; border: 1px solid #cbd0c9; border-radius: 6px; font-size: 12px; background: #f9faf7; }
+.cabinet-toolbar button[aria-pressed=true] { background: #2f3d35; color: #fff; border-color: #2f3d35; }
+.cabinet-layout { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 24px; align-items: start; }
+.cabinet-main { min-width: 0; }
+.cabinet-stage { position: relative; height: min(65vh, 660px); min-height: 480px; border: 1px solid #dad8d1; border-radius: 10px; overflow: hidden; background: #e9e5df; }
+.cabinet-stage-label { position: absolute; z-index: 1; top: 21px; left: 24px; display: flex; gap: 18px; font-size: 10px; color: #79786f; pointer-events: none; }
+.cabinet-stage-label span:first-child { font-weight: 700; letter-spacing: .14em; }
+.cabinet-stage-hint { position: absolute; bottom: 17px; left: 24px; right: 24px; text-align: center; font-size: 10px; color: #77766d; pointer-events: none; }
+.cabinet-caption { display: flex; gap: 12px; justify-content: space-between; padding: 15px 2px; font-size: 12px; color: #74776f; border-bottom: 1px solid #d5dbd4; }
+.cabinet-caption b { color: #4b514b; font-weight: 600; }
+.cabinet-inspector { display: flex; flex-direction: column; gap: 19px; }
+.cabinet-info { padding-bottom: 19px; border-bottom: 1px solid #d1d8d1; }
+.cabinet-finishes { display: flex; gap: 13px; }
+.cabinet-finish { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 11px; color: #6d736b; }
+.cabinet-swatch { width: 55px; height: 34px; border-radius: 5px; display: block; border: 3px solid var(--paper); outline: 1px solid #c5cec4; }
+.cabinet-finish[aria-pressed=true] { color: #263c2f; font-weight: 700; }
+.cabinet-finish[aria-pressed=true] .cabinet-swatch { outline: 2px solid #405847; }
+.cabinet-dimensions { display: flex; gap: 7px; align-items: baseline; font-size: 21px; }
+.cabinet-dimensions b { font-weight: 550; }
+.cabinet-dimensions i, .cabinet-dimensions span { font-size: 12px; font-style: normal; color: #858b80; }
+.cabinet-note { font-size: 11px; color: #7a8076; margin: 7px 0 0; }
+.cabinet-info dl { margin: 16px 0 0; font-size: 11px; }
+.cabinet-info dl div { display: flex; justify-content: space-between; padding: 4px 0; }
+.cabinet-info dt { color: #788074; }
+.cabinet-info dd { font-weight: 600; margin: 0; }
+.cabinet-tier { display: flex; align-items: start; gap: 13px; padding: 9px 0; border-bottom: 1px solid #dfe4de; }
+.cabinet-tier:last-child { border: 0; padding-bottom: 0; }
+.cabinet-tier > span { font-size: 10px; color: #9b9d93; font-family: var(--mono); padding-top: 2px; }
+.cabinet-tier > div { display: flex; flex-direction: column; align-items: start; gap: 5px; }
+.cabinet-tier button { font-size: 12px; text-align: left; color: #484f46; }
+.cabinet-tier button:hover, .cabinet-tier button[aria-pressed=true] { color: #00595b; text-decoration: underline; }
+.cabinet-check { font-size: 11px; padding: 12px 14px; background: #e0e9df; border-radius: 6px; color: #486244; }
+.cabinet-check b { font-weight: 650; }
+.cabinet-check p { margin: 7px 0 0; line-height: 1.6; }
+.cabinet-reference { font-size: 11px; color: #73796e; padding: 13px 0; }
+.cabinet-reference summary { cursor: pointer; }
+.cabinet-reference p { line-height: 1.75; margin: 10px 0 0; max-width: 720px; }
+.cabinet-device-detail img { width: 100%; height: 115px; object-fit: contain; background: #fff; border-radius: 5px; margin-bottom: 12px; }
+.cabinet-device-detail h2 { font-size: 14px; font-weight: 600; }
+.cabinet-device-detail p { font-size: 11px; margin: 4px 0 9px; color: #747c71; }
+.cabinet-device-detail button { font-size: 11px; color: #00595b; }
+@media (max-width: 850px) {
+  .cabinet-heading { align-items: start; flex-direction: column; gap: 15px; }
+  .cabinet-layout { grid-template-columns: 1fr; }
+  .cabinet-inspector { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .cabinet-stage { min-height: 430px; }
+  .cabinet-caption { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .cabinet-heading h1 { font-size: 28px; }
+  .cabinet-inspector { grid-template-columns: 1fr; }
+  .cabinet-stage { min-height: 380px; }
+  .cabinet-stage-label { left: 15px; gap: 12px; }
+}
+
+/* Furniture workshop */
+.cad-workspace { --cad-accent: #3b5e4a; }
+.cad-layout { grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; }
+.cad-workspace .cabinet-heading h1 { font-size: 30px; }
+.cad-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.cad-button { border: 1px solid #c7cec4; border-radius: 5px; background: #fafbf7; padding: 7px 11px; font-size: 11px; color: #455244; line-height: 1.5; }
+.cad-button:hover { border-color: #648369; background: #f4f7f0; }
+.cad-button[aria-pressed=true] { background: #3b5142; border-color: #3b5142; color: #fff; }
+.cad-button:disabled { opacity: .35; cursor: default; }
+.cad-draft { font-size: 10px; background: #eee4cd; color: #7a6438; padding: 6px 9px; border-radius: 4px; }
+.cad-modes { display: flex; border-bottom: 1px solid #bac8bc; margin: 0 0 14px; gap: 22px; overflow-x: auto; }
+.cad-modes button { white-space: nowrap; padding: 13px 0 15px; display: flex; gap: 8px; align-items: center; font-size: 13px; color: #788174; border-bottom: 2px solid transparent; }
+.cad-modes button small { font-family: var(--mono); color: #9ca594; font-size: 10px; }
+.cad-modes button[aria-pressed=true] { color: #294c35; border-color: #3c654b; }
+.cad-topbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 13px; }
+.cad-stage { height: min(67vh, 750px); min-height: 490px; border-radius: 6px; }
+.cad-inspector { gap: 16px; display: flex; max-height: calc(100vh - 215px); min-height: 510px; overflow-y: auto; scrollbar-width: thin; padding: 0 8px 20px 0; }
+.cad-group { padding: 0 0 15px; border-bottom: 1px solid #d0d8ce; }
+.cad-group h2, .cad-drawing h2 { font-size: 12px; font-weight: 650; color: #3f5140; margin: 0 0 12px; }
+.cad-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cad-fields.three { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+.cad-field { min-width: 0; display: block; font-size: 10px; color: #697562; }
+.cad-field > span { display: block; margin-bottom: 5px; }
+.cad-field > div { position: relative; }
+.cad-field input { width: 100%; color: #304530; border: 1px solid #cbd4c6; background: #fbfcf9; border-radius: 4px; padding: 7px 29px 7px 8px; font-family: var(--mono); font-size: 12px; appearance: textfield; }
+.cad-field input::-webkit-inner-spin-button { display: none; }
+.cad-field small { position: absolute; right: 8px; top: 8px; font-size: 10px; color: #8e9885; pointer-events: none; }
+.cad-field input:focus, .cad-select select:focus { outline: 2px solid #87a690; outline-offset: 1px; }
+.cad-help { font-size: 10px; color: #7a8373; line-height: 1.7; margin: 10px 0 0; }
+.cad-part-list { display: grid; gap: 5px; margin-bottom: 10px; }
+.cad-part-list button { display: flex; flex-direction: column; align-items: start; text-align: left; padding: 9px 11px; border: 1px solid #d4dccf; border-radius: 5px; background: #f6f8f3; }
+.cad-part-list button[aria-pressed=true] { border-color: #73917a; background: #e8efe3; }
+.cad-part-list b { font-size: 11px; font-weight: 600; color: #42533f; }
+.cad-part-list span { font-size: 10px; color: #89947f; margin-top: 3px; }
+.cad-hole { padding: 10px 0; border-top: 1px solid #dbe2d7; }
+.cad-hole > b, .cad-mini-title { font-size: 10px; font-weight: 600; margin: 0 0 8px; display: block; color: #77826e; }
+.cad-mini-title { margin-top: 12px; }
+.cad-text-button { font-size: 10px; color: #4f7462; margin-top: 9px; text-decoration: underline; }
+.cad-text-button.danger { color: #8a5146; }
+.cad-select { display: flex; flex-direction: column; gap: 7px; font-size: 10px; color: #6e7d63; margin-bottom: 12px; }
+.cad-select select { width: 100%; padding: 9px 5px; background: #f9fbf6; border: 1px solid #cbd4c6; border-radius: 5px; font-size: 11px; color: #3d5138; }
+.cad-view-options { display: flex; flex-wrap: wrap; gap: 17px; padding: 13px 1px; border-bottom: 1px solid #cdd6c8; }
+.cad-view-options label { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #6a7960; }
+.cad-view-options input { accent-color: #527658; }
+.cad-stats { display: flex; justify-content: space-between; gap: 15px; padding: 17px 0; flex-wrap: wrap; }
+.cad-stats small { display: block; font-size: 8px; letter-spacing: .1em; color: #919b85; margin-bottom: 6px; }
+.cad-stats b { font-family: var(--mono); font-size: 14px; font-weight: 500; color: #4d6145; }
+.cad-stats i { font-size: 10px; font-style: normal; color: #939e87; }
+.cad-dimension { white-space: nowrap; background: #edf0e7ed; border: 1px solid #c2cbbb; color: #56704a; border-radius: 3px; padding: 3px 6px; font: 9px var(--mono); pointer-events: none; user-select: none; }
+.cad-validation, .cad-route-status { border: 1px solid #c7d6bf; background: #e9efe3; border-radius: 5px; padding: 11px 13px; font-size: 11px; color: #4f7044; }
+.cad-validation summary { cursor: pointer; }
+.cad-validation p, .cad-route-status p { font-size: 10px; margin-top: 7px; line-height: 1.6; }
+.cad-validation.has-issues, .cad-route-status.is-error, .cad-alert { background: #f5e8d7; border-color: #ddc6a5; color: #936137; }
+.cad-alert { padding: 10px 13px; font-size: 12px; border-radius: 5px; margin: 10px 0; }
+.cad-device-photo { width: 100%; height: 100px; object-fit: contain; background: white; border-radius: 5px; }
+.cad-downloads { display: grid; gap: 7px; }
+.cad-downloads button { border: 1px solid #c2d0bb; border-radius: 5px; background: #f9fcf5; text-align: left; padding: 11px 12px; color: #4f6d44; font-size: 11px; }
+.cad-downloads button:hover { background: #e4eedb; }
+.cad-bom { display: grid; gap: 11px; }
+.cad-bom > div { display: flex; flex-direction: column; gap: 3px; }
+.cad-bom b { font-size: 10px; color: #586d4c; font-weight: 600; }
+.cad-bom span { font-size: 10px; color: #859479; }
+.cad-drawing { margin-top: 18px; padding: 20px; background: #fff; border: 1px solid #d0d8cb; border-radius: 6px; }
+.cad-drawing p { font-size: 10px; color: #829375; }
+@media (max-width: 1100px) { .cad-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 15px; } }
+@media (max-width: 850px) { .cad-layout { grid-template-columns: 1fr; } .cad-inspector { max-height: none; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: visible; padding-right: 0; } .cad-stage { min-height: 430px; } }
+@media (max-width: 520px) { .cad-inspector { display: flex; } .cad-modes { gap: 18px; } .cad-modes button { font-size: 11px; } .cad-stage { min-height: 380px; height: 56vh; } .cad-workspace .cabinet-heading h1 { font-size: 27px; } .cad-topbar .cad-button { padding: 6px 8px; font-size: 10px; } .cad-view-options { gap: 12px; } }
+
+.power-distribution { margin-bottom: 16px; border: 1px solid #cbc9bc; border-radius: 12px; background: #f5f3eb; color: #343f37; }
+.power-distribution summary { cursor: pointer; padding: 13px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.power-distribution summary small { display: block; font-size: 12px; color: #6f766d; margin-top: 3px; }
+.power-badge { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; white-space: nowrap; }
+.power-content { padding: 0 18px 15px; font-size: 13px; }
+.power-outlets { list-style: none; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin: 14px 0; padding: 0; }
+.power-outlets li { position: relative; min-width: 0; border: 1px solid #ccd0c7; border-radius: 9px; padding: 12px 8px; background: #e7e9e1; text-align: center; }
+.power-socket { display: block; width: 36px; height: 36px; line-height: 32px; border: 3px solid #788477; border-radius: 50%; margin: 0 auto 10px; font-size: 9px; color: #4b5c4e; }
+.power-number { position: absolute; top: 6px; left: 8px; font-size: 10px; color: #71816f; }
+.power-outlets strong, .power-outlets small { display: block; font-size: 11px; overflow-wrap: anywhere; }
+.power-outlets small { margin-top: 5px; color: #6a7468; }
+.power-outlets .power-spare { background: transparent; border-style: dashed; }
+.power-specs { font-size: 11px; color: #72796e; margin-top: 8px; }
+.power-specs a { text-decoration: underline; }
+@media (max-width: 900px) { .power-outlets { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 500px) { .power-outlets { grid-template-columns: repeat(2, minmax(0, 1fr)); } .power-badge { display: none; } }

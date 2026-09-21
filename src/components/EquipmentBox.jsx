@@ -1,8 +1,9 @@
 import React, { forwardRef, useState } from 'react';
-import { RigidBody } from '@react-three/rapier';
+import { RigidBody, CuboidCollider } from '@react-three/rapier';
 import { Html } from '@react-three/drei';
 import { EQUIPMENT_PHYSICAL } from '../data/cabinetSpecs';
 import { DEVICE_SPECS } from '../data/devicePorts';
+import EquipmentModel from './EquipmentModel';
 
 const MM_TO_M = 0.001;
 
@@ -13,10 +14,8 @@ const MM_TO_M = 0.001;
 // в заранее посчитанной точке, которая рассинхронизируется при любых
 // изменениях сцены (exploded, будущий drag-and-drop).
 //
-// Внешний вид: чистый цвет корпуса устройства (spec.color). Фото товара
-// сюда намеренно не идёт текстурой — aspect ratio реального фото
-// никогда не совпадает с гранью бокса и даёт мутную растянутую
-// картинку; живое фото — в 2D-панели деталей (DeviceDetailPanel).
+// EquipmentModel builds schematic chassis, controls and a turntable platter
+// within the catalog envelope. Product photos remain in the details panel.
 //
 // ref передаётся НАПРЯМУЮ в <RigidBody> (rapier's RigidBodyApi) — никакой
 // промежуточной useImperativeHandle-обёртки: та фиксирует bodyRef.current
@@ -37,13 +36,11 @@ const EquipmentBox = forwardRef(function EquipmentBox(
   const h = phys.dims.h * MM_TO_M;
   const d = phys.dims.d * MM_TO_M;
 
-  const heatColor = phys.heat === 'high' ? '#c1121f' : phys.heat === 'medium' ? '#e09f3e' : '#2a6b4a';
-
   return (
     <RigidBody
       ref={ref}
       position={dropPosition}
-      colliders="cuboid"
+      colliders={false}
       mass={Math.max(phys.weight, 0.1)}
       friction={2.0} // высокие резиновые опоры реально держат корпус на месте;
                      // без этого лёгкие устройства (a90 2кг) перетягиваются
@@ -51,28 +48,20 @@ const EquipmentBox = forwardRef(function EquipmentBox(
       restitution={0.02}
       linearDamping={0.6}
       angularDamping={0.95}
+      // Positions on a shelf are design constraints. Let gravity seat the box,
+      // but cable impulses must not rotate or move a configured unit sideways.
+      lockRotations
+      enabledTranslations={[false, true, false]}
       type={exploded ? 'kinematicPosition' : 'dynamic'}
       userData={{ equipmentId }}
     >
-      <group>
-        <mesh
-          castShadow
-          receiveShadow
+      <CuboidCollider args={[w / 2, h / 2, d / 2]} />
+      <group
           onClick={(e) => { e.stopPropagation(); onSelect && onSelect(equipmentId); }}
           onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
           onPointerOut={() => setHovered(false)}
         >
-          <boxGeometry args={[w, h, d]} />
-          <meshStandardMaterial
-            color={hovered || selected ? '#ffe8b0' : spec.color}
-            roughness={0.55}
-            metalness={0.2}
-          />
-        </mesh>
-        <mesh position={[-(w / 2) + 0.012, -(h / 2) + 0.012, d / 2 + 0.001]}>
-          <circleGeometry args={[0.006, 12]} />
-          <meshBasicMaterial color={heatColor} />
-        </mesh>
+        <EquipmentModel {...{ equipmentId, w, h, d }} selected={hovered || selected} />
         {(hovered || selected) && (
           <Html position={[0, h / 2 + 0.03, 0]} center>
             <div style={{

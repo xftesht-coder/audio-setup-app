@@ -18,7 +18,7 @@ const RIGS = {
   },
   '02': {
     id: '02',
-    name: 'FiiO WARMER R2R',
+    name: 'Schiit Bifrost 3',
     sourceDevices: ['dac_fiio', 'a90'],
     sourceCables: [
       { id: 'c1', from: { device: 'dac_fiio', port: 'fiio_out_xlr' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'XLR', length: 0.5 },

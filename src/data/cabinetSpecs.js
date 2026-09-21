@@ -7,6 +7,14 @@
 import { DEVICE_SPECS as DEVICE_SPECS_REF } from './devicePorts.js';
 
 export const MATERIALS = {
+  walnut: {
+    id: 'walnut', name: 'Орех', color: '#795035', roughness: 0.48, metalness: 0,
+    density: 650, note: 'Тёплый орех, матовая отделка.',
+  },
+  oak: {
+    id: 'oak', name: 'Дуб', color: '#BC9664', roughness: 0.58, metalness: 0,
+    density: 700, note: 'Светлый натуральный дуб.',
+  },
   alder: {
     id: 'alder',
     name: 'Ольха (массив/шпон)',
@@ -47,6 +55,9 @@ export const MATERIALS = {
     metalness: 0.8,
   },
 };
+
+// Only finishes suitable for shelf faces belong in the furniture selector.
+export const CABINET_FINISHES = Object.fromEntries(['walnut', 'oak', 'alder'].map(id => [id, MATERIALS[id]]));
 
 export const FASTENER_SPECS = {
   screw_4x50: {
@@ -103,13 +114,11 @@ export const EQUIPMENT_PHYSICAL = {
     source: 'ревью-замеры (офиц. страница отдаёт 404 на вес — см. открытые вопросы)',
   },
   dac_fiio: {
-    dims: { w: 223.5, h: 66.8, d: 213 }, // с ножками
-    weight: 2.87,
-    heat: 'high', // 4×JJ E88CC лампы, вент. сверху и с боков
-    ventTop: true,
-    ventSides: true,
-    photo: '/photos/dac_fiio.jpg',
-    source: 'fiio.com/WARMERR2R_parameters',
+    dims: { w: 228.6, h: 50.8, d: 152.4 },
+    weight: 2.72,
+    heat: 'medium',
+    photo: 'https://www.schiit.com/public/upload/images/bifrost%203%20front%20silver%201920.jpg',
+    source: 'schiit.com/products/bifrost-3 (9×6×2 inches, 6 lb, 15 W)',
   },
   streamer_wiim: {
     dims: { w: 140, h: 42, d: 140 },
@@ -156,49 +165,52 @@ export const ROBOT_VACUUM_CLEARANCE = {
 };
 
 // ============================================================
-// КОМПОНОВКА MAIN RACK (бриф §4, v2)
-// Внутренняя ширина 500мм, глубина полки 420мм.
-// Каждый ярус: shelfThickness (CLD 40мм) + высота техники + зазор вентиляции.
-// x-позиции — центр устройства от левого края внутренней ширины (500мм).
+// Open four-post rack, inspired by wood/metal Hi-Fi furniture.
+// Bottom-to-top order: heavy amplifier, DAC/headphone amp, phono/streamer,
+// turntable on an open top deck. Dimensions below describe this design concept.
 // ============================================================
 export const MAIN_RACK = {
   id: 'main_rack',
   name: 'Основная стойка',
-  innerWidth: 500,
-  shelfDepth: 420,
+  innerWidth: 600,
+  shelfWidth: 680,
+  shelfDepth: 450,
+  postRadius: 18,
+  postInset: 38,
   legHeight: 140,
-  plinthHeight: 40,
-  shelfThickness: 40,
+  plinthHeight: 0,
+  shelfThickness: 32,
   tiers: [
     {
-      id: 'tier_turntable',
-      label: 'Ярус 1 — Винил (открытый верх)',
-      clearanceAbove: 350, // крышка вертушки
-      items: [{ equipmentId: 'turntable', x: 250 }], // по центру
-    },
-    {
-      id: 'tier_phono_wiim',
-      label: 'Ярус 2 — Фонокорректор + Стример',
-      clearanceAbove: 40,
-      items: [
-        { equipmentId: 'phono', x: 130 },
-        { equipmentId: 'streamer_wiim', x: 380 },
-      ],
+      id: 'tier_arcam',
+      label: 'Ярус 1 — Интегральный усилитель',
+      clearanceAbove: 110,
+      items: [{ equipmentId: 'arcam', x: 300 }],
     },
     {
       id: 'tier_fiio_a90',
-      label: 'Ярус 3 — DAC (лампы) + Усилитель для наушников',
-      clearanceAbove: 150, // heat=high (лампы)
+      label: 'Ярус 2 — DAC + усилитель для наушников',
+      clearanceAbove: 150,
       items: [
-        { equipmentId: 'dac_fiio', x: 125 },
-        { equipmentId: 'a90', x: 375 },
+        { equipmentId: 'dac_fiio', x: 165 },
+        { equipmentId: 'a90', x: 435 },
       ],
     },
     {
-      id: 'tier_arcam',
-      label: 'Ярус 4 — Интегральный усилитель',
-      clearanceAbove: 150,
-      items: [{ equipmentId: 'arcam', x: 250 }],
+      id: 'tier_phono_wiim',
+      label: 'Ярус 3 — Фонокорректор + стример',
+      clearanceAbove: 100,
+      items: [
+        { equipmentId: 'phono', x: 165 },
+        { equipmentId: 'streamer_wiim', x: 435 },
+      ],
+    },
+    {
+      id: 'tier_turntable',
+      label: 'Верхняя полка — Проигрыватель',
+      openTop: true,
+      clearanceAbove: 350,
+      items: [{ equipmentId: 'turntable', x: 300 }],
     },
   ],
 };
@@ -255,14 +267,15 @@ export function validateCablePorts() {
 // ============================================================
 export function validateRackConstraints() {
   const issues = [];
-  MAIN_RACK.tiers.forEach((tier) => {
+  MAIN_RACK.tiers.forEach((tier, index) => {
+    const hasShelfAbove = index < MAIN_RACK.tiers.length - 1;
     tier.items.forEach(({ equipmentId, x }) => {
       const eq = EQUIPMENT_PHYSICAL[equipmentId];
       if (!eq) return;
       const requiredClearance =
         eq.heat === 'high' ? CLEARANCE_RULES.heatHigh :
         eq.heat === 'medium' ? CLEARANCE_RULES.heatMedium : 0;
-      if (tier.clearanceAbove < requiredClearance) {
+      if (hasShelfAbove && tier.clearanceAbove < requiredClearance) {
         issues.push({
           severity: 'critical',
           tier: tier.id,
@@ -270,7 +283,7 @@ export function validateRackConstraints() {
           message: `${equipmentId}: зазор сверху ${tier.clearanceAbove}мм меньше требуемого ${requiredClearance}мм (heat=${eq.heat}).`,
         });
       }
-      if (eq.openTop && tier.clearanceAbove < CLEARANCE_RULES.turntableOpenTop) {
+      if (hasShelfAbove && eq.openTop && tier.clearanceAbove < CLEARANCE_RULES.turntableOpenTop) {
         issues.push({
           severity: 'warning',
           tier: tier.id,
@@ -309,8 +322,8 @@ export function validateRackConstraints() {
 // BOM: доски, крепёж (упрощённый расчёт по геометрии MAIN_RACK)
 // ============================================================
 export function computeBOM() {
-  const shelvesCount = MAIN_RACK.tiers.length + 1; // + цоколь
-  const shelfArea = (MAIN_RACK.innerWidth / 1000) * (MAIN_RACK.shelfDepth / 1000); // м2
+  const shelvesCount = MAIN_RACK.tiers.length;
+  const shelfArea = (MAIN_RACK.shelfWidth / 1000) * (MAIN_RACK.shelfDepth / 1000); // м2
   const totalShelfArea = shelfArea * shelvesCount;
   const screwsPerShelf = Math.ceil((MAIN_RACK.innerWidth / 150)) * 2 + 4; // шаг 150мм, 2 стороны + углы
   const totalScrews = screwsPerShelf * shelvesCount;
@@ -328,6 +341,7 @@ export function computeBOM() {
       heightMm: MAIN_RACK.legHeight,
       type: MATERIALS.steel_leg.name,
     },
+    frame: { posts: 4, diameterMm: MAIN_RACK.postRadius * 2, shelfMounts: shelvesCount * 4 },
     fasteners: {
       screws_4x50: totalScrews,
       pocket_holes: shelvesCount * 4,

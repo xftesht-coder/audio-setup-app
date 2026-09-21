@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 
 /**
@@ -18,8 +18,11 @@ import { useFrame } from '@react-three/fiber';
 export default function ShelfValidator({ bodyRefs, expectedYByUnit }) {
   const frame = useRef(0);
   const history = useRef({}); // id -> [last Y samples]
+  const lastResult = useRef(null);
   const STABLE_WINDOW = 8;
   const STABLE_BAND = 0.003; // допустимая полоса микроколебаний, м
+
+  useEffect(() => () => { delete window.__shelfValidation; }, []);
 
   useFrame(() => {
     frame.current += 1;
@@ -57,7 +60,12 @@ export default function ShelfValidator({ bodyRefs, expectedYByUnit }) {
       };
     });
 
-    const allOnShelf = Object.values(report).every(r => r.status === 'on_shelf');
+    const allOnShelf = Object.keys(report).length === Object.keys(expectedYByUnit).length
+      && Object.values(report).every(r => r.status === 'on_shelf');
+    if (import.meta.env.DEV && lastResult.current !== allOnShelf) {
+      console.debug('[Cabinet] shelf support', JSON.stringify({ allOnShelf, units: report }));
+      lastResult.current = allOnShelf;
+    }
     if (typeof window !== 'undefined') {
       window.__shelfValidation = {
         checkedAt: now,
