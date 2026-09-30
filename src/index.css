@@ -187,6 +187,39 @@ a:hover {
 @media (max-width: 850px) { .cad-layout { grid-template-columns: 1fr; } .cad-inspector { max-height: none; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: visible; padding-right: 0; } .cad-stage { min-height: 430px; } }
 @media (max-width: 520px) { .cad-inspector { display: flex; } .cad-modes { gap: 18px; } .cad-modes button { font-size: 11px; } .cad-stage { min-height: 380px; height: 56vh; } .cad-workspace .cabinet-heading h1 { font-size: 27px; } .cad-topbar .cad-button { padding: 6px 8px; font-size: 10px; } .cad-view-options { gap: 12px; } }
 
+.share-page { max-width: 1500px; margin: 0 auto; padding: clamp(18px, 4vw, 48px); color: #292c2b; }
+.share-heading { margin-bottom: 26px; }
+.share-heading h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.1; letter-spacing: -.04em; font-weight: 600; }
+.share-heading > p:last-child { margin: 10px 0 0; color: #6b706b; font-size: 14px; }
+.share-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .8fr); gap: 22px; align-items: start; }
+.share-visual { min-width: 0; }
+.share-visual .cad-stage { height: min(72vh, 760px); min-height: 480px; }
+.share-footnote { padding: 10px 2px; color: #73796e; font-size: 11px; }
+.share-details { display: flex; flex-direction: column; gap: 12px; }
+.share-card { padding: 18px 20px; border: 1px solid #e0e1da; border-radius: 10px; background: #fbfaf7; }
+.share-eyebrow { margin: 0 0 10px; color: #767c72; font-size: 9px; letter-spacing: .14em; font-weight: 700; }
+.share-flow { margin: 0; color: #323a34; font-size: 13px; line-height: 1.75; }
+.share-flow span { padding: 0 3px; color: #67806d; font-weight: 700; }
+.share-flow i { color: #767c72; font-style: normal; }
+.share-gear ul { list-style: none; padding: 0; margin: 0; }
+.share-gear li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid #e8e8e1; font-size: 11px; }
+.share-gear li:first-child { border-top: 0; }
+.share-gear li b { font-weight: 600; }
+.share-gear li span { color: #73796e; text-align: right; }
+.share-power { display: flex; align-items: center; gap: 13px; padding: 15px 18px; border-radius: 10px; background: #e8eee7; color: #3b5340; }
+.share-power > span { font-size: 23px; }
+.share-power div { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.share-power small { color: #657363; font-size: 11px; }
+.share-note { margin: 0; padding: 12px 14px; border-left: 3px solid #c49c58; background: #f4eee3; color: #665a46; font-size: 11px; line-height: 1.6; }
+@media (max-width: 760px) {
+  .share-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .share-page { padding: 16px; }
+  .share-heading { margin-bottom: 18px; }
+  .share-visual .cad-stage { height: 58vh; min-height: 390px; }
+  .share-details { gap: 10px; }
+  .share-card { padding: 15px 16px; }
+}
+
 .power-distribution { margin-bottom: 16px; border: 1px solid #cbc9bc; border-radius: 12px; background: #f5f3eb; color: #343f37; }
 .power-distribution summary { cursor: pointer; padding: 13px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .power-distribution summary small { display: block; font-size: 12px; color: #6f766d; margin-top: 3px; }

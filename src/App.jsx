@@ -7,17 +7,20 @@ import ValidationPanel from './components/ValidationPanel';
 import DeviceDetailPanel from './components/DeviceDetailPanel';
 import CabinetPanel from './components/CabinetPanel';
 import PowerDistribution from './components/PowerDistribution';
+import ShareView from './components/ShareView';
 
 export default function App() {
   const selectedRig = useRoutingStore((s) => s.selectedRig);
   const selectedMode = useRoutingStore((s) => s.selectedMode);
   const selectedDevice = useRoutingStore((s) => s.selectedDevice);
   const [section, setSectionState] = useState(() => window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
+  const isShareView = new URLSearchParams(window.location.search).get('view') === 'share';
   useEffect(() => {
     const update = () => setSectionState(window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
   }, []);
+  if (isShareView) return <ShareView />;
   const setSection = (next) => {
     setSectionState(next);
     window.history.replaceState(null, '', `#${next}`);
