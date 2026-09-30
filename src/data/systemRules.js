@@ -5,112 +5,56 @@
 // Критичные правила - специфичные комбинации устройств, которые опасны или неверны
 export const CRITICAL_RULES = [
   {
-    id: 'phono_line_level',
-    check: (fromDeviceId, fromPortId, toDeviceId, _toPortId) => {
-      return toDeviceId === 'arcam' && _toPortId === 'arcam_phono' &&
-        fromDeviceId !== 'turntable';
-    },
+    id: 'turntable_needs_phono',
+    check: (fromDeviceId, _fromPortId, toDeviceId, toPortId) => fromDeviceId === 'turntable' && toDeviceId === 'rusich_a2' && ['rusich_rca1', 'rusich_rca2', 'rusich_xlr1', 'rusich_xlr2'].includes(toPortId),
     severity: 'critical',
-    message: '🔴 ОПАСНО: Phono вход Arcam SA10 предназначен ТОЛЬКО для сырого сигнала с MM картриджа напрямую с проигрывателя! Подключение линейного уровня (преамп, DAC) даст ~40dB лишнего усиления + неправильную RIAA коррекцию → искажения и риск повреждения акустики.',
-    suggestion: 'Используй вход CD, PVR или STB для линейного сигнала.',
+    message: 'Не подключай выход картриджа проигрывателя прямо во вход усилителя мощности. Сначала сигнал должен пройти через фонокорректор Schiit Skoll F.',
+    suggestion: 'Виниловый тракт: Pro-Ject E1 → Skoll F → A90 → Rusich ALEPH PASS A2 → Acoustic Energy AE320.',
   },
   {
-    id: 'fiio_no_volume',
-    check: (fromDeviceId, fromPortId) => {
-      return fromDeviceId === 'dac_fiio' && (fromPortId === 'fiio_out_rca' || fromPortId === 'fiio_out_xlr');
-    },
+    id: 'bifrost_output_level',
+    check: fromDeviceId => fromDeviceId === 'dac_fiio',
     severity: 'info',
-    message: 'ℹ️ Schiit Bifrost 3: максимальный выход 2Vrms RCA / 4Vrms XLR. Громкость и EQ доступны через Forkbeard; проверь уровни на ЦАПе и усилителе.',
-  },
-  {
-    id: 'cayin_mode_switch',
-    check: (fromDeviceId, fromPortId) => {
-      return fromDeviceId === 'dac_cayin' && (fromPortId === 'cayin_out_35' || fromPortId === 'cayin_out_44');
-    },
-    severity: 'warning',
-    message: '⚠️ Cayin RU7: переключи режим PO (Headphone) → LO (Line-Out) в меню устройства перед использованием как источник для преампа! В режиме PO сигнал будет управляться громкостью RU7, что может конфликтовать с гейном следующего устройства.',
+    message: 'Schiit Bifrost 3: максимум 2.0 Vrms RCA и 4.0 Vrms XLR. Проверь уровень и регулятор Topping A90 перед прослушиванием.',
   },
   {
     id: 'a90_input_switch',
-    check: (fromDeviceId, fromPortId, toDeviceId, _toPortId) => {
-      return toDeviceId === 'a90' && (_toPortId === 'a90_in_rca' || _toPortId === 'a90_in_xlr');
-    },
+    check: (_fromDeviceId, _fromPortId, toDeviceId, toPortId) => toDeviceId === 'a90' && ['a90_in_rca', 'a90_in_xlr'].includes(toPortId),
     severity: 'info',
-    message: 'ℹ️ Topping A90 переключает вход (RCA/XLR) кнопкой на передней панели - используется только один источник за раз, даже если оба физически подключены.',
+    message: 'У Topping A90 вход выбирается переключателем. Выбери тот вход (RCA или XLR), к которому подключён источник.',
   },
   {
     id: 'ground_wire_needed',
-    check: (fromDeviceId, _fromPortId, toDeviceId, _toPortId) => {
-      return fromDeviceId === 'turntable' && toDeviceId === 'phono' && _fromPortId === 'tt_out';
-    },
+    check: (fromDeviceId, fromPortId, toDeviceId) => fromDeviceId === 'turntable' && fromPortId === 'tt_out' && toDeviceId === 'phono',
     severity: 'tip',
-    message: '💡 Не забудь также подключить земляной провод (Ground Wire) от проигрывателя к Ground терминалу на Schiit Skoll F для минимизации фона/гула.',
+    message: 'Подключи отдельный земляной провод проигрывателя к GND на Schiit Skoll F, чтобы снизить риск сетевого гула.',
   },
   {
     id: 'speaker_no_biwire',
-    check: (_fromDeviceId, _fromPortId, toDeviceId, _toPortId) => {
-      return toDeviceId === 'speakers';
-    },
+    check: (_fromDeviceId, _fromPortId, toDeviceId) => toDeviceId === 'speakers',
     severity: 'info',
-    message: 'ℹ️ Acoustic Energy AE320 имеет одну пару binding posts - bi-wiring/bi-amping физически невозможен на этой модели.',
+    message: 'У Acoustic Energy AE320 одна пара клемм на колонку; схема рассчитана на обычное подключение без bi-wiring.',
   },
   {
-    id: 'gain_staging_hot',
-    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => {
-      return fromDeviceId === 'dac_fiio' && toDeviceId === 'a90' && toPortId === 'a90_in_xlr';
-    },
-    severity: 'warning',
-    message: '⚠️ Gain Staging: Bifrost 3 выдаёт до 4Vrms по XLR - это довольно горячий уровень. На A90 рекомендуется Gain = Low при этом источнике, иначе диапазон регулировки громкости будет слишком узким сверху.',
-  },
-  {
-    id: 'wiim_single_output',
-    check: (fromDeviceId, _fromPortId) => {
-      return fromDeviceId === 'streamer_wiim';
-    },
+    id: 'wiim_digital_output_select',
+    check: (fromDeviceId, fromPortId, toDeviceId) => fromDeviceId === 'streamer_wiim' && ['wiim_out_optical', 'wiim_out_coax'].includes(fromPortId) && toDeviceId === 'dac_fiio',
     severity: 'info',
-    message: 'ℹ️ WiiM Pro Plus выводит звук только через ОДИН порт одновременно (RCA/Optical/Coaxial) — переключается в приложении WiiM Home. Убедись, что выбран правильный выход перед прослушиванием.',
-  },
-  {
-    id: 'macbook_optical_default',
-    check: (fromDeviceId, fromPortId) => {
-      return fromDeviceId === 'macbook' && fromPortId === 'mb_optical';
-    },
-    severity: 'info',
-    message: 'ℹ️ MacBook подключён по Optical в Schiit Bifrost 3 (пресет по умолчанию). Хочешь Coaxial — удали этот кабель (кнопка "Удалить" в патч-листе) и вручную соедини порт "Coaxial Out" на MacBook с "Coaxial In" на Bifrost кликом.',
-  },
-  {
-    id: 'macbook_coaxial_selected',
-    check: (fromDeviceId, fromPortId) => {
-      return fromDeviceId === 'macbook' && fromPortId === 'mb_coaxial';
-    },
-    severity: 'info',
-    message: 'ℹ️ MacBook подключён по Coaxial (обычно чуть выше качеством передачи, чем Optical, но требует USB-to-S/PDIF адаптер). Убедись, что выбран правильный выход звука в System Settings → Sound на Mac.',
+    message: 'Выбери Optical или Coaxial выход в WiiM Home. В патч-панели каждому варианту соответствует свой вход Bifrost 3.',
   },
   {
     id: 'macbook_output_switch',
-    check: (fromDeviceId) => {
-      return fromDeviceId === 'macbook';
-    },
+    check: fromDeviceId => fromDeviceId === 'macbook',
     severity: 'warning',
-    message: '⚠️ macOS выводит звук только на ОДНО устройство одновременно — выбери правильный цифровой выход (Optical или Coaxial adapter) в System Settings → Sound перед прослушиванием.',
+    message: 'macOS отправляет звук только на выбранное устройство. Проверь цифровой выход в настройках звука перед прослушиванием.',
   },
 ];
 
-// Проверка всех правил для конкретного соединения
 export function checkSystemRules(fromDeviceId, fromPortId, toDeviceId, toPortId) {
   return CRITICAL_RULES
     .filter(rule => rule.check(fromDeviceId, fromPortId, toDeviceId, toPortId))
-    .map(rule => ({
-      id: rule.id,
-      severity: rule.severity,
-      message: rule.message,
-      suggestion: rule.suggestion,
-    }));
+    .map(({ id, severity, message, suggestion }) => ({ id, severity, message, suggestion }));
 }
 
-// ============================================================
-// ТИПОВЫЕ ДЛИНЫ КАБЕЛЕЙ (для калькулятора)
-// ============================================================
 export const CABLE_LENGTHS = [0.3, 0.5, 1, 1.5, 2, 3, 5, 8, 10];
 
 // Расчёт рекомендации по длине кабеля

@@ -5,7 +5,7 @@ export const POWER_STRIP = {
   source: 'https://www.brennenstuhl.com/en-DE/products/extension-leads/premium-protect-line-60.000a-extension-lead-with-surge-protection-8-way-3m-h05vv-f-3g1-5',
 };
 export const POWER_OUTLETS = [
-  { device: 'arcam', cable: 'Supra LoRad' },
+  { device: 'rusich_a2', cable: 'Supra LoRad · исполнение уточнить' },
   { device: 'dac_fiio', cable: 'Кастом · Furutech' },
   { device: 'a90', cable: 'Кастом · Furutech' },
   { device: 'phono', cable: 'Кастом · Furutech' },

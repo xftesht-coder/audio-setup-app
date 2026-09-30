@@ -59,16 +59,51 @@ export function defaultProject() {
     equipment: MAIN_RACK.tiers.flatMap(t => t.items.map(e => ({ id: e.equipmentId, shelfId: t.id, x: e.x - 300, z: 0 }))),
     cables: [
       ...RACK_CABLES.map((c, i) => ({ ...base, ...c, category: 'signal', name: `${c.type} · ${DEVICE_SPECS[c.from].name} → ${DEVICE_SPECS[c.to].name}`, depthOffset: i * 22, ...(c.type === 'GROUND' ? { diameter: 3, bendRadius: 25, massPerM: 20, connectorDiameter: 5 } : {}), ...(c.type === 'OPTICAL' ? { diameter: 5, bendRadius: 40, massPerM: 35 } : {}) })),
-      ...['arcam', 'a90', 'dac_fiio', 'phono', 'turntable', 'streamer_wiim'].map((id, i) => ({ ...base, id: `p_${id}`, from: id, to: 'service', type: i >= 4 ? 'DC' : 'AC', category: i >= 4 ? 'dc' : 'power',
-        name: id === 'arcam' ? 'Arcam · Supra LoRad' : id === 'streamer_wiim' ? 'WiiM · USB-C 5 В' : id === 'turntable' ? 'Проигрыватель · внешний БП' : `${DEVICE_SPECS[id].name} · кастом Furutech / уточнить`,
-        diameter: i >= 4 ? 4 : id === 'arcam' ? 11 : 14.3, bendRadius: i >= 4 ? 40 : 100, massPerM: i >= 4 ? 35 : 220,
+      ...['rusich_a2', 'a90', 'dac_fiio', 'phono', 'turntable', 'streamer_wiim'].map((id, i) => ({ ...base, id: `p_${id}`, from: id, to: 'service', type: i >= 4 ? 'DC' : 'AC', category: i >= 4 ? 'dc' : 'power',
+        name: id === 'rusich_a2' ? 'Rusich ALEPH PASS A2 · Supra LoRad, исполнение уточнить' : id === 'streamer_wiim' ? 'WiiM · USB-C 5 В' : id === 'turntable' ? 'Проигрыватель · внешний БП' : `${DEVICE_SPECS[id].name} · кастом Furutech / уточнить`,
+        diameter: id === 'rusich_a2' ? 11 : i >= 4 ? 4 : 14.3, bendRadius: i >= 4 ? 40 : 100, massPerM: i >= 4 ? 35 : 220,
         connectorLength: i >= 4 ? 25 : 75, connectorDiameter: i >= 4 ? 10 : 36, connectorMass: i >= 4 ? 8 : 100, available: 2500, depthOffset: i * 28,
-        note: id === 'arcam' ? 'Supra LoRad — по словам владельца. Ø11 мм относится к 2.5; вариант, масса, радиус и вилка требуют проверки.' : id === 'turntable' ? 'Внешний БП. Напряжение, полярность и габариты ещё не подтверждены.' : id === 'streamer_wiim' ? 'USB-C 5 В по WiiM. Размер кабеля и адаптера — допущение.' : 'Модель Furutech и тип питания аппарата уточнить. Ø14,3 взят как пример FP-3TS20, остальные размеры — допущения.' })),
+        note: id === 'rusich_a2' ? 'Ты указал Supra LoRad для прежнего усилителя; считаю его кабелем Rusich. Точную версию и фактический изгиб нужно подтвердить. Ø11 мм — ориентир из паспорта варианта LoRad 2.5, не замер твоего кабеля. Чертёж Rusich указывает питание 230 В AC и предохранитель 10 А, но не фактический ток.' : id === 'turntable' ? 'Внешний БП. Напряжение, полярность и габариты ещё не подтверждены.' : id === 'streamer_wiim' ? 'USB-C 5 В по WiiM. Размер кабеля и адаптера — допущение.' : 'Ты описал эти кабели как кастомные Furutech. Точные модели не заданы; Ø14,3 мм взят как пример FP-3TS20, остальные размеры — допущения.' })),
     ],
   });
 }
 
 export const sortedShelves = p => [...p.shelves].sort((a, b) => a.y - b.y);
+
+// Migrate saved v1 cabinet projects after Arcam was replaced by the Rusich
+// Class A power amplifier. Preserve user edits and raise shelves only as much
+// as needed for the new case height and the provisional ventilation clearance.
+export function migrateLegacyProject(project) {
+  if (!project || project.version !== 1) return project;
+  let changed = false;
+  const equipment = project.equipment.map(e => {
+    if (e.id !== 'arcam') return e;
+    changed = true;
+    return { ...e, id: 'rusich_a2' };
+  });
+  const cables = project.cables.map(c => {
+    const from = c.from === 'arcam' ? 'rusich_a2' : c.from;
+    const to = c.to === 'arcam' ? 'rusich_a2' : c.to;
+    const fromPort = c.fromPort === 'arcam_speaker' ? 'rusich_speakers' : c.fromPort;
+    const toPort = c.toPort === 'arcam_cd' ? 'rusich_rca1' : c.toPort;
+    const name = (c.name || '').replaceAll('Arcam SA10', 'Rusich ALEPH PASS A2').replaceAll('Arcam', 'Rusich');
+    if (from !== c.from || to !== c.to || fromPort !== c.fromPort || toPort !== c.toPort || name !== c.name || c.id === 'p_arcam') changed = true;
+    return { ...c, id: c.id === 'p_arcam' ? 'p_rusich_a2' : c.id, from, to, fromPort, toPort, name };
+  });
+  if (!changed) return project;
+  const shelves = project.shelves.map(s => ({ ...s }));
+  const ordered = [...shelves].sort((a, b) => a.y - b.y);
+  ordered.forEach((shelf, index) => {
+    const above = ordered[index + 1];
+    if (!above) return;
+    const equipmentOnShelf = equipment.filter(e => e.shelfId === shelf.id);
+    const tallest = Math.max(0, ...equipmentOnShelf.map(e => EQUIPMENT_PHYSICAL[e.id].dims.h));
+    const required = Math.max(20, ...equipmentOnShelf.map(e => EQUIPMENT_PHYSICAL[e.id].heat === 'high' ? 150 : EQUIPMENT_PHYSICAL[e.id].heat === 'medium' ? 100 : 20));
+    const delta = Math.max(0, required - (above.y - shelf.y - shelf.thickness - tallest));
+    for (const upper of ordered.slice(index + 1)) upper.y += delta;
+  });
+  return { ...project, shelves, equipment, cables };
+}
 export const postCenters = p => [-1, 1].flatMap(a => [-1, 1].map(b => [a * (p.width / 2 - p.postInsetX), b * (p.depth / 2 - p.postInsetZ)]));
 export const shelfHoles = (p, s) => [...postCenters(p).map(([x, z], i) => ({ id: `M16-${i + 1}`, x: x - s.x, z: z - s.z, diameter: HARDWARE.clearance, automatic: true })), ...s.holes];
 export function equipmentBoxes(p) {
@@ -108,6 +143,9 @@ export function validateConstruction(p) {
   }
   for (const e of eqs) {
     const s = p.shelves.find(s => s.id === e.shelfId);
+    const physical = EQUIPMENT_PHYSICAL[e.id];
+    if (physical.depthIsPlaceholder) add(`${e.id}: глубина корпуса пока условная; измерь усилитель и уточни кабельный вылет до выпуска стойки в производство.`, 'warning');
+    if (physical.weight == null) add(`${e.id}: масса неизвестна; учесть её до расчёта нагрузки на полки, опоры и пол.`, 'warning');
     if (Math.abs(e.x) + e.w / 2 > s.width / 2 || Math.abs(e.z) + e.d / 2 > s.depth / 2) add(`${e.id}: корпус выступает за свою полку.`);
     const next = shelves.find(s => s.y > e.center[1] - e.h / 2 + 0.1);
     const required = EQUIPMENT_PHYSICAL[e.id].openTop ? 350 : EQUIPMENT_PHYSICAL[e.id].heat === 'high' ? 150 : EQUIPMENT_PHYSICAL[e.id].heat === 'medium' ? 100 : 20;

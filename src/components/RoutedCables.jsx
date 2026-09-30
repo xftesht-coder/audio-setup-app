@@ -31,7 +31,7 @@ export default function RoutedCables({ project, routes, selection, select, detai
     {routes.map(r => <group key={`support-${r.cable.id}`}>
       {r.supports.map((point, i) => <group key={i}>
         <mesh position={point.map(v => v / 1000)}><sphereGeometry args={[r.cable.diameter / 2000 + 0.003, 10, 6]} /><meshStandardMaterial color="#b2a98e" metalness={0.2} roughness={0.65} /></mesh>
-        {(selection?.id === r.cable.id || (detail && !selection && r.cable.id === 'p_arcam')) && <>
+        {(selection?.id === r.cable.id || (detail && !selection && r.cable.id === 'p_rusich_a2')) && <>
           <Line points={[[-frameX / 1000, point[1] / 1000, frameZ / 1000], [frameX / 1000, point[1] / 1000, frameZ / 1000]]} color="#6f7975" lineWidth={2} />
           <Line points={[point.map(v => v / 1000), [point[0] / 1000, point[1] / 1000, frameZ / 1000]]} color="#8c9388" lineWidth={1} />
         </>}

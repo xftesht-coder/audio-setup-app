@@ -5,7 +5,7 @@ import { useCabinetStore } from '../stores/useCabinetStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
 import { CABINET_FINISHES, EQUIPMENT_PHYSICAL } from '../data/cabinetSpecs';
 import { DEVICE_SPECS } from '../data/devicePorts';
-import { ENGINEERING_SOURCES, manufacturingBOM, sortedShelves, shelfHoles, validateConstruction } from '../data/workshop';
+import { ENGINEERING_SOURCES, manufacturingBOM, migrateLegacyProject, sortedShelves, shelfHoles, validateConstruction } from '../data/workshop';
 import { routeAllCables } from '../data/cableRouting';
 import { bomCSV, drillingCSV, panelSVG, projectDXF, reviewHTML, REVIEW_NOTES, downloadText } from '../data/workshopExport';
 
@@ -70,7 +70,7 @@ export default function CabinetPanel() {
   const issues = useMemo(() => [...validateConstruction(p), ...routes.flatMap(r => r.issues.map(message => ({ severity: 'error', message: `${r.cable.name}: ${message}` })))], [p, routes]);
   const shelf = p.shelves.find(s => selection?.type === 'shelf' && s.id === selection.id) || shelves[0];
   const eq = p.equipment.find(e => selection?.type === 'equipment' && e.id === selection.id) || p.equipment[0];
-  const route = routes.find(r => selection?.type === 'cable' && r.cable.id === selection.id) || routes.find(r => r.cable.id === 'p_arcam') || routes[0];
+  const route = routes.find(r => selection?.type === 'cable' && r.cable.id === selection.id) || routes.find(r => r.cable.id === 'p_rusich_a2') || routes[0];
   const height = Math.max(...p.shelves.map(s => s.y + s.thickness));
   const routingDepth = Math.ceil(p.depth / 2 - Math.min(...routes.flatMap(r => r.points.map(pt => pt[2]))));
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function CabinetPanel() {
       <div className="cad-actions"><span className="cad-draft">Проект · на согласование</span><button className="cad-button" onClick={() => downloadText('audio-rack.json', JSON.stringify(p, null, 2), 'application/json')}>Сохранить JSON</button><button className="cad-button" onClick={() => fileRef.current.click()}>Открыть</button></div>
       <input hidden ref={fileRef} type="file" accept=".json,application/json" onChange={async e => {
         const file = e.target.files?.[0]; if (!file) return;
-        try { if (file.size > 500000) throw new Error('Файл больше 500 КБ'); const ok = state.commit(JSON.parse(await file.text())); if (!ok) throw new Error('Формат проекта не прошёл проверку'); select(null); setImportError(''); } catch (err) { setImportError(err.message); }
+        try { if (file.size > 500000) throw new Error('Файл больше 500 КБ'); const ok = state.commit(migrateLegacyProject(JSON.parse(await file.text()))); if (!ok) throw new Error('Формат проекта не прошёл проверку'); select(null); setImportError(''); } catch (err) { setImportError(err.message); }
         e.target.value = '';
       }} />
     </header>
@@ -111,7 +111,7 @@ export default function CabinetPanel() {
       </>}
       {mode === 'equipment' && <>
         <Group title="Выберите аппарат"><div className="cad-part-list">{p.equipment.map(e => <button key={e.id} aria-pressed={eq?.id === e.id} onClick={() => select({ type: 'equipment', id: e.id })}><b>{DEVICE_SPECS[e.id].name}</b><span>{p.shelves.find(s => s.id === e.shelfId).name}</span></button>)}</div></Group>
-        {eq && <Group title={DEVICE_SPECS[eq.id].name}><img className="cad-device-photo" src={EQUIPMENT_PHYSICAL[eq.id].photo} alt={DEVICE_SPECS[eq.id].name} /><p className="cad-help">{Object.values(EQUIPMENT_PHYSICAL[eq.id].dims).join(' × ')} мм · {EQUIPMENT_PHYSICAL[eq.id].weight} кг</p><label className="cad-select">Полка<select value={eq.shelfId} onChange={e => state.editEquipment(eq.id, { shelfId: e.target.value })}>{shelves.map(s => <option key={s.id} value={s.id}>{s.name} · Y {s.y}</option>)}</select></label><div className="cad-fields"><NumberField label="X на полке" value={eq.x} min={-1000} max={1000} onChange={v => state.editEquipment(eq.id, { x: v })} /><NumberField label="Z на полке" value={eq.z} min={-600} max={600} onChange={v => state.editEquipment(eq.id, { z: v })} /></div><p className="cad-help">Аппарат стоит на выбранной полке. При перемещении кабельные трассы пересчитываются.</p></Group>}
+        {eq && <Group title={DEVICE_SPECS[eq.id].name}>{EQUIPMENT_PHYSICAL[eq.id].photo && <img className="cad-device-photo" src={EQUIPMENT_PHYSICAL[eq.id].photo} alt={DEVICE_SPECS[eq.id].name} />}<p className="cad-help">{EQUIPMENT_PHYSICAL[eq.id].dims.w} × {EQUIPMENT_PHYSICAL[eq.id].dims.h} × {EQUIPMENT_PHYSICAL[eq.id].depthIsPlaceholder ? 'глубина неизвестна' : EQUIPMENT_PHYSICAL[eq.id].dims.d} мм · {EQUIPMENT_PHYSICAL[eq.id].weight == null ? 'масса неизвестна' : `${EQUIPMENT_PHYSICAL[eq.id].weight} кг`}</p>{EQUIPMENT_PHYSICAL[eq.id].geometryNote && <p className="cad-alert">{EQUIPMENT_PHYSICAL[eq.id].geometryNote}</p>}{eq.id === 'rusich_a2' && <p className="cad-help">Источник: {DEVICE_SPECS[eq.id].sourceDoc}</p>}<label className="cad-select">Полка<select value={eq.shelfId} onChange={e => state.editEquipment(eq.id, { shelfId: e.target.value })}>{shelves.map(s => <option key={s.id} value={s.id}>{s.name} · Y {s.y}</option>)}</select></label><div className="cad-fields"><NumberField label="X на полке" value={eq.x} min={-1000} max={1000} onChange={v => state.editEquipment(eq.id, { x: v })} /><NumberField label="Z на полке" value={eq.z} min={-600} max={600} onChange={v => state.editEquipment(eq.id, { z: v })} /></div><p className="cad-help">Аппарат стоит на выбранной полке. При перемещении кабельные трассы пересчитываются.</p></Group>}
       </>}
       {mode === 'cables' && <>
         <Group title="Задняя кабельная зона"><div className="cad-fields"><NumberField label="Вылет за кромку" value={p.rearGap} min={80} max={700} onChange={v => update({ rearGap: v })} /><NumberField label="Разнос зон питания" value={p.powerGap} min={60} max={400} onChange={v => update({ powerGap: v })} /></div><p className="cad-help">Чёрный — сигнал, синий — сеть, серый — низковольтное питание. Золотистые точки — держатели; линии — эскиз их опор. Внешние БП и распределитель требуют отдельной компоновки.</p></Group>

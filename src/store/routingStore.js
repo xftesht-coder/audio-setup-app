@@ -34,10 +34,20 @@ const RIGS = {
   },
   '04': {
     id: '04',
-    name: 'WiiM Pro Plus (стриминг)',
-    sourceDevices: ['streamer_wiim', 'a90'],
+    name: 'WiiM → Bifrost 3 · оптика',
+    sourceDevices: ['streamer_wiim', 'dac_fiio', 'a90'],
     sourceCables: [
-      { id: 'c1', from: { device: 'streamer_wiim', port: 'wiim_out_rca' }, to: { device: 'a90', port: 'a90_in_rca' }, connectorType: 'RCA', length: 0.5 },
+      { id: 'c1', from: { device: 'streamer_wiim', port: 'wiim_out_optical' }, to: { device: 'dac_fiio', port: 'fiio_optical' }, connectorType: 'OPTICAL', length: 0.5 },
+      { id: 'c2', from: { device: 'dac_fiio', port: 'fiio_out_xlr' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'XLR', length: 0.4 },
+    ],
+  },
+  '06': {
+    id: '06',
+    name: 'WiiM → Bifrost 3 · коаксиал',
+    sourceDevices: ['streamer_wiim', 'dac_fiio', 'a90'],
+    sourceCables: [
+      { id: 'c1', from: { device: 'streamer_wiim', port: 'wiim_out_coax' }, to: { device: 'dac_fiio', port: 'fiio_coaxial' }, connectorType: 'COAXIAL', length: 0.5 },
+      { id: 'c2', from: { device: 'dac_fiio', port: 'fiio_out_xlr' }, to: { device: 'a90', port: 'a90_in_xlr' }, connectorType: 'XLR', length: 0.4 },
     ],
   },
   '05': {
@@ -58,10 +68,10 @@ const LISTENING_MODES = {
   speakers: {
     id: 'speakers',
     name: '🔊 Колонки',
-    devices: ['arcam', 'speakers'],
+    devices: ['rusich_a2', 'speakers'],
     cables: [
-      { id: 'm1', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'arcam', port: 'arcam_cd' }, connectorType: 'RCA', length: 0.5 },
-      { id: 'm2', from: { device: 'arcam', port: 'arcam_speaker' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
+      { id: 'm1', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'rusich_a2', port: 'rusich_rca1' }, connectorType: 'RCA', length: 0.5 },
+      { id: 'm2', from: { device: 'rusich_a2', port: 'rusich_speakers' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
     ],
   },
   headphones: {
@@ -86,7 +96,7 @@ function buildConfig(rigId, modeId) {
 }
 
 export const useRoutingStore = create((set, get) => ({
-  selectedRig: '01',
+  selectedRig: '04',
   selectedMode: 'speakers', // 'speakers' | 'headphones'
   selectedView: 'front',
   selectedDevice: null,

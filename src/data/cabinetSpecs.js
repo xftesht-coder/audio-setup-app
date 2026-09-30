@@ -127,12 +127,16 @@ export const EQUIPMENT_PHYSICAL = {
     photo: '/photos/streamer_wiim.jpg',
     source: 'wiimhome.com specs',
   },
-  arcam: {
-    dims: { w: 433, h: 87, d: 310 },
-    weight: 8.4,
-    heat: 'medium',
-    photo: '/photos/arcam.jpg',
-    source: 'hifichoice.com, audioguru.com',
+  rusich_a2: {
+    // Достоверные размеры с чертежа владельца. 300 мм по глубине — только
+    // условный габарит для 3D-сцены, поскольку бокового вида на чертеже нет.
+    dims: { w: 430, h: 180, d: 300 },
+    depthIsPlaceholder: true,
+    weight: null,
+    heat: 'high',
+    photo: null,
+    source: 'Чертёж владельца: ALEPH PASS A2 Антон Р.pdf, лист 1 (430 × 180 мм; глубина и масса не указаны)',
+    geometryNote: '430 × 180 мм — по чертежу. Глубина 300 мм — временный габарит только для 3D и проверки размещения; измерить на усилителе.',
   },
   speakers: {
     dims: { w: 175, h: 1000, d: 320 },
@@ -166,7 +170,7 @@ export const ROBOT_VACUUM_CLEARANCE = {
 
 // ============================================================
 // Open four-post rack, inspired by wood/metal Hi-Fi furniture.
-// Bottom-to-top order: heavy amplifier, DAC/headphone amp, phono/streamer,
+// Bottom-to-top order: class A amplifier, DAC/headphone amp, phono/streamer,
 // turntable on an open top deck. Dimensions below describe this design concept.
 // ============================================================
 export const MAIN_RACK = {
@@ -182,10 +186,11 @@ export const MAIN_RACK = {
   shelfThickness: 32,
   tiers: [
     {
+      // Keep the historical shelf key so existing furniture projects keep their dimensions.
       id: 'tier_arcam',
-      label: 'Ярус 1 — Интегральный усилитель',
-      clearanceAbove: 110,
-      items: [{ equipmentId: 'arcam', x: 300 }],
+      label: 'Ярус 1 — Усилитель Rusich ALEPH PASS A2, класс A',
+      clearanceAbove: 150,
+      items: [{ equipmentId: 'rusich_a2', x: 300 }],
     },
     {
       id: 'tier_fiio_a90',
@@ -243,7 +248,7 @@ export const RACK_CABLES = [
   { id: 'r4', from: 'phono', fromPort: 'phono_out_rca', to: 'a90', toPort: 'a90_in_rca', type: 'RCA', length: 0.5 },
   { id: 'r2', from: 'streamer_wiim', fromPort: 'wiim_out_optical', to: 'dac_fiio', toPort: 'fiio_optical', type: 'OPTICAL', length: 0.5 },
   { id: 'r3', from: 'dac_fiio', fromPort: 'fiio_out_xlr', to: 'a90', toPort: 'a90_in_xlr', type: 'XLR', length: 0.4 },
-  { id: 'r5', from: 'a90', fromPort: 'a90_out_rca', to: 'arcam', toPort: 'arcam_cd', type: 'RCA', length: 0.5 },
+  { id: 'r5', from: 'a90', fromPort: 'a90_out_rca', to: 'rusich_a2', toPort: 'rusich_rca1', type: 'RCA', length: 0.5 },
 ];
 
 // Дефолтная проверка целостности (не выдумывать — падать явно при рассинхроне)

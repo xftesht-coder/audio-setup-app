@@ -138,6 +138,44 @@ function Electronics({ equipmentId, w, h, d, selected }) {
   );
 }
 
+function RusichA2({ w, h, d, selected }) {
+  const topMark = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = Math.max(160, Math.round(canvas.width * d / w));
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#c9c9c6'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#181a1a'; ctx.font = 'italic 700 62px Georgia'; ctx.fillText('Rusich', 36, 76);
+    ctx.font = '600 34px sans-serif'; ctx.fillText('ALEPH PASS A2', 235, 74);
+    ctx.textAlign = 'center'; ctx.font = '600 25px sans-serif'; ctx.fillText('POWER AMPLIFIER · CLASS A', canvas.width / 2, 119);
+    ctx.textAlign = 'right'; ctx.fillText('DUAL MONO', canvas.width - 28, 119);
+    const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; texture.anisotropy = 4;
+    return texture;
+  }, [w, d]);
+  useEffect(() => () => topMark.dispose(), [topMark]);
+  return <group>
+    <Feet w={w} h={h} d={d} />
+    <RoundedBox args={[w - 0.002, h - 0.006, d - 0.002]} radius={0.006} smoothness={3} position={[0, 0.002, 0]} castShadow receiveShadow>
+      <meshStandardMaterial color="#bfc1bf" metalness={0.48} roughness={0.45} emissive={selected ? '#5b4421' : '#000'} emissiveIntensity={0.18} />
+    </RoundedBox>
+    <mesh position={[0, h / 2 + 0.0007, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[w - 0.008, d - 0.008]} />
+      <meshStandardMaterial map={topMark} metalness={0.25} roughness={0.5} />
+    </mesh>
+    {/* Top indicators and power control are placed from the owner drawing. */}
+    {[-1, 1].map(side => <group key={side} position={[side * w * 0.093, h / 2 + 0.0015, d * 0.1]}>
+      <mesh><cylinderGeometry args={[0.003, 0.003, 0.002, 20]} /><meshStandardMaterial color="#262a29" /></mesh>
+      <mesh position={[0, 0.0015, 0]}><cylinderGeometry args={[0.0017, 0.0017, 0.0012, 16]} /><meshStandardMaterial color="#cb5b4d" emissive="#7d271e" emissiveIntensity={0.35} /></mesh>
+    </group>)}
+    <mesh position={[0, h / 2 + 0.0015, d * 0.1]}><cylinderGeometry args={[0.008, 0.008, 0.002, 32]} /><meshStandardMaterial color="#aaa9a5" metalness={0.55} roughness={0.35} /></mesh>
+    {/* The supplied sheet has no front elevation, so that face stays unlabelled. */}
+    <mesh position={[0, 0.002, d / 2 + 0.0003]}>
+      <planeGeometry args={[w - 0.012, h - 0.012]} />
+      <meshStandardMaterial color="#202222" roughness={0.48} metalness={0.18} />
+    </mesh>
+  </group>;
+}
+
 export default function EquipmentModel(props) {
+  if (props.equipmentId === 'rusich_a2') return <RusichA2 {...props} />;
   return props.equipmentId === 'turntable' ? <Turntable {...props} /> : <Electronics {...props} />;
 }
