@@ -8,15 +8,18 @@ import DeviceDetailPanel from './components/DeviceDetailPanel';
 import CabinetPanel from './components/CabinetPanel';
 import PowerDistribution from './components/PowerDistribution';
 import ShareView from './components/ShareView';
+import ListeningRoom from './components/ListeningRoom';
+
+const getSection = () => ({ '#cabinet': 'cabinet', '#room': 'room' }[window.location.hash] || 'patch');
 
 export default function App() {
   const selectedRig = useRoutingStore((s) => s.selectedRig);
   const selectedMode = useRoutingStore((s) => s.selectedMode);
   const selectedDevice = useRoutingStore((s) => s.selectedDevice);
-  const [section, setSectionState] = useState(() => window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
+  const [section, setSectionState] = useState(getSection);
   const isShareView = new URLSearchParams(window.location.search).get('view') === 'share';
   useEffect(() => {
-    const update = () => setSectionState(window.location.hash === '#cabinet' ? 'cabinet' : 'patch');
+    const update = () => setSectionState(getSection());
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
   }, []);
@@ -30,7 +33,8 @@ export default function App() {
     <div className="min-h-screen flex bg-paper">
       {section === 'patch' && <Sidebar />}
       <main className="flex-1 min-w-0 p-4">
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <button onClick={() => setSection('room')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'room' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Комната</button>
           <button
             onClick={() => setSection('patch')}
             className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'patch' ? 'bg-signal-wash border-signal text-signal' : 'border-rule text-muted bg-card'}`}
@@ -60,7 +64,7 @@ export default function App() {
               )}
             </div>
           </div>
-        ) : (
+        ) : section === 'room' ? <ListeningRoom /> : (
           <CabinetPanel />
         )}
       </main>

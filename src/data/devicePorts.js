@@ -1,3 +1,5 @@
+import { REL_QUAKE } from './listeningRoom';
+
 // ============================================================
 // ПОЛНАЯ БАЗА ДАННЫХ ПОРТОВ УСТРОЙСТВ
 // Составлено на основе официальной документации производителей
@@ -5,6 +7,10 @@
 
 // Типы разъёмов и их визуальные/технические свойства
 export const CONNECTOR_TYPES = {
+  SPEAKON_HIGH_LEVEL: {
+    id: 'SPEAKON_HIGH_LEVEL', name: 'Neutrik Speakon · HIGH LEVEL',
+    category: 'speaker', color: '#506f81', impedance: 'high-level 100kΩ',
+  },
   RCA: {
     id: 'RCA',
     name: 'RCA (Cinch)',
@@ -123,7 +129,25 @@ export const KNOWN_ADAPTERS = [
 // ПОЛНАЯ СПЕЦИФИКАЦИЯ УСТРОЙСТВ С РЕАЛЬНЫМИ ПОРТАМИ
 // ============================================================
 
+function relQuakeSpec(id, side) {
+  return {
+    id, name: `REL Quake ${side}`, fullName: 'REL Quake · активный сабвуфер',
+    category: 'subwoofer', manufacturer: 'REL', width: 110, height: 95,
+    color: '#bac5c6', hasBack: true,
+    ports: [
+      { id: `${id}_hi`, type: 'SPEAKON_HIGH_LEVEL', direction: 'input', label: 'HIGH LEVEL · Speakon', position: 'rear', count: 1, impedance: '100kΩ', notes: 'Штатный высокоуровневый вход. Фактическое подключение владельца пока не подтверждено.' },
+      { id: `${id}_low`, type: 'RCA', direction: 'input', label: 'LOW LEVEL / LFE · RCA', position: 'rear', count: 1, notes: 'Монофонический линейный вход; это другой тракт, чем HIGH LEVEL.' },
+    ],
+    specs: { 'Габариты Ш × В × Г': '253 × 294 × 272 мм', 'Масса': '7,4 кг', 'Динамик': '200 мм · вниз', 'Корпус': 'Закрытый', 'Питание': 'Свой фильтр на 3 розетки у стены' },
+    warnings: [REL_QUAKE.connection.note],
+    verifiedSources: [{ name: 'REL Q-Series manual · Quake · стр. 8, 23', url: REL_QUAKE.source }],
+    sourceDoc: 'Официальное руководство REL Q-Series',
+  };
+}
+
 export const DEVICE_SPECS = {
+  sub_left: relQuakeSpec('sub_left', 'L'),
+  sub_right: relQuakeSpec('sub_right', 'R'),
   // ---------------- ИСТОЧНИК: ВИНИЛ ----------------
   turntable: {
     id: 'turntable',

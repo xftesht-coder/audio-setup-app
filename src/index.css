@@ -188,6 +188,44 @@ a:hover {
 @media (max-width: 520px) { .cad-inspector { display: flex; } .cad-modes { gap: 18px; } .cad-modes button { font-size: 11px; } .cad-stage { min-height: 380px; height: 56vh; } .cad-workspace .cabinet-heading h1 { font-size: 27px; } .cad-topbar .cad-button { padding: 6px 8px; font-size: 10px; } .cad-view-options { gap: 12px; } }
 
 .share-page { max-width: 1500px; margin: 0 auto; padding: clamp(18px, 4vw, 48px); color: #292c2b; }
+.listening-room { max-width: 1600px; margin: 0 auto; }
+.room-heading { margin: 22px 0 24px; }
+.room-heading h1 { font-size: clamp(30px, 5vw, 54px); line-height: 1.06; letter-spacing: -.045em; margin: 0 0 12px; font-weight: 500; }
+.room-heading > p:last-child { color: #79776d; font-size: 14px; }
+.room-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.room-toolbar > div { display: flex; border: 1px solid #ccc8bd; border-radius: 20px; overflow: hidden; padding: 3px; gap: 3px; }
+.room-toolbar button { padding: 7px 15px; border-radius: 17px; color: #65665c; font-size: 12px; }
+.room-toolbar button[aria-pressed="true"] { color: #fff; background: #3c473e; }
+.room-toolbar button:focus-visible { outline: 2px solid #936e32; outline-offset: -2px; }
+.room-toolbar > span { margin-left: auto; font-size: 9px; color: #858679; letter-spacing: .13em; }
+.room-stage { position: relative; overflow: hidden; border-radius: 14px; background: #d6d2c8; aspect-ratio: 8 / 5; }
+.room-poster { display: block; width: 100%; height: 100%; object-fit: cover; }
+.room-canvas { position: absolute; inset: 0; }
+.room-caption { position: absolute; left: 22px; bottom: 20px; color: #fff; background: #252820ba; padding: 11px 15px; border-radius: 8px; pointer-events: none; backdrop-filter: blur(8px); }
+.room-caption b, .room-caption span { display: block; font-size: 11px; font-weight: 500; }
+.room-caption span { margin-top: 4px; color: #e4e3d8; font-size: 10px; }
+.room-loading, .room-error { display: block; white-space: nowrap; padding: 12px 16px; color: #454c41; background: #fcfaf3; border-radius: 8px; font-size: 12px; }
+.room-error { position: absolute; top: 12px; left: 12px; right: 12px; white-space: normal; }
+.room-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 22px 0; border-bottom: 1px solid #d8d7cd; }
+.room-facts h3, .room-power-grid h3 { margin: 7px 0; font-size: 16px; font-weight: 600; }
+.room-facts p { font-size: 12px; line-height: 1.7; color: #74776e; margin: 0 0 10px; }
+.room-facts a { font-size: 11px; }
+.room-power-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+.room-power-grid article { background: #e6e9df; padding: 16px 18px; border-radius: 10px; }
+.room-power-grid h3 { font-size: 13px; margin-top: 0; }
+.room-power-grid p { font-size: 12px; margin: 6px 0; }
+.room-power-grid small, .room-truth { color: #71776b; font-size: 11px; line-height: 1.65; }
+.room-truth { margin-top: 16px; }
+.listening-room-compact .room-facts { grid-template-columns: 1fr; gap: 18px; }
+.listening-room-compact .room-toolbar > span { display: none; }
+@media (max-width: 700px) {
+  .room-stage { aspect-ratio: 1 / 1; }
+  .room-poster { object-fit: contain; }
+  .room-facts, .room-power-grid { grid-template-columns: 1fr; gap: 12px; }
+  .room-caption { left: 10px; right: 10px; bottom: 10px; padding: 9px 12px; }
+  .room-toolbar > span { display: none; }
+  .room-toolbar button { padding: 7px 12px; }
+}
 .share-heading { margin-bottom: 26px; }
 .share-heading h1 { margin: 0; font-size: clamp(30px, 4vw, 48px); line-height: 1.1; letter-spacing: -.04em; font-weight: 600; }
 .share-heading > p:last-child { margin: 10px 0 0; color: #6b706b; font-size: 14px; }

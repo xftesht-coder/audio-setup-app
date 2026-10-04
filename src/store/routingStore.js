@@ -68,7 +68,7 @@ const LISTENING_MODES = {
   speakers: {
     id: 'speakers',
     name: '🔊 Колонки',
-    devices: ['rusich_a2', 'speakers'],
+    devices: ['rusich_a2', 'speakers', 'sub_left', 'sub_right'],
     cables: [
       { id: 'm1', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'rusich_a2', port: 'rusich_rca1' }, connectorType: 'RCA', length: 0.5 },
       { id: 'm2', from: { device: 'rusich_a2', port: 'rusich_speakers' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },

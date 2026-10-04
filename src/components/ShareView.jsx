@@ -1,4 +1,4 @@
-import CabinetView3D from './CabinetView3D';
+import ListeningRoom from './ListeningRoom';
 import { EQUIPMENT_PHYSICAL } from '../data/cabinetSpecs';
 import { DEVICE_SPECS } from '../data/devicePorts';
 import { POWER_STRIP } from '../data/powerDistribution';
@@ -10,12 +10,11 @@ export default function ShareView() {
     <header className="share-heading">
       <p className="cabinet-eyebrow">AUDIO SETUP · SYSTEM VIEW</p>
       <h1>Моя аудиосистема</h1>
-      <p>Стойка, компоненты и схема подключения.</p>
+      <p>Место для музыки · AE320 в чёрном лаке · два REL Quake.</p>
     </header>
     <div className="share-grid">
-      <section className="share-visual" aria-label="Трёхмерная модель стойки">
-        <CabinetView3D readOnly />
-        <div className="share-footnote">Вращайте модель мышью или пальцем; сведите пальцы либо используйте колесо, чтобы приблизить.</div>
+      <section className="share-visual" aria-label="Визуализация комнаты">
+        <ListeningRoom compact />
       </section>
       <aside className="share-details">
         <section className="share-card">

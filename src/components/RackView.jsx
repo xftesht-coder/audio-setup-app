@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRoutingStore } from '../store/routingStore';
 import { CONNECTOR_TYPES } from '../data/devicePorts';
 import { getCableStyle } from '../data/cableStyles';
+import { REL_QUAKE } from '../data/listeningRoom';
 
 const ROW_H = 22;
 const HEADER_H = 34;
@@ -281,6 +282,8 @@ export default function RackView({ rigId, modeId }) {
           })}
         </svg>
       </div>
+
+      {modeId === 'speakers' && <p className="share-note">REL Quake L + R добавлены в систему. {REL_QUAKE.connection.note} До уточнения линии к сабам не считаются проверенными соединениями.</p>}
 
       <div className="mt-3 flex flex-wrap gap-3 border-t border-rule pt-3">
         <div className="flex items-center gap-1.5">
