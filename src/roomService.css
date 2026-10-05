@@ -1,0 +1,47 @@
+.app-navigation { margin-bottom: 10px; gap: 5px; }
+.app-navigation button { padding: 6px 11px; font-size: 12px; font-weight: 600; }
+.room-heading { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 18px; margin:12px 0 14px; }
+.room-heading h1 { font-size:24px; margin:0; letter-spacing:-.03em; }
+.room-heading > p:last-child { font-size:11px; margin:0; }
+.room-toolbar { gap:7px; margin-bottom:9px; }
+.room-toolbar button { padding:6px 11px; }
+.room-workspace { min-width:0; }
+.room-workspace.is-patching { display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:12px; align-items:start; }
+.room-stage-patch { height:min(74vh,780px); min-height:460px; aspect-ratio:auto; position:sticky; top:12px; }
+.room-patch { background:#fbfcf8; border:1px solid #cbd4cb; border-radius:12px; padding:14px; font-size:11px; color:#37423c; }
+.patch-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:13px; }
+.patch-title b {font-size:17px; letter-spacing:-.025em;}
+.patch-title span {font-size:10px; color:#738173;}
+.room-patch label {display:grid; gap:5px; font-size:10px; color:#677766;}
+.room-patch select {width:100%; min-width:0; padding:9px; border:1px solid #cad4c9; border-radius:6px; font-size:12px; color:#344637; background:white;}
+.patch-message { min-height:40px; padding:9px 10px; border-radius:7px; background:#ebefe5; line-height:1.5; margin:10px 0; }
+.patch-ports {display:grid;gap:4px;}
+.patch-ports button {display:flex; justify-content:space-between; gap:6px; text-align:left; border:1px solid #d8ddd3; border-radius:6px; padding:8px 9px; background:white;}
+.patch-ports small {color:#8a9386;font-size:9px;white-space:nowrap;}
+.patch-ports button.is-compatible {border-color:#6c9e70;background:#e8f4e8;}
+.patch-ports button[aria-pressed=true],.patch-cables button[aria-pressed=true] {border-color:#aa8342;background:#fff3d7;}
+.patch-cancel {padding:8px 0; color:#8b6335;font-size:10px;}
+.patch-cables {display:grid;gap:5px; margin:14px 0 10px;}
+.patch-cables>b {font-size:11px;margin-bottom:2px;}
+.patch-cables>button {display:grid;text-align:left;border:1px solid #d9dfd3;padding:8px;border-radius:6px;gap:4px;background:#f3f5ef;font-size:10px;}
+.patch-cables>p {font-size:11px;color:#7f8b7b;}
+.patch-unplug {background:#f5ead5;border-radius:7px;padding:10px;display:grid;gap:8px;line-height:1.5;}
+.patch-unplug>span {font-size:10px;}
+.patch-unplug>div {display:flex;gap:5px;flex-wrap:wrap;}
+.patch-unplug button,.patch-history button,.patch-presets button {border:1px solid #c4cdbd;border-radius:5px;padding:6px 8px;background:#ffffffa6;font-size:10px;}
+.patch-history {display:flex;gap:4px;flex-wrap:wrap;margin:12px 0;}
+.room-patch button:disabled {opacity:.35;cursor:default;}
+.room-patch button:focus-visible,.room-patch select:focus-visible {outline:2px solid #517e61;outline-offset:2px;}
+.room-patch details {border-top:1px solid #dce0d5;padding-top:10px;font-size:10px;line-height:1.65;color:#75816f;}
+.room-patch summary {cursor:pointer;color:#52634c;}
+.room-patch details p {margin:9px 0;}
+.room-patch details a {text-decoration:underline;}
+.patch-presets {display:flex;flex-wrap:wrap;gap:5px;margin:10px 0;}
+.port-tooltip {white-space:nowrap;background:#263d30eb;color:#fff9e8;padding:6px 9px;border:1px solid #ffffff35;border-radius:5px;font-size:10px;box-shadow:0 3px 15px #0003;}
+.room-specs {border-top:1px solid #cdd5c9;margin-top:12px;padding:12px 0;font-size:12px;}
+.room-specs>summary {cursor:pointer;color:#4d634e;font-size:12px;}
+.room-specs .room-facts {padding:16px 0;}
+.room-chair-fact {padding:14px 0;border-bottom:1px solid #d8d7cd;font-size:13px;}
+.room-chair-fact p {margin:6px 0 0;font-size:11px;color:#73816e;}
+@media(max-width:850px){.room-workspace.is-patching{grid-template-columns:1fr}.room-stage-patch{position:relative;top:auto;height:55vh;min-height:320px}.room-patch{display:block}.patch-ports{grid-template-columns:1fr 1fr}.patch-message{min-height:0}.room-heading h1{font-size:21px}.room-toolbar>div{flex-wrap:wrap}.patch-title{margin-bottom:9px}}
+@media(max-width:420px){.patch-ports{grid-template-columns:1fr}.app-navigation button{font-size:10px;padding:6px 8px}.room-heading{margin-top:6px}.room-toolbar button{font-size:11px;padding:6px 9px}}

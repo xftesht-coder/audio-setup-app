@@ -52,7 +52,8 @@ export default function WalkCamera({ controller, onStatus, onPosition }) {
     const up=()=>{state.drag=null;};
     const visibility=()=>{if(document.hidden)pause();};
     const focusOut=e=>{if(e.relatedTarget!==canvas && document.pointerLockElement!==canvas){state.keys.clear();state.active=false;onStatus('ready');}};
-    controller.current={ enter, pause, step:(f,r)=>{activate();for(let i=0;i<4;i++)move(f,r,.05);}, reset:()=>{pause();camera.position.set(WALK_ROOM.start.x,WALK_ROOM.eyeHeight,WALK_ROOM.start.z);camera.lookAt(0,1.1,0);euler.setFromQuaternion(camera.quaternion);state.yaw=euler.y;state.pitch=euler.x;invalidate();report();} };
+    const goTo=(point,target)=>{pause();camera.position.set(point.x,WALK_ROOM.eyeHeight,point.z);camera.lookAt(...target);euler.setFromQuaternion(camera.quaternion);state.yaw=euler.y;state.pitch=euler.x;invalidate();report();};
+    controller.current={ enter, pause, step:(f,r)=>{activate();for(let i=0;i<4;i++)move(f,r,.05);}, reset:()=>goTo(WALK_ROOM.start,[0,1.1,0]), behind:()=>goTo(WALK_ROOM.behind,[0,.85,0]) };
     const events=[[document,'keydown',keyDown],[document,'keyup',keyUp],[document,'mousemove',mouseMove],[document,'pointerlockchange',lockChange],[document,'pointerlockerror',lockError],[document,'visibilitychange',visibility],[window,'blur',pause],[canvas,'pointerdown',down],[canvas,'pointermove',pointerMove],[canvas,'pointerup',up],[canvas,'pointercancel',up],[canvas,'lostpointercapture',up],[canvas,'blur',focusOut]];
     events.forEach(([target,name,fn])=>target.addEventListener(name,fn));invalidate();report();
     return ()=>{events.forEach(([target,name,fn])=>target.removeEventListener(name,fn));if(document.pointerLockElement===canvas)document.exitPointerLock();controller.current=null;state.keys.clear();state.active=false;canvas.removeAttribute('tabindex');canvas.removeAttribute('aria-label');};

@@ -29,7 +29,7 @@ export default function App() {
     <div className="min-h-screen flex bg-paper">
       {section === 'patch' && <PageBoundary><Suspense fallback={null}><Sidebar /></Suspense></PageBoundary>}
       <main className="flex-1 min-w-0 p-4">
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="app-navigation flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setSection('room')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'room' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Комната</button>
           <button onClick={() => setSection('system')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'system' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Система · Schiit</button>
           <button onClick={() => setSection('lighting')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'lighting' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Свет · Govee</button>
@@ -47,7 +47,7 @@ export default function App() {
           </button>
         </div>
 
-        {!['lighting', 'system'].includes(section) && <PowerDistribution />}
+        {!['lighting', 'system','room'].includes(section) && <PowerDistribution />}
         {section === 'patch' && <p className="system-legacy-note">Сохранённая схема с A90. Выбрать Freya, WARMER или другой аппарат и проверить новый тракт можно в <a href="/#system">конфигураторе системы ↗</a>.</p>}
         <PageBoundary key={section}><Suspense fallback={<p className="page-loading" role="status">Открываем раздел…</p>}>
           {section === 'patch' ? <PatchPanel /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}

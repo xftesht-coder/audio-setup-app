@@ -4,6 +4,8 @@ import { Environment, Html, Lightformer, OrbitControls, SoftShadows, useGLTF } f
 import { LISTENING_ROOM } from '../data/listeningRoom';
 import { WALK_ROOM } from '../data/roomNavigation';
 import WalkCamera from './WalkCamera';
+import RoomWiring3D from './RoomWiring3D';
+import { ROOM_DEVICE_MAP } from '../data/roomEquipment';
 
 function RoomModel({ walking, view, onReady }) {
   const { scene } = useGLTF(LISTENING_ROOM.model, '/draco/');
@@ -14,7 +16,7 @@ function RoomModel({ walking, view, onReady }) {
     copy.traverse(object => {
       if (!object.isMesh) return;
       object.visible = walking || !object.name.startsWith('Architecture_cutaway') && !object.name.startsWith('Architecture cutaway');
-      if (!walking && view === 'cables' && /^Cable[ _]access/.test(object.name)) object.visible = false;
+      if (!walking && ['cables','service'].includes(view) && /^Cable[ _]access/.test(object.name)) object.visible = false;
       const materials=Array.isArray(object.material)?object.material:[object.material];
       materials.forEach(material => {
         for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
@@ -35,24 +37,26 @@ function RoomModel({ walking, view, onReady }) {
   return <primitive object={model} dispose={null} />;
 }
 
-function Camera({ view }) {
+function Camera({ view, device, front }) {
   const controls = useRef();
   const { camera, invalidate, size } = useThree();
   useEffect(() => {
-    const target = view === 'cables' ? [0, .32, -.40] : view === 'system' ? [0, .54, 0] : [0, .48, .55];
-    const position = view === 'cables' ? [2.5, 1.65, -3.6] : view === 'system' ? [1.8, 1.5, 4.5] : [3.25, 2.45, 5.3];
+    const d=ROOM_DEVICE_MAP[device];
+    const target = view==='seat' ? [0,.36,3.79] : view==='service' ? [d.center[0],d.center[2],-d.center[1]] : view === 'cables' ? [0, .32, -.40] : view === 'system' ? [0, .64, 0] : [0, .48, .55];
+    const position = view==='seat' ? [1.25,1.1,2.0] : view==='service' ? [target[0]+(front?.07:0),target[1]+(front?.24:.055),target[2]+(front?1:-1)*Math.max(.55,d.size[0]*1.9)] : view === 'cables' ? [2.5, 1.65, -3.6] : view === 'system' ? [1.8, 1.5, 4.5] : [3.25, 2.45, 5.3];
+    if(view==='service'&&/^(pdu|side)/.test(device)){position[0]=target[0]+.15;position[1]=.9;position[2]=target[2]-.20;}
     const fit = Math.max(1, 1.5 / (size.width / size.height));
     camera.position.set(...position.map((v, i) => target[i] + (v - target[i]) * fit));
-    camera.fov=view === 'cables' ? 43 : 32;camera.updateProjectionMatrix();
+    camera.fov=['cables','service'].includes(view) ? 43 : 32;camera.updateProjectionMatrix();
     controls.current.target.set(...target);
     controls.current.update();
     invalidate();
-  }, [view, camera, invalidate, size.width, size.height]);
-  return <OrbitControls ref={controls} makeDefault enablePan={false} minDistance={1.5} maxDistance={9}
-    minPolarAngle={.2} maxPolarAngle={Math.PI / 2 - .015} minAzimuthAngle={view === 'cables' ? -Infinity : -1.3} maxAzimuthAngle={view === 'cables' ? Infinity : 1.3} />;
+  }, [view, device, front, camera, invalidate, size.width, size.height]);
+  return <OrbitControls ref={controls} makeDefault enablePan={view==='service'} minDistance={view==='service'?.18:1.5} maxDistance={9}
+    minPolarAngle={.2} maxPolarAngle={Math.PI / 2 + (view==='service'?.25:-.015)} minAzimuthAngle={['cables','service','seat'].includes(view) ? -Infinity : -1.3} maxAzimuthAngle={['cables','service','seat'].includes(view) ? Infinity : 1.3} />;
 }
 
-export default function RoomView3D({ view = 'room', walking = false, onUnavailable }) {
+export default function RoomView3D({ view = 'room', walking = false, editing=false, device='freya', front=false, onEdit, onUnavailable }) {
   const controller=useRef();
   const [status,setStatus]=useState('ready'),[ready,setReady]=useState(false),[position,setPosition]=useState(WALK_ROOM.start);
   return <div className={`room-renderer ${walking?'is-walking':''}`}><Canvas frameloop="demand" shadows dpr={[1, 1.5]} camera={{ position: [3.25, 2.45, 5.3], fov: 32, near: .03, far: 35 }}
@@ -66,7 +70,7 @@ export default function RoomView3D({ view = 'room', walking = false, onUnavailab
     <pointLight position={[-1.86,1.15,.05]} intensity={.65} color="#ffd09a" distance={2.5} decay={2} />
     <pointLight position={[1.86,1.15,.05]} intensity={.65} color="#ffd09a" distance={2.5} decay={2} />
     <directionalLight position={[2, 2.6, 4]} intensity={.3} color="#ffe9ce" />
-    {view === 'cables' && !walking && <directionalLight position={[0, 2.5, -3]} intensity={.7} />}
+    {['cables','service'].includes(view) && !walking && <directionalLight position={[0, 2.5, -3]} intensity={1.1} />}
     <Environment resolution={256}>
       <color attach="background" args={['#77786e']} />
       <Lightformer form="rect" intensity={2} scale={[.6, 3, 1]} position={[-1, 1.7, 4]} rotation={[0, Math.PI, 0]} />
@@ -76,14 +80,15 @@ export default function RoomView3D({ view = 'room', walking = false, onUnavailab
       <Lightformer form="rect" intensity={1.5} scale={[5, 4, 1]} position={[0, 4, 0]} rotation={[Math.PI / 2, 0, 0]} />
     </Environment>
     <Suspense fallback={<Html center><span className="room-loading" role="status">Загружаем комнату…</span></Html>}><RoomModel walking={walking} view={view} onReady={setReady} />
-      {walking ? <WalkCamera controller={controller} onStatus={setStatus} onPosition={setPosition} /> : <Camera view={view} />}
+      <RoomWiring3D editing={editing&&!front} device={device}/>
+      {walking ? <WalkCamera controller={controller} onStatus={setStatus} onPosition={setPosition} /> : <Camera view={view} device={device} front={front} />}
     </Suspense>
   </Canvas>
     {walking && ready && <>
       <div className="walk-status" role="status">{status==='locked'?'WASD · мышь · Esc — пауза':status==='drag'?'WASD · тяни изображение для поворота · Esc — пауза':'Прогулка по комнате'}</div>
       {status==='ready' && <div className="walk-start"><button onClick={()=>controller.current?.enter()}>Войти в комнату</button><p>WASD или стрелки · мышь — обзор<br/>Esc — освободить курсор</p></div>}
       {status==='locked' && <span className="walk-crosshair" aria-hidden="true">+</span>}
-      <div className="walk-tools"><button onClick={()=>controller.current?.reset()}>К месту слушателя</button><button onClick={()=>controller.current?.pause()}>Пауза</button></div>
+      <div className="walk-tools"><button onClick={()=>controller.current?.reset()}>К креслу</button><button onClick={()=>controller.current?.behind()}>Зайти за стойку</button><button onClick={()=>{controller.current?.pause();onEdit?.();}}>Подключить кабели</button><button onClick={()=>controller.current?.pause()}>Пауза</button></div>
       <div className="walk-pad" role="group" aria-label="Шаги по комнате"><button aria-label="Шаг вперёд" onClick={()=>controller.current?.step(1,0)}>↑</button><div><button aria-label="Шаг влево" onClick={()=>controller.current?.step(0,-1)}>←</button><button aria-label="Шаг назад" onClick={()=>controller.current?.step(-1,0)}>↓</button><button aria-label="Шаг вправо" onClick={()=>controller.current?.step(0,1)}>→</button></div></div>
       <svg className="walk-map" viewBox="-3 -1.4 6 6.6" role="img" aria-label="Положение в комнате: зелёная точка — вы"><title>План комнаты</title><rect x={WALK_ROOM.minX} y={WALK_ROOM.minZ} width={5.4} height={5.99} rx=".07" className="map-room"/>{WALK_ROOM.obstacles.map((o,i)=><rect key={i} x={o.minX} y={o.minZ} width={o.maxX-o.minX} height={o.maxZ-o.minZ} className="map-furniture"/>)}<circle cx={position.x} cy={position.z} r=".14" className="map-person"/></svg>
     </>}

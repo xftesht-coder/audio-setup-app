@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { RoundedBox } from '@react-three/drei';
 import { CanvasTexture, SRGBColorSpace } from 'three';
 import useWoodTexture from './useWoodTexture';
+import { FREYA_TUBES } from '../data/roomEquipment';
 
 function useFaceTexture(id, ratio) {
   const texture = useMemo(() => {
@@ -141,37 +142,32 @@ function Electronics({ equipmentId, w, h, d, selected }) {
 function RusichA2({ w, h, d, selected }) {
   const topMark = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = Math.max(160, Math.round(canvas.width * d / w));
+    canvas.width = 1024; canvas.height = Math.max(160, Math.round(canvas.width * h / w));
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#c9c9c6'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#181a1a'; ctx.font = 'italic 700 62px Georgia'; ctx.fillText('Rusich', 36, 76);
     ctx.font = '600 34px sans-serif'; ctx.fillText('ALEPH PASS A2', 235, 74);
-    ctx.textAlign = 'center'; ctx.font = '600 25px sans-serif'; ctx.fillText('POWER AMPLIFIER · CLASS A', canvas.width / 2, 119);
-    ctx.textAlign = 'right'; ctx.fillText('DUAL MONO', canvas.width - 28, 119);
+    ctx.textAlign = 'center'; ctx.font = '600 15px sans-serif'; ctx.fillText('POWER AMPLIFIER CLASS A', canvas.width / 2, 74);
+    ctx.textAlign = 'right'; ctx.fillText('DUAL MONO POWER', canvas.width - 28, 74);
     const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; texture.anisotropy = 4;
     return texture;
-  }, [w, d]);
+  }, [w, h]);
   useEffect(() => () => topMark.dispose(), [topMark]);
   return <group>
     <Feet w={w} h={h} d={d} />
     <RoundedBox args={[w - 0.002, h - 0.006, d - 0.002]} radius={0.006} smoothness={3} position={[0, 0.002, 0]} castShadow receiveShadow>
       <meshStandardMaterial color="#bfc1bf" metalness={0.48} roughness={0.45} emissive={selected ? '#5b4421' : '#000'} emissiveIntensity={0.18} />
     </RoundedBox>
-    <mesh position={[0, h / 2 + 0.0007, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[w - 0.008, d - 0.008]} />
+    <mesh position={[0, .002, d / 2 + .0007]}>
+      <planeGeometry args={[w - 0.008, h - 0.008]} />
       <meshStandardMaterial map={topMark} metalness={0.25} roughness={0.5} />
     </mesh>
-    {/* Top indicators and power control are placed from the owner drawing. */}
-    {[-1, 1].map(side => <group key={side} position={[side * w * 0.093, h / 2 + 0.0015, d * 0.1]}>
+    {/* Front elevation and controls from the owner's 430 x 180 mm drawing. */}
+    {[-1, 1].map(side => <group key={side} rotation={[Math.PI/2,0,0]} position={[side * w * 0.093, -h * .30, d/2+.002]}>
       <mesh><cylinderGeometry args={[0.003, 0.003, 0.002, 20]} /><meshStandardMaterial color="#262a29" /></mesh>
       <mesh position={[0, 0.0015, 0]}><cylinderGeometry args={[0.0017, 0.0017, 0.0012, 16]} /><meshStandardMaterial color="#cb5b4d" emissive="#7d271e" emissiveIntensity={0.35} /></mesh>
     </group>)}
-    <mesh position={[0, h / 2 + 0.0015, d * 0.1]}><cylinderGeometry args={[0.008, 0.008, 0.002, 32]} /><meshStandardMaterial color="#aaa9a5" metalness={0.55} roughness={0.35} /></mesh>
-    {/* The supplied sheet has no front elevation, so that face stays unlabelled. */}
-    <mesh position={[0, 0.002, d / 2 + 0.0003]}>
-      <planeGeometry args={[w - 0.012, h - 0.012]} />
-      <meshStandardMaterial color="#202222" roughness={0.48} metalness={0.18} />
-    </mesh>
+    <mesh position={[0,-h*.30,d/2+.002]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[0.008, 0.008, 0.002, 32]} /><meshStandardMaterial color="#aaa9a5" metalness={0.55} roughness={0.35} /></mesh>
   </group>;
 }
 
@@ -184,7 +180,7 @@ function CatalogEnvelope({ profile, w, h, d, selected }) {
     const c = canvas.getContext('2d'); c.fillStyle = '#c6c8c7'; c.fillRect(0, 0, 1024, 180);
     c.fillStyle = '#252c2c'; c.font = '28px sans-serif'; c.fillText(profile.name.toUpperCase(), 35, 65);
     c.font = '18px sans-serif'; c.fillText('PLANNED / ENVELOPE', 35, 140);
-    if (warmer) { c.fillStyle = '#e8c880'; c.fillRect(400, 75, 245, 85); c.fillStyle = '#353532'; c.font = '18px serif'; c.fillText('VU', 505, 120); c.beginPath(); c.moveTo(530, 145); c.lineTo(480, 92); c.stroke(); }
+    if (warmer) { c.fillStyle = '#c6c8c7'; c.fillRect(0,0,1024,180); c.fillStyle = '#e8c880'; c.fillRect(135, 25, 680, 112); c.fillStyle = '#353532'; c.font = '18px serif'; for(const x of [320,640]){c.fillText('−20   −10    0   +3',x-75,65);c.fillText('VU',x-10,107);c.beginPath();c.moveTo(x,120);c.lineTo(x-50,60);c.stroke();} c.font='20px sans-serif';c.fillText('R2R TUBE DAC',415,166); }
     const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; return texture;
   }, [profile.name, warmer]);
   useEffect(() => () => map.dispose(), [map]);
@@ -193,7 +189,7 @@ function CatalogEnvelope({ profile, w, h, d, selected }) {
     <mesh position={[0, -h / 2 + .007 + bodyH / 2, d / 2 + .0005]}><planeGeometry args={[w - .006, bodyH - .006]} /><meshStandardMaterial map={map} metalness={.35} roughness={.35} /></mesh>
     <Feet w={w} h={h} d={d} />
     {(freya || warmer) && <Knob position={[w * .37, -h / 2 + .007 + bodyH / 2, d / 2 + .004]} radius={freya ? .015 : .012} />}
-    {freya && [-.105, -.035, .035, .105].map(x => <group key={x} position={[x, -h / 2 + bodyH + (h - bodyH) / 2, -.018]}><mesh castShadow><cylinderGeometry args={[.014, .015, h - bodyH, 24]} /><meshPhysicalMaterial color="#b7c4c5" transparent opacity={.48} roughness={.12} metalness={.15} /></mesh><mesh><cylinderGeometry args={[.005, .006, (h - bodyH) * .6, 10]} /><meshStandardMaterial color="#775241" emissive="#af3b05" emissiveIntensity={.25} /></mesh></group>)}
+    {freya && FREYA_TUBES.map(([x,z]) => <group key={`${x}:${z}`} position={[x, -h / 2 + bodyH + (h - bodyH) / 2, -z]}><mesh castShadow><cylinderGeometry args={[.014, .015, h - bodyH, 24]} /><meshPhysicalMaterial color="#d7dddd" transparent opacity={.42} roughness={.09} metalness={.05} /></mesh><mesh><cylinderGeometry args={[.005, .006, (h - bodyH) * .6, 10]} /><meshStandardMaterial color="#775241" emissive="#af3b05" emissiveIntensity={.25} /></mesh></group>)}
   </group>;
 }
 

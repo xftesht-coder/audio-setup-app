@@ -4,12 +4,14 @@ export const WALK_ROOM = {
   minX: -2.7, maxX: 2.7, minZ: -1.09, maxZ: 4.9,
   radius: .20, eyeHeight: 1.63, speed: 1.25,
   start: { x: 0, z: 2.5 },
+  behind: { x: 0, z: -.76 },
   obstacles: [
-    { name: 'Стойка и кабельная зона', minX: -.41, maxX: .60, minZ: -.66, maxZ: .25 },
+    { name: 'Стойка', minX: -.40, maxX: .40, minZ: -.25, maxZ: .25 },
+    { name: 'Brennenstuhl', minX: .43, maxX: .53, minZ: -.568, maxZ: .068 },
     ...[-1.1, 1.1].map(x => ({ name: 'AE320', minX: x-.10, maxX: x+.10, minZ: -.18, maxZ: .18 })),
     ...[-1.6, 1.6].map(x => ({ name: 'REL Quake', minX: x-.127, maxX: x+.127, minZ: -.225, maxZ: .065 })),
     ...[-1.86, 1.86].map(x => ({ name: 'Торшер и фильтр', minX: x-.13, maxX: x+.13, minZ: -.43, maxZ: .18 })),
-    { name: 'Диван', minX: -1.14, maxX: 1.14, minZ: 3.67, maxZ: 4.63 },
+    { name: 'Gliver ДеФранс', minX: -.45, maxX: .45, minZ: 3.25, maxZ: 4.33 },
   ],
 };
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));

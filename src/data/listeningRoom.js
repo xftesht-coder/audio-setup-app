@@ -23,14 +23,14 @@ export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
 }));
 
 export const LISTENING_ROOM = {
-  model: '/models/listening-room.glb?v=natural-3', poster: '/images/listening-room.jpg?v=natural-3',
-  cablePoster: '/images/listening-room-cables.jpg?v=natural-3',
+  model: '/models/listening-room.glb?v=service-1', poster: '/images/listening-room.jpg?v=service-1',
+  cablePoster: '/images/listening-room-cables.jpg?v=service-1',
   cabling: {
     note: 'Свободные петли за полками, мягкие держатели у заднего края и широкие дуги тяжёлых шнуров. Напольные линии провисают между деревянными опорами, питание проходит отдельно. Укладка воссоздана по референсам; длины, жёсткость и допустимые радиусы конкретных кабелей ещё не измерены.',
     reference: 'https://ca.pinterest.com/pin/38069559342458139/',
   },
   rug: { name: 'LAXMI Quincey', widthMm: 3000, depthMm: 2000, color: 'Белый', source: 'Размер и фотографии владельца', geometry: 'Рельеф и бахрома воссозданы по фото' },
   room: { widthMm: 5400, depthMm: 6000, heightMm: 2800, status: 'concept' },
-  notes: 'Комната, окно, диван, подвесная люстра, лампы и корпуса дополнительных фильтров — проектный вариант. Конкретная модель Govee ещё не выбрана. Габарит ковра — 200 × 300 см. Детализация моделей по фото не заменяет обмеры; глубина Rusich пока условная.',
+  notes: 'Комната, окно, подвесная люстра, лампы и корпуса дополнительных фильтров — проектный вариант. Конкретная модель Govee ещё не выбрана. Габарит ковра — 200 × 300 см; кресла — по спецификации владельца. Детали панелей восстановлены по фото и чертежу; глубина Rusich и ревизия A90 пока не подтверждены.',
   speakerSource: 'https://www.acoustic-energy.co.uk/wp-content/uploads/Acoustic-Energy-AE320-Info-Sheet.pdf',
 };
