@@ -72,6 +72,7 @@ const LISTENING_MODES = {
     cables: [
       { id: 'm1', from: { device: 'a90', port: 'a90_out_rca' }, to: { device: 'rusich_a2', port: 'rusich_rca1' }, connectorType: 'RCA', length: 0.5 },
       { id: 'm2', from: { device: 'rusich_a2', port: 'rusich_speakers' }, to: { device: 'speakers', port: 'speaker_input' }, connectorType: 'SPEAKER', length: 3 },
+      ...['left', 'right'].map(side => ({ id: `m_rel_${side}`, from: { device: 'rusich_a2', port: 'rusich_speakers' }, to: { device: `sub_${side}`, port: `sub_${side}_hi` }, connectorType: 'XLR_HIGH_LEVEL', length: null, provenance: 'owner-reported', signal: 'speaker' })),
     ],
   },
   headphones: {
@@ -142,7 +143,8 @@ export const useRoutingStore = create((set, get) => ({
       from: { device: state.selectedPort.device, port: state.selectedPort.port },
       to: { device: toDevice, port: toPort },
       connectorType: compat.connectorType,
-      length: 1,
+      length: compat.ownerReported ? null : 1,
+      ...(compat.ownerReported ? { provenance: 'owner-reported', signal: 'speaker' } : {}),
     };
 
     const key = state.getComboKey(state.selectedRig, state.selectedMode);
@@ -215,7 +217,7 @@ export const useRoutingStore = create((set, get) => ({
 
     const presetCables = preset.cables
       .filter((c) => !removed.includes(c.id))
-      .map((c) => ({ ...c, length: lengthOverrides[c.id] ?? c.length }));
+      .map((c) => ({ ...c, length: Object.hasOwn(lengthOverrides, c.id) ? lengthOverrides[c.id] : c.length }));
 
     return [...presetCables, ...custom];
   },

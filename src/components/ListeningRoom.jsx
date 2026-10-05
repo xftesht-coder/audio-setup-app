@@ -21,7 +21,7 @@ export default function ListeningRoom({ compact = false }) {
     {!compact && <header className="room-heading"><p className="share-eyebrow">AUDIO SETUP · LISTENING ROOM</p><h1>Место для музыки.</h1><p>Чёрный лак, белая шерсть и тёплый свет.</p></header>}
     <div className="room-toolbar">
       <div role="group" aria-label="Режим просмотра">{[['photo', 'Фото'], ['3d', 'Открыть 3D'], ['walk', 'Прогулка · WASD']].map(([id, label]) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</div>
-      {mode === '3d' && <div role="group" aria-label="Ракурс камеры"><button aria-pressed={view === 'room'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'system'} onClick={() => setView('system')}>Система</button></div>}
+      {mode === '3d' && <div role="group" aria-label="Ракурс камеры"><button aria-pressed={view === 'room'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'system'} onClick={() => setView('system')}>Система</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели</button></div>}
       {interactive && <button className="room-fullscreen" onClick={async()=>{try{await stage.current.requestFullscreen();setFullscreenError('');}catch{setFullscreenError('Полный экран недоступен в этом браузере. Прогулка работает в окне.');}}}>На весь экран</button>}
       <span>ОБНОВЛЁННАЯ КОМНАТА</span>
     </div>
@@ -32,7 +32,7 @@ export default function ListeningRoom({ compact = false }) {
       {unavailable && interactive && <p className="room-error" role="status">3D недоступно — показываем рендер комнаты.</p>}
       {mode!=='walk' && <div className="room-caption"><b>AE320 · Piano Gloss Black</b><span>2 × REL Quake · серые корпуса · Quincey 200 × 300 см</span></div>}
     </div>
-    <p className="share-footnote">{mode==='walk'?'Нажми «Войти в комнату»: WASD / стрелки — шаг, мышь — обзор, Esc — пауза. На телефоне поворачивай пальцем и используй кнопки шагов.':mode === '3d' ? 'Вращайте мышью или пальцем. Колесо или жест двумя пальцами — приблизить.' : 'Рендер из Blender. Открой 3D или зайди в комнату в режиме прогулки.'}</p>
+    <p className="share-footnote">{mode==='walk'?'Нажми «Войти в комнату»: WASD / стрелки — шаг, мышь — обзор, Esc — пауза. На телефоне поворачивай пальцем и используй кнопки шагов.':mode === '3d' ? view === 'cables' ? 'Вид сзади: стена временно скрыта, видны опоры, запас кабеля и общие выходы Rusich. Вращайте мышью или пальцем; колесо — приблизить.' : 'Вращайте мышью или пальцем. Колесо или жест двумя пальцами — приблизить.' : 'Рендер из Blender. Открой 3D или зайди в комнату в режиме прогулки.'}</p>
     {fullscreenError && <p className="share-note" role="status">{fullscreenError}</p>}
     <div className="room-facts">
       <article><span className="share-eyebrow">АКУСТИКА</span><h3>Чёрный рояльный лак</h3><p>Acoustic Energy AE320, два корпуса. Световые отражения показывают глянец; диффузоры и подвесы остаются матовыми.</p><a href={LISTENING_ROOM.speakerSource} target="_blank" rel="noreferrer">Паспорт AE320 ↗</a></article>
@@ -41,7 +41,8 @@ export default function ListeningRoom({ compact = false }) {
     </div>
     <div className="room-power-grid">{SIDE_POWER_STRIPS.map(strip => <article key={strip.id}><h3>{strip.name} · 3 розетки</h3><p>{strip.outlets.join(' · ')}</p><small>{strip.note}</small></article>)}</div>
     <div className="room-lighting-link"><div><b>Освещение · Govee</b><p>Модели выбираем из каталога. Лампы в рендере пока показывают только места установки.</p></div><a href="/#lighting">Открыть каталог ↗</a></div>
-    <p className="share-note">{REL_QUAKE.connection.note} В схеме эти два соединения отмечены как неподтверждённые.</p>
+    <div className="room-lighting-link"><div><b>Укладка кабелей</b><p>{LISTENING_ROOM.cabling.note}</p></div><a href={LISTENING_ROOM.cabling.reference} target="_blank" rel="noreferrer">Референс Pinterest ↗</a></div>
+    <p className="share-note">{REL_QUAKE.connection.note}</p>
     <p className="room-truth">{LISTENING_ROOM.notes} В сцене восемь аппаратов, включая планируемые Freya 2, WARMER и Bifrost 3. Сцена комнаты — сохранённая визуализация; изменения стойки в редакторе не перестраивают её автоматически.</p>
   </section>;
 }

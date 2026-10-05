@@ -15,7 +15,8 @@ export default function CableTable({ rigId, modeId }) {
     return { deviceName: spec?.name, portLabel: port?.label };
   };
 
-  const totalLength = activeCables.reduce((sum, c) => sum + c.length, 0);
+  const totalLength = activeCables.reduce((sum, c) => sum + (c.length ?? 0), 0);
+  const unknownLengths = activeCables.filter(c => c.length == null).length;
 
   const exportCSV = () => {
     const style = (t) => getCableStyle(t).name;
@@ -23,7 +24,7 @@ export default function CableTable({ rigId, modeId }) {
     const rows = activeCables.map((cable) => {
       const from = getPortLabel(cable.from.device, cable.from.port);
       const to = getPortLabel(cable.to.device, cable.to.port);
-      return [style(cable.connectorType), from.deviceName, from.portLabel, to.deviceName, to.portLabel, cable.length];
+      return [style(cable.connectorType), from.deviceName, from.portLabel, to.deviceName, to.portLabel, cable.length ?? 'Не измерена'];
     });
     const csv = [header, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -40,7 +41,7 @@ export default function CableTable({ rigId, modeId }) {
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-bold text-ink">Патч-лист (Cable Schedule)</p>
         <div className="flex items-center gap-3">
-          <p className="text-xs text-muted">Всего кабеля: <b>{totalLength.toFixed(1)}м</b></p>
+          <p className="text-xs text-muted">Задано: <b>{totalLength.toFixed(1)}м</b>{unknownLengths > 0 && ` · ещё ${unknownLengths} не измерены`}</p>
           <button
             onClick={exportCSV}
             className="text-xs bg-signal-wash text-signal px-2.5 py-1 rounded font-medium hover:bg-signal/20"
@@ -94,11 +95,13 @@ export default function CableTable({ rigId, modeId }) {
                   </td>
                   <td className="py-2 pr-2">
                     <select
-                      value={cable.length}
-                      onChange={(e) => updateCableLength(rigId, modeId, cable.id, parseFloat(e.target.value))}
+                      aria-label={`Длина кабеля ${from.deviceName} → ${to.deviceName}`}
+                      value={cable.length ?? ''}
+                      onChange={(e) => updateCableLength(rigId, modeId, cable.id, e.target.value === '' ? null : parseFloat(e.target.value))}
                       className="border border-rule rounded px-1 py-0.5 text-xs bg-white"
                     >
-                      {CABLE_LENGTHS.map(len => (
+                      <option value="">Не измерена</option>
+                      {[...new Set([...CABLE_LENGTHS, ...(Number.isFinite(cable.length) ? [cable.length] : [])])].sort((a, b) => a - b).map(len => (
                         <option key={len} value={len}>{len}м</option>
                       ))}
                     </select>

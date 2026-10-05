@@ -5,13 +5,14 @@ import { LISTENING_ROOM } from '../data/listeningRoom';
 import { WALK_ROOM } from '../data/roomNavigation';
 import WalkCamera from './WalkCamera';
 
-function RoomModel({ walking, onReady }) {
+function RoomModel({ walking, view, onReady }) {
   const { scene } = useGLTF(LISTENING_ROOM.model, '/draco/');
   const model = useMemo(() => {
     const copy = scene.clone(true);
     copy.traverse(object => {
       if (!object.isMesh) return;
       object.visible = walking || !object.name.startsWith('Architecture_cutaway') && !object.name.startsWith('Architecture cutaway');
+      if (!walking && view === 'cables' && /^Cable[ _]access/.test(object.name)) object.visible = false;
       const materials=Array.isArray(object.material)?object.material:[object.material];
       // Large bevelled room shells self-shadow with seams in a finite shadow map.
       // Keep their received furniture shadows; the window key supplies interior light.
@@ -19,7 +20,7 @@ function RoomModel({ walking, onReady }) {
       object.receiveShadow = true;
     });
     return copy;
-  }, [scene, walking]);
+  }, [scene, walking, view]);
   useEffect(() => { onReady(true); }, [onReady]);
   return <primitive object={model} dispose={null} />;
 }
@@ -28,17 +29,17 @@ function Camera({ view }) {
   const controls = useRef();
   const { camera, invalidate, size } = useThree();
   useEffect(() => {
-    const target = view === 'system' ? [0, .54, 0] : [0, .48, .55];
-    const position = view === 'system' ? [1.8, 1.5, 4.5] : [3.25, 2.45, 5.3];
+    const target = view === 'cables' ? [0, .32, -.40] : view === 'system' ? [0, .54, 0] : [0, .48, .55];
+    const position = view === 'cables' ? [2.5, 1.65, -3.6] : view === 'system' ? [1.8, 1.5, 4.5] : [3.25, 2.45, 5.3];
     const fit = Math.max(1, 1.5 / (size.width / size.height));
     camera.position.set(...position.map((v, i) => target[i] + (v - target[i]) * fit));
-    camera.fov=32;camera.updateProjectionMatrix();
+    camera.fov=view === 'cables' ? 43 : 32;camera.updateProjectionMatrix();
     controls.current.target.set(...target);
     controls.current.update();
     invalidate();
   }, [view, camera, invalidate, size.width, size.height]);
   return <OrbitControls ref={controls} makeDefault enablePan={false} minDistance={1.5} maxDistance={9}
-    minPolarAngle={.2} maxPolarAngle={Math.PI / 2 - .015} minAzimuthAngle={-1.3} maxAzimuthAngle={1.3} />;
+    minPolarAngle={.2} maxPolarAngle={Math.PI / 2 - .015} minAzimuthAngle={view === 'cables' ? -Infinity : -1.3} maxAzimuthAngle={view === 'cables' ? Infinity : 1.3} />;
 }
 
 export default function RoomView3D({ view = 'room', walking = false, onUnavailable }) {
@@ -62,7 +63,7 @@ export default function RoomView3D({ view = 'room', walking = false, onUnavailab
       <Lightformer form="rect" intensity={2} scale={[1, 4, 1]} position={[3, 2, 0]} rotation={[0, -Math.PI / 2, 0]} />
       <Lightformer form="rect" intensity={1.5} scale={[5, 4, 1]} position={[0, 4, 0]} rotation={[Math.PI / 2, 0, 0]} />
     </Environment>
-    <Suspense fallback={<Html center><span className="room-loading" role="status">Загружаем комнату…</span></Html>}><RoomModel walking={walking} onReady={setReady} />
+    <Suspense fallback={<Html center><span className="room-loading" role="status">Загружаем комнату…</span></Html>}><RoomModel walking={walking} view={view} onReady={setReady} />
       {walking ? <WalkCamera controller={controller} onStatus={setStatus} onPosition={setPosition} /> : <Camera view={view} />}
     </Suspense>
   </Canvas>

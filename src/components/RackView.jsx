@@ -283,7 +283,7 @@ export default function RackView({ rigId, modeId }) {
         </svg>
       </div>
 
-      {modeId === 'speakers' && <p className="share-note">REL Quake L + R добавлены в систему. {REL_QUAKE.connection.note} До уточнения линии к сабам не считаются проверенными соединениями.</p>}
+      {modeId === 'speakers' && <p className="share-note">{REL_QUAKE.connection.note}</p>}
 
       <div className="mt-3 flex flex-wrap gap-3 border-t border-rule pt-3">
         <div className="flex items-center gap-1.5">

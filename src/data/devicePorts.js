@@ -7,6 +7,10 @@ import { REL_QUAKE } from './listeningRoom.js';
 
 // Типы разъёмов и их визуальные/технические свойства
 export const CONNECTOR_TYPES = {
+  XLR_HIGH_LEVEL: {
+    id: 'XLR_HIGH_LEVEL', name: 'XLR · HIGH LEVEL владельца',
+    category: 'speaker', color: '#506f81', impedance: 'Распайка и параметры неизвестны',
+  },
   SPEAKON_HIGH_LEVEL: {
     id: 'SPEAKON_HIGH_LEVEL', name: 'Neutrik Speakon · HIGH LEVEL',
     category: 'speaker', color: '#506f81', impedance: 'high-level 100kΩ',
@@ -135,10 +139,10 @@ function relQuakeSpec(id, side) {
     category: 'subwoofer', manufacturer: 'REL', width: 110, height: 95,
     color: '#bac5c6', hasBack: true,
     ports: [
-      { id: `${id}_hi`, type: 'SPEAKON_HIGH_LEVEL', direction: 'input', label: 'HIGH LEVEL · Speakon', position: 'rear', count: 1, impedance: '100kΩ', notes: 'Штатный высокоуровневый вход. Фактическое подключение владельца пока не подтверждено.' },
+      { id: `${id}_hi`, type: 'XLR_HIGH_LEVEL', direction: 'input', label: 'HIGH LEVEL · XLR владельца', position: 'rear', count: 1, notes: REL_QUAKE.connection.note },
       { id: `${id}_low`, type: 'RCA', direction: 'input', label: 'LOW LEVEL / LFE · RCA', position: 'rear', count: 1, notes: 'Монофонический линейный вход; это другой тракт, чем HIGH LEVEL.' },
     ],
-    specs: { 'Габариты Ш × В × Г': '253 × 294 × 272 мм', 'Масса': '7,4 кг', 'Динамик': '200 мм · вниз', 'Корпус': 'Закрытый', 'Питание': 'Свой фильтр на 3 розетки у стены' },
+    specs: { 'Габариты Ш × В × Г': '253 × 294 × 272 мм', 'Масса': '7,4 кг', 'Динамик': '200 мм · вниз', 'Корпус': 'Закрытый', 'Питание': 'Свой фильтр на 3 розетки у стены', 'Штатный HIGH LEVEL': REL_QUAKE.highLevelConnector, 'Установленный разъём': 'XLR · со слов владельца; распайка неизвестна' },
     warnings: [REL_QUAKE.connection.note],
     verifiedSources: [{ name: 'REL Q-Series manual · Quake · стр. 8, 23', url: REL_QUAKE.source }],
     sourceDoc: 'Официальное руководство REL Q-Series',
@@ -710,6 +714,16 @@ export function checkCompatibility(portA, portB) {
       compatible: false,
       reason: `Оба порта имеют направление "${portA.direction}" - нужен один output и один input.`,
     };
+  }
+  // A connector shell does not convert a power-amplifier signal to line level.
+  // Only the owner's explicit Rusich-to-REL routes are recorded as exceptions.
+  if (portA.type === 'XLR_HIGH_LEVEL' || portB.type === 'XLR_HIGH_LEVEL') {
+    const output = portA.direction === 'output' ? portA : portB;
+    const input = portA.direction === 'input' ? portA : portB;
+    if (output.id === 'rusich_speakers' && ['sub_left_hi', 'sub_right_hi'].includes(input.id) && output.type === 'SPEAKER') {
+      return { compatible: true, connectorType: 'XLR_HIGH_LEVEL', ownerReported: true, electricallyVerified: false };
+    }
+    return { compatible: false, reason: 'Вход XLR HIGH LEVEL принимает акустический сигнал по схеме владельца. Линейный XLR к нему не подключается; для другого усилителя нужны данные о распайке и выходе.' };
   }
   if (portA.type === portB.type) {
     return { compatible: true, connectorType: portA.type };

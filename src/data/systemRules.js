@@ -5,6 +5,12 @@
 // Критичные правила - специфичные комбинации устройств, которые опасны или неверны
 export const CRITICAL_RULES = [
   {
+    id: 'owner_rel_high_level',
+    check: (fromDeviceId, fromPortId, toDeviceId, toPortId) => fromDeviceId === 'rusich_a2' && fromPortId === 'rusich_speakers' && ['sub_left', 'sub_right'].includes(toDeviceId) && toPortId === `${toDeviceId}_hi`,
+    severity: 'info',
+    message: 'HIGH LEVEL от общих с AE320 выходов Rusich → XLR на REL: соединение указано владельцем. Распайка XLR и электрические параметры не проверены; это не линейный XLR.',
+  },
+  {
     id: 'turntable_needs_phono',
     check: (fromDeviceId, _fromPortId, toDeviceId, toPortId) => fromDeviceId === 'turntable' && toDeviceId === 'rusich_a2' && ['rusich_rca1', 'rusich_rca2', 'rusich_xlr1', 'rusich_xlr2'].includes(toPortId),
     severity: 'critical',
@@ -59,6 +65,7 @@ export const CABLE_LENGTHS = [0.3, 0.5, 1, 1.5, 2, 3, 5, 8, 10];
 
 // Расчёт рекомендации по длине кабеля
 export function getCableLengthWarning(connectorType, lengthMeters) {
+  if (!Number.isFinite(lengthMeters) || connectorType === 'XLR_HIGH_LEVEL') return { warning: false };
   const spec = {
     RCA: 3,
     XLR: 15,

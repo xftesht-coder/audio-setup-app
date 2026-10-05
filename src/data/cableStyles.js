@@ -3,6 +3,7 @@
 // ============================================================
 
 export const CABLE_STYLE = {
+  XLR_HIGH_LEVEL: { color: '#506f81', width: 3.5, cap: 'xlr', name: 'HIGH LEVEL → XLR · по владельцу' },
   RCA:            { color: '#1a1a1a', width: 2.5, cap: 'rca',     name: 'RCA межблочный' },
   XLR:            { color: '#2b2b2b', width: 3.5, cap: 'xlr',     name: 'XLR балансный' },
   USB_C:          { color: '#495057', width: 2,   cap: 'usb',     name: 'USB-C цифровой' },

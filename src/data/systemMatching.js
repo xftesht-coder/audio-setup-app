@@ -1,4 +1,19 @@
 import { AUDIO_MODELS, AUDIO_ROLES, DEFAULT_SYSTEM_PLAN, SPEAKERS, TURNTABLE, WIIM } from './audioModels.js';
+import { REL_QUAKE } from './listeningRoom.js';
+
+export function relHighLevelLinks(powerAmp, quantity = 1) {
+  const ownerSetup = powerAmp.id === 'owner-rusich' && quantity === 1;
+  return ['L', 'R'].map(side => ({
+    from: powerAmp, to: { id: `rel-quake-${side}`, name: `REL Quake ${side}` },
+    branch: 'subwoofers', connector: 'XLR_HIGH_LEVEL', signal: 'speaker',
+    parallelWith: 'ae320', sourceConnector: 'BINDING_POST',
+    provenance: ownerSetup ? 'owner-reported' : 'proposed', status: 'unknown',
+    checks: [
+      { status: ownerSetup ? 'ok' : 'unknown', text: ownerSetup ? `По владельцу: общие с AE320 акустические выходы Rusich → HIGH LEVEL → XLR на REL ${side}.` : 'При замене усилителя подключение REL нужно согласовать заново; схема владельца относится только к Rusich.' },
+      { status: 'unknown', text: `Распайка установленного XLR и допустимый способ подключения к выходу усилителя не проверены. В штатном паспорте Quake — ${REL_QUAKE.highLevelConnector}. Линейный XLR не подходит.` },
+    ],
+  }));
+}
 
 export const IMPEDANCE_REFERENCE = 'https://www.ranecommercial.com/legacy/tech.html';
 export function validSystemPlan(input) {
@@ -75,7 +90,8 @@ export function assessSystem(candidate) {
   if (plan.dac === 'fiio-warmer-r2r' && plan.sourceMode === 'digital') notes.push({ status: 'ok', text: `WARMER R2R: ${plan.transport === 'OPTICAL' ? 'оптика до 24 бит / 96 кГц — задайте соответствующий предел выхода WiiM' : 'коаксиальный вход до 24 бит / 192 кГц'}.` });
   if (plan.preampMode === 'passive' && !['schiit-freya_2', 'schiit-kara-f', 'schiit-saga_2', 'schiit-sys'].includes(plan.preamp)) notes.push({ status: 'error', text: 'Пассивный режим у выбранного предусилителя не подтверждён.' });
   if (plan.powerAmpQuantity === 2 && !selected.powerAmp.monoOnly && !(selected.powerAmp.stereoRcaMonoXlr && plan.ampConnector === 'XLR')) notes.push({ status: 'unknown', text: 'Выбраны два усилителя, но соединение работает в стереорежиме. Распределение каналов между аппаратами и нагрузками нужно задать отдельно.' });
-  notes.push({ status: 'unknown', text: 'Два REL Quake: соединение «XLR Hi» владельца не подтверждено. Линейный XLR и высокоуровневый вход сабвуфера — разные сигналы; автоматически их не соединяем.' });
+  links.push(...relHighLevelLinks(selected.powerAmp, plan.powerAmpQuantity));
+  notes.push({ status: 'unknown', text: plan.powerAmp === 'owner-rusich' && plan.powerAmpQuantity === 1 ? 'REL подключены параллельно AE320 к акустическим выходам Rusich — по владельцу. Для электрической проверки ещё нужны распайка XLR на сабах и схема выхода Rusich.' : 'Схема подключения REL владельца относится к Rusich. Для выбранного усилителя high-level ветки показаны как проект: требуется согласовать распайку и выходной каскад.' });
   return { plan, selected, links, notes, hasErrors: [...links, ...notes].some(x => x.status === 'error') };
 }
 
