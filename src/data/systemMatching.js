@@ -44,7 +44,7 @@ export function checkAudioLink(from, to, connector, signal, { quantity = 1, pass
 export function assessSystem(candidate) {
   const plan = validSystemPlan(candidate), selected = Object.fromEntries(Object.keys(AUDIO_ROLES).map(role => [role, AUDIO_MODELS[plan[role]]]));
   const links = [], notes = [];
-  const connect = (from, to, connector, signal, options) => links.push(checkAudioLink(from, to, connector, signal, options));
+  const connect = (from, to, connector, signal, options) => links.push({ ...checkAudioLink(from, to, connector, signal, options), branch: options?.branch || 'speakers' });
   if (plan.sourceMode === 'vinyl') {
     connect(TURNTABLE, selected.phono, 'RCA', 'phono');
     connect(selected.phono, selected.preamp, plan.phonoConnector, 'line');
@@ -66,7 +66,7 @@ export function assessSystem(candidate) {
   if (!selected.headphoneAmp && !selected.preamp.hasHeadphoneOutput) notes.push({ status: 'warning', text: `${selected.preamp.name} не имеет выхода на наушники. Для HD 650 нужен отдельный усилитель; A90 не заменяется в этой роли автоматически.` });
   if (selected.headphoneAmp) {
     if (selected.headphoneAmp.id !== selected.preamp.id) {
-      connect(selected.preamp, selected.headphoneAmp, 'RCA', 'line', { passive });
+      connect(selected.preamp, selected.headphoneAmp, 'RCA', 'line', { passive, branch: 'headphones' });
       if (plan.ampConnector === 'RCA' && selected.preamp.outputPairs?.RCA < 2) notes.push({ status: 'error', text: 'Единственная пара RCA-выходов предусилителя уже занята основным трактом. Одновременно подключить отдельный усилитель наушников без изменения схемы нельзя; разветвитель не добавляется автоматически.' });
       notes.push({ status: 'unknown', text: 'Ветка наушников показана от RCA предусилителя. Если этот выход уже занят усилителем мощности или эквалайзером, нужно проверить число выходных пар. Два регулятора громкости требуют согласовать уровни.' });
     }
@@ -79,13 +79,22 @@ export function assessSystem(candidate) {
   return { plan, selected, links, notes, hasErrors: [...links, ...notes].some(x => x.status === 'error') };
 }
 
-export function systemShareUrl(plan, origin) {
+// External plans must be complete: silently replacing a bad component would change a friend's system.
+export function parseSystemPlan(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Вариант системы повреждён или создан в другой версии приложения.');
+  const plan = validSystemPlan(input), keys = Object.keys(DEFAULT_SYSTEM_PLAN);
+  if (Object.keys(input).length !== keys.length || keys.some(key => !Object.hasOwn(input, key) || input[key] !== plan[key])) throw new Error('Вариант содержит неизвестный аппарат или режим подключения.');
+  return plan;
+}
+
+export function systemShareUrl(plan, origin, name = '') {
   const url = new URL('/', origin);
   url.searchParams.set('view', 'share');
   url.searchParams.set('system', JSON.stringify(validSystemPlan(plan)));
+  if (name.trim()) url.searchParams.set('name', name.trim().slice(0, 64));
   url.hash = 'room';
   return url.toString();
 }
 export function systemPlanFromSearch(search) {
-  try { const raw = new URLSearchParams(search).get('system'); return raw ? validSystemPlan(JSON.parse(raw)) : null; } catch { return null; }
+  try { const raw = new URLSearchParams(search).get('system'); return raw ? parseSystemPlan(JSON.parse(raw)) : null; } catch { return null; }
 }

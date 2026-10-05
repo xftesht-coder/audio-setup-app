@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AUDIO_MODELS, AUDIO_ROLES, SCHIIT_CATALOG, productEnvelope } from '../data/audioModels';
 import { IMPEDANCE_REFERENCE, systemShareUrl } from '../data/systemMatching';
 import { equipmentName, plannedRack } from '../data/equipmentProfiles';
 import { useSystemPlanStore } from '../stores/useSystemPlanStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
 import SystemSummary from './SystemSummary';
+import SystemVariants from './SystemVariants';
 
 const CATEGORIES = { 'Pre-Order': 'Предзаказ', Fun: 'Специальные устройства', Modular: 'Модульные усилители', 'Speaker Amps': 'Усилители мощности', 'Headphone Amps': 'Усилители наушников', DACs: 'ЦАПы', Preamps: 'Предусилители', Gaming: 'Игровые', Phono: 'Фонокорректоры', EQ: 'Эквалайзеры', Accessories: 'Аксессуары', Upgrades: 'Апгрейды', Schwag: 'Сувениры', Packages: 'Комплекты' };
 const categories = [...new Set(SCHIIT_CATALOG.products.map(p => p.category))];
@@ -27,9 +28,14 @@ function CatalogCard({ product, onSelect }) {
 }
 
 export default function SystemBuilder() {
-  const { plan, update, storageError } = useSystemPlanStore();
+  const { plan, update, storageError, undo, redo, past, future } = useSystemPlanStore();
   const project = useWorkshopStore(s => s.project), commit = useWorkshopStore(s => s.commit);
   const [query, setQuery] = useState(''), [category, setCategory] = useState('all'), [visible, setVisible] = useState(18), [message, setMessage] = useState('');
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(''), 6000);
+    return () => clearTimeout(timer);
+  }, [message]);
   const filtered = useMemo(() => SCHIIT_CATALOG.products.filter(p => (category === 'all' || category === p.category) && p.name.toLowerCase().includes(query.trim().toLowerCase())), [category, query]);
   const shareUrl = systemShareUrl(plan, window.location.origin);
   const set = (key, value) => update({ [key]: value });
@@ -44,7 +50,8 @@ export default function SystemBuilder() {
   return <section className="system-builder" aria-label="Конфигуратор аудиосистемы">
     <header className="lighting-heading"><div><p className="share-eyebrow">AUDIO SETUP · SYSTEM LAB</p><h1>Собираем свой звук.</h1><p>Freya 2 после A90. Два ЦАПа на полках — слушаем тот, который выбрали.</p></div><a className="system-primary" href="#schiit-catalog" onClick={e => { e.preventDefault(); document.getElementById('schiit-catalog').scrollIntoView({ behavior: 'smooth' }); }}>Каталог Schiit · {SCHIIT_CATALOG.products.length}</a></header>
     <div className="system-intent"><b>Планируемая система</b><p>Freya 2 — будущий предусилитель. Bifrost 3 — предзаказ; FiiO WARMER R2R — альтернативный ЦАП. A90 остаётся на стойке для сравнения и наушников. Выбор ниже меняет тракт, а не факт покупки.</p></div>
-    <section className="system-controls" aria-label="Выбор компонентов"><h2>Что слушаем</h2><div className="system-select-grid">
+    <SystemVariants />
+    <section className="system-controls" aria-label="Выбор компонентов"><div className="system-section-title"><h2>Что слушаем</h2><div className="plan-history"><button disabled={!past.length} onClick={() => { undo(); setMessage('Последнее изменение тракта отменено.'); }}>↶ Отменить</button><button disabled={!future.length} onClick={() => { redo(); setMessage('Изменение тракта повторено.'); }}>↷ Повторить</button></div></div><div className="system-select-grid">
       {Object.entries(AUDIO_ROLES).map(([role, label]) => <SelectField key={role} label={label} value={plan[role] || ''} onChange={value => choose(role, value || null)} options={[...(['eq', 'headphoneAmp'].includes(role) ? [['', 'Не используется']] : []), ...roleModels[role].map(m => [m.id, m.name + (m.availability === 'preorder' ? ' · предзаказ' : '')])]} />)}
     </div><h3>Подключение</h3><div className="system-select-grid">
       <SelectField label="Источник" value={plan.sourceMode} onChange={v => set('sourceMode', v)} options={ [['digital', 'WiiM → внешний ЦАП'], ['vinyl', 'Винил → фонокорректор'], ['wiimAnalog', 'WiiM → аналоговый выход RCA']] } />
@@ -57,7 +64,7 @@ export default function SystemBuilder() {
     <SystemSummary plan={plan} detailed />
     <section className="system-inventory"><div className="system-section-title"><div><p className="share-eyebrow">ФИЗИЧЕСКОЕ РАЗМЕЩЕНИЕ</p><h2>Остаются на полках</h2></div><a href="/#cabinet">Открыть стойку ↗</a></div><ul>{project.equipment.map(item => <li key={item.id}>{equipmentName(item)}</li>)}</ul><p>Смена тракта сохраняет остальные аппараты. Кнопка добавит недостающие кандидаты на отдельные полки. Для моделей без полного габарита перенос будет остановлен; новые кабели требуют координат разъёмов.</p><button className="system-primary" onClick={applyRack}>Разместить выбранные аппараты</button></section>
     <section className="system-sharing"><h2>Показать другу этот вариант</h2><p>Ссылка содержит выбранные компоненты и соединения. У друга откроется тот же план без панели редактирования. Мебель и комната — сохранённая общая сцена.</p><div><a className="system-primary" href={shareUrl} target="_blank" rel="noreferrer">Открыть просмотр ↗</a><button onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); setMessage('Ссылка на этот вариант скопирована.'); } catch { setMessage('Скопируйте ссылку из поля ниже.'); } }}>Копировать ссылку</button></div><input aria-label="Ссылка на выбранную систему" readOnly value={shareUrl} onFocus={e => e.target.select()} /></section>
-    {(message || storageError) && <p className="system-feedback" role="status">{storageError || message}</p>}
+    {(message || storageError) && <div className="system-feedback" role="status"><p>{storageError || message}</p>{!storageError && <button aria-label="Закрыть уведомление" onClick={() => setMessage('')}>×</button>}</div>}
     <section id="schiit-catalog" className="schiit-library" aria-label="Каталог Schiit"><div className="system-section-title"><div><p className="share-eyebrow">ОФИЦИАЛЬНАЯ ЛИНЕЙКА</p><h2>Schiit · {SCHIIT_CATALOG.products.length} позиций</h2></div><small>Сверено {SCHIIT_CATALOG.checkedAt.split('-').reverse().join('.')}</small></div><p>{SCHIIT_CATALOG.scope}</p>
       <div className="lighting-filters"><label className="lighting-search">Найти Schiit<input type="search" placeholder="Freya, Bifrost, Yggdrasil…" value={query} onChange={e => { setQuery(e.target.value); setVisible(18); }} /></label><SelectField label="Категория Schiit" value={category} onChange={v => { setCategory(v); setVisible(18); }} options={ [['all', 'Все категории'], ...categories.map(c => [c, CATEGORIES[c] || c])] } /></div>
       <p role="status" className="lighting-results">Найдено: {filtered.length}</p><div className="schiit-grid">{filtered.slice(0, visible).map(p => <CatalogCard key={p.id} product={p} onSelect={choose} />)}</div>{!filtered.length && <p>Совпадений нет. Попробуй другое название или категорию.</p>}{visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 18)}>Показать ещё</button>}
