@@ -21,9 +21,9 @@ export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
 }));
 
 export const LISTENING_ROOM = {
-  model: '/models/listening-room.glb', poster: '/images/listening-room.jpg',
+  model: '/models/listening-room.glb?v=polished-1', poster: '/images/listening-room.jpg?v=polished-1',
   rug: { name: 'LAXMI Quincey', widthMm: 3000, depthMm: 2000, color: 'Белый', source: 'Размер и фотографии владельца', geometry: 'Рельеф и бахрома воссозданы по фото' },
   room: { widthMm: 5400, depthMm: 6000, heightMm: 2800, status: 'concept' },
-  notes: 'Комната, расстановка, лампы и корпуса дополнительных фильтров — проектный вариант. Габарит ковра — 200 × 300 см. Детализация моделей по фото не заменяет обмеры; глубина Rusich пока условная.',
+  notes: 'Комната, окно, диван, подвесная люстра, лампы и корпуса дополнительных фильтров — проектный вариант. Конкретная модель Govee ещё не выбрана. Габарит ковра — 200 × 300 см. Детализация моделей по фото не заменяет обмеры; глубина Rusich пока условная.',
   speakerSource: 'https://www.acoustic-energy.co.uk/wp-content/uploads/Acoustic-Energy-AE320-Info-Sheet.pdf',
 };
