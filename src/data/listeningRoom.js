@@ -23,10 +23,11 @@ export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
 }));
 
 export const LISTENING_ROOM = {
-  model: '/models/listening-room.glb?v=cables-2', poster: '/images/listening-room.jpg?v=cables-2',
+  model: '/models/listening-room.glb?v=natural-3', poster: '/images/listening-room.jpg?v=natural-3',
+  cablePoster: '/images/listening-room-cables.jpg?v=natural-3',
   cabling: {
-    note: 'Тяжёлые акустические и high-level кабели лежат за аппаратурой на низких деревянных опорах. Плавные изгибы, свободный запас и отдельные линии питания. Опоры, длины и траектории — проект размещения; конкретные марки кабеля и минимальные радиусы ещё не измерены.',
-    reference: 'https://de.pinterest.com/pin/hifi-cable-elevators--55802482883529658/',
+    note: 'Свободные петли за полками, мягкие держатели у заднего края и широкие дуги тяжёлых шнуров. Напольные линии провисают между деревянными опорами, питание проходит отдельно. Укладка воссоздана по референсам; длины, жёсткость и допустимые радиусы конкретных кабелей ещё не измерены.',
+    reference: 'https://ca.pinterest.com/pin/38069559342458139/',
   },
   rug: { name: 'LAXMI Quincey', widthMm: 3000, depthMm: 2000, color: 'Белый', source: 'Размер и фотографии владельца', geometry: 'Рельеф и бахрома воссозданы по фото' },
   room: { widthMm: 5400, depthMm: 6000, heightMm: 2800, status: 'concept' },

@@ -21,16 +21,17 @@ export default function ListeningRoom({ compact = false }) {
     {!compact && <header className="room-heading"><p className="share-eyebrow">AUDIO SETUP · LISTENING ROOM</p><h1>Место для музыки.</h1><p>Чёрный лак, белая шерсть и тёплый свет.</p></header>}
     <div className="room-toolbar">
       <div role="group" aria-label="Режим просмотра">{[['photo', 'Фото'], ['3d', 'Открыть 3D'], ['walk', 'Прогулка · WASD']].map(([id, label]) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</div>
+      {mode === 'photo' && <div role="group" aria-label="Ракурс фотографии"><button aria-pressed={view !== 'cables'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели крупно</button></div>}
       {mode === '3d' && <div role="group" aria-label="Ракурс камеры"><button aria-pressed={view === 'room'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'system'} onClick={() => setView('system')}>Система</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели</button></div>}
       {interactive && <button className="room-fullscreen" onClick={async()=>{try{await stage.current.requestFullscreen();setFullscreenError('');}catch{setFullscreenError('Полный экран недоступен в этом браузере. Прогулка работает в окне.');}}}>На весь экран</button>}
       <span>ОБНОВЛЁННАЯ КОМНАТА</span>
     </div>
     <div ref={stage} className={`room-stage ${mode==='walk'?'room-stage-walk':''}`}>
       <button className="room-exit-fullscreen" onClick={()=>document.exitFullscreen?.()}>Выйти из полного экрана</button>
-      <img className="room-poster" src={LISTENING_ROOM.poster} alt="Аудиосистема с чёрными глянцевыми AE320, двумя REL Quake, белым ковром и двумя лампами в светлой комнате" />
+      <img className="room-poster" src={mode === 'photo' && view === 'cables' ? LISTENING_ROOM.cablePoster : LISTENING_ROOM.poster} alt={mode === 'photo' && view === 'cables' ? 'Вид за стойкой: свободные кабельные петли, мягкие держатели и напольные опоры; задняя стена скрыта для осмотра' : 'Аудиосистема с чёрными глянцевыми AE320, двумя серыми REL Quake, белым ковром и двумя лампами в светлой комнате'} />
       {interactive && !unavailable && <div className="room-canvas"><RoomBoundary><Suspense fallback={<p className="room-loading" role="status">Готовим 3D…</p>}><RoomView3D view={view} walking={mode==='walk'} onUnavailable={() => setUnavailable(true)} /></Suspense></RoomBoundary></div>}
       {unavailable && interactive && <p className="room-error" role="status">3D недоступно — показываем рендер комнаты.</p>}
-      {mode!=='walk' && <div className="room-caption"><b>AE320 · Piano Gloss Black</b><span>2 × REL Quake · серые корпуса · Quincey 200 × 300 см</span></div>}
+      {mode!=='walk' && <div className="room-caption"><b>{view === 'cables' ? 'Свободные петли · мягкие крепления' : 'AE320 · Piano Gloss Black'}</b><span>{view === 'cables' ? 'Общие выходы Rusich → AE320 + REL HIGH LEVEL' : '2 × REL Quake · серые корпуса · Quincey 200 × 300 см'}</span></div>}
     </div>
     <p className="share-footnote">{mode==='walk'?'Нажми «Войти в комнату»: WASD / стрелки — шаг, мышь — обзор, Esc — пауза. На телефоне поворачивай пальцем и используй кнопки шагов.':mode === '3d' ? view === 'cables' ? 'Вид сзади: стена временно скрыта, видны опоры, запас кабеля и общие выходы Rusich. Вращайте мышью или пальцем; колесо — приблизить.' : 'Вращайте мышью или пальцем. Колесо или жест двумя пальцами — приблизить.' : 'Рендер из Blender. Открой 3D или зайди в комнату в режиме прогулки.'}</p>
     {fullscreenError && <p className="share-note" role="status">{fullscreenError}</p>}
