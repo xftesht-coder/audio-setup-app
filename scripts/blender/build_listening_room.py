@@ -12,7 +12,7 @@ OUT = ROOT.parents[1] / 'artifacts' / 'blender'
 OUT.mkdir(parents=True, exist_ok=True)
 random.seed(42)
 source = bpy.data.scenes['Anton | Hi-Fi - soft cables v3']
-scene = bpy.data.scenes.new('Audio Setup | Listening room 2026-10-04')
+scene = bpy.data.scenes.new('Audio Setup | Listening room 2026-10-05')
 bpy.context.window.scene = scene
 scene.unit_settings.system = 'METRIC'
 scene.unit_settings.scale_length = 1
@@ -49,7 +49,7 @@ def material(name, rgb, rough=.45, metal=0, coat=0, emission=0):
 
 lacquer = material('AE320 | Piano Gloss Black', (.001,.0015,.002), .11, 0, .4)
 next(n for n in lacquer.node_tree.nodes if n.type == 'BSDF_PRINCIPLED').inputs['Specular IOR Level'].default_value=.32
-sub_finish = material('REL | black satin', (.006,.007,.009), .29, 0, .15)
+sub_finish = material('REL | owner specified grey satin', (.25,.265,.28), .38, 0, .1)
 black = material('Black satin aluminium', (.025,.027,.03), .3, .6)
 rubber = material('Soft black cable jacket', (.011,.013,.015), .67)
 silver = material('Brushed silver aluminium', (.55,.58,.60), .29, .86)
@@ -106,7 +106,7 @@ def label(name,text,xyz,size,mat,rotation=(math.pi/2,0,0)):
     o=bpy.data.objects.new(name,d);active.objects.link(o);o.location=xyz;o.rotation_euler=rotation;d.materials.append(mat);return o
 
 # Copy only relevant objects. Original unsaved scene remains intact in backup.
-keep = ('01 | Walnut','Left speaker','Right speaker','Pro-Ject','Schiit Skoll','Topping A90','WiiM','11 | Rear')
+keep = ('01 | Walnut','Left speaker','Right speaker','Pro-Ject','Schiit Skoll','Topping A90','WiiM')
 for src in source.objects:
     cn=next((c.name for c in src.users_collection if c.name.startswith(keep)),None)
     if not cn:continue
@@ -123,12 +123,12 @@ for src in source.objects:
             # Original envelope was 975mm; official enclosure height is 1000mm (ex spikes).
             o.dimensions.z=1.0;o.location.z=.525
             o['verified_envelope_mm']='175 x 1000 x 320 excluding spikes'
-    elif cn.startswith('Pro-Ject'):o.location.z+=.1168
+    elif cn.startswith('Pro-Ject'):o.location.z+=.4268
     elif cn.startswith(('Schiit Skoll','WiiM')):o.location.z+=.1168
     elif cn.startswith('Topping'):o.location.z+=.133
     elif cn.startswith('01 |'):
-        if 'Graphite rack post' in src.name:o.dimensions.z+=.1168;o.location.z+=.0584
-        elif o.location.z>.70:o.location.z+=.1168
+        if 'Graphite rack post' in src.name:o.dimensions.z+=.4268;o.location.z+=.2134
+        elif o.location.z>.70:o.location.z+=.4268
         elif o.location.z>.50:o.location.z+=.1168
         elif o.location.z>.30:o.location.z+=.133
     elif cn.startswith('11 |'):
@@ -136,7 +136,7 @@ for src in source.objects:
         elif o.location.z>.50:o.location.z+=.1168
         elif o.location.z>.30:o.location.z+=.133
 
-active=collection('02 | Current electronics: Rusich and Bifrost 3')
+active=collection('02 | Electronics and planned DAC alternatives')
 # Rusich front height and width verified from owner's drawing; depth is an explicit proxy.
 box('Rusich ALEPH PASS A2 | depth provisional 300mm',(0,-.015,.269),(.43,.30,.164),silver,.005)
 box('Rusich | front plate',(0,-.169,.269),(.43,.01,.164),black,.003)
@@ -161,6 +161,35 @@ for x in (-.195,-.161):
     for a in (0,2.094,4.189):cylinder('XLR | three pins',(x+.004*math.cos(a),-.001,.559+.004*math.sin(a)),.0008,.007,gold,(math.pi/2,0,0),8)
 box('Bifrost | optical port',(-.087,-.009,.558),(.010,.008,.009),rubber,.001)
 cylinder('Bifrost | coaxial',(-.064,-.006,.558),.004,.014,gold,(math.pi/2,0,0))
+
+# A separate shelf keeps both DACs and both preamps present. Envelopes follow
+# manufacturer dimensions; controls and tubes are illustrative, not a CAD scan.
+wood=next(m for m in bpy.data.materials if m.name.startswith('Walnut | horizontal'))
+box('Planned shelf | Freya + WARMER | 780 x 450 x 32 mm',(0,0,.9248),(.780,.450,.032),wood,.005)
+for x in (-.302,.302):
+    for y in (-.187,.187):
+        cylinder('New shelf | support collar',(x,y,.9018),.025,.012,black)
+        cylinder('New shelf | top fixing',(x,y,.9412),.008,.001,black)
+glass=material('Freya | tube glass illustration',(.19,.21,.22),.16,.22)
+tube_glow=material('Freya | warm tube core',(.22,.08,.025),.6,emission=.5)
+fy=.9408
+box('Schiit Freya 2 | planned envelope',(-.14,0,fy+.0254),(.4064,.2032,.0508),silver,.004)
+label('Freya 2 identity','SCHIIT   /   FREYA 2',(-.23,-.103,fy+.023),.007,black)
+cylinder('Freya 2 | volume',(.012,-.108,fy+.026),.015,.013,silver,(math.pi/2,0,0))
+for x in (-.245,-.175,-.105,-.035):
+    cylinder('Freya 2 | tube socket',(x,.025,fy+.053),.019,.006,black)
+    cylinder('Freya 2 | tube envelope',(x,.025,fy+.083),.015,.0626,glass)
+    cylinder('Freya 2 | tube top',(x,.025,fy+.111),.012,.006,tube_glow)
+box('FiiO WARMER R2R | planned enclosure',(.207,0,fy+.0374),(.2235,.213,.0588),silver,.004)
+for x in (.128,.286):
+    for y in (-.075,.075):cylinder('WARMER | foot',(x,y,fy+.004),.010,.008,rubber)
+box('WARMER | illuminated VU window',(.207,-.108,fy+.038),(.080,.003,.031),warm,.002)
+label('WARMER | VU scale','VU',(.207,-.110,fy+.035),.007,black)
+tube('WARMER | VU needle',[(.21,-.111,fy+.023),(.192,-.111,fy+.047)],.00065,black,False)
+label('WARMER R2R identity','FIIO  /  WARMER R2R',(.207,-.108,fy+.014),.004,black)
+cylinder('WARMER | input selector',(.289,-.113,fy+.037),.012,.010,silver,(math.pi/2,0,0))
+scene['rack_inventory']='8: Pro-Ject E1, Skoll F, WiiM Pro Plus, A90, Rusich, Bifrost 3 (preorder), Freya 2 (planned), WARMER R2R (candidate)'
+scene['new_cables']='Unmeasured connector coordinates: no invented point-to-point wiring for planned devices'
 
 active=collection('03 | REL Quake stereo pair')
 for side,x in [('L',-1.60),('R',1.60)]:
@@ -195,7 +224,7 @@ main_y=strip('Brennenstuhl Premium-Protect-Line 8-way',.48,.25,8,.635)
 def plug(name,x,y):
     cylinder(name,(x,y,.086),.018,.038,rubber)
     cylinder(name+' | strain relief',(x,y,.113),.005,.018,rubber)
-for i in range(6):plug('Main outlet '+str(i+1),.48,main_y[i])
+for i in range(8):plug('Main outlet '+str(i+1)+' | reserved in plan',.48,main_y[i])
 for side,x in [('L',-1.60),('R',1.60)]:
     sx=x+(-.26 if x<0 else .26);sy=.28
     ys=strip(side+' | proposed 3-way filter',sx,sy,3,.25)
@@ -214,7 +243,7 @@ tube('Central PDU | wall feed',[(.48,.59,.035),(.53,.66,.01),(.57,.98,.01),(.50,
 active=collection('05 | Signal loom and rack power: supported routes')
 # Continuous curves travel behind shelf depth225mm. Service bends are illustrative;
 # no manufacturer bend-radius compliance claimed without exact cable variants.
-for label_name,x,z,port_y in [('Rusich',-.17,.23,.15),('Bifrost',-.04,.56,-.01),('A90',.215,.56,.006),('Skoll',-.23,.79,-.01),('WiiM',.18,.79,-.02),('E1',.11,.97,.18)]:
+for label_name,x,z,port_y in [('Rusich',-.17,.23,.15),('Bifrost',-.04,.56,-.01),('A90',.215,.56,.006),('Skoll',-.23,.79,-.01),('WiiM',.18,.79,-.02),('E1',.11,1.28,.18)]:
     k=['Rusich','Bifrost','A90','Skoll','WiiM','E1'].index(label_name)
     tube(label_name+' | supported power',[(x,port_y,z),(x,.285,z),(x,.335,z-.03),(.29,.34,z-.08),(.29,.35,.07),(.43,.36,.015),(.48,main_y[k],.12)],.0035,rubber)
     box(label_name+' | cable saddle',(.29,.345,z-.08),(.027,.025,.012),black,.003)
@@ -224,7 +253,7 @@ tube('WiiM to Bifrost | optical',[(.13,-.018,.79),(.13,.29,.79),(-.087,.30,.67),
 for dx in (0,.021):
     tube('A90 to Rusich | RCA',[(.16+dx,.008,.559),(.16+dx,.285,.55),(.17+dx,.30,.39),(.15+dx,.29,.303),(.15+dx,.151,.303)],.003,rubber)
     tube('Skoll to A90 | RCA',[(-.10+dx,-.01,.787),(-.10+dx,.285,.787),(.11+dx,.29,.63),(.11+dx,.018,.56)],.003,rubber)
-tube('E1 to Skoll | phono',[(-.04,.18,.975),(-.04,.285,.96),(-.16,.285,.86),(-.17,-.005,.788)],.0035,rubber)
+tube('E1 to Skoll | phono',[(-.04,.18,1.285),(-.04,.285,1.285),(-.16,.30,.86),(-.17,-.005,.788)],.0035,rubber)
 for side,x in [('L',-1.1),('R',1.1)]:
     sx=-.12 if x<0 else .09
     tube(side+' | amplifier to AE320',[(sx,.16,.22),(sx,.30,.21),(sx,.42,.04),(x*.6,.43,.012),(x,.29,.012),(x,.21,.06),(x,.18,.13)],.004,rubber)

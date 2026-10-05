@@ -1,6 +1,7 @@
 // Product facts and design proposals deliberately have separate provenance.
 export const REL_QUAKE = {
   manufacturer: 'REL', model: 'Quake', quantity: 2,
+  finish: { color: 'Серый', source: 'Уточнение владельца · 04.10.2026', sheen: 'Матовый сатин — визуальное приближение' },
   dimensions: { width: 253, height: 294, depth: 272 }, massKg: 7.4,
   driver: '200 мм · направлен вниз', enclosure: 'Закрытый корпус',
   highLevelConnector: 'Neutrik Speakon',
@@ -15,7 +16,7 @@ export const REL_QUAKE = {
 export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
   id: `sub_power_${side}`, side, name: i === 0 ? 'Левый сабвуфер' : 'Правый сабвуфер',
   sockets: 3, manufacturer: null, model: null, status: 'proposed',
-  outlets: [`REL Quake ${i === 0 ? 'L' : 'R'}`, 'Умная лампа', 'Резерв'],
+  outlets: [`REL Quake ${i === 0 ? 'L' : 'R'}`, 'Govee · модель выбирается', 'Резерв'],
   note: 'Отдельный фильтр у стены · модель и электрические параметры не выбраны',
 }));
 

@@ -6,7 +6,8 @@ import { bomCSV, drillingCSV, panelSVG, projectDXF, reviewHTML } from '../src/da
 
 test('default project has 12 feasible supported cable routes clear of the furniture and chassis', () => {
   const p = defaultProject();
-  assert.deepEqual(validateConstruction(p), []);
+  assert.deepEqual(validateConstruction(p).filter(i => i.severity === 'error'), []);
+  assert.ok(validateConstruction(p).some(i => i.message.includes('глубина корпуса')));
   const routes = routeAllCables(p);
   assert.equal(routes.length, 12);
   for (const r of routes) {
@@ -98,8 +99,8 @@ test('undo, redo, persistence and rejected edits preserve the coherent project',
   store.getState().redo(); assert.equal(store.getState().project.width, 720);
   assert.equal(store.getState().update({ width: -1 }), false);
   assert.equal(store.getState().project.width, 720);
-  store.getState().removeShelf('tier_arcam'); assert.equal(store.getState().project.shelves.length, 4);
-  store.getState().addShelf(); assert.equal(store.getState().project.shelves.length, 5);
-  store.getState().removeShelf(store.getState().selection.id); assert.equal(store.getState().project.shelves.length, 4);
+  store.getState().removeShelf('tier_arcam'); assert.equal(store.getState().project.shelves.length, 5);
+  store.getState().addShelf(); assert.equal(store.getState().project.shelves.length, 6);
+  store.getState().removeShelf(store.getState().selection.id); assert.equal(store.getState().project.shelves.length, 5);
   const loaded = await freshStore(storage.getItem()); assert.equal(loaded.store.getState().project.width, 720);
 });

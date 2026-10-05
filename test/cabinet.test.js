@@ -78,9 +78,9 @@ test('unavailable or corrupt browser storage does not break controls', async (t)
   }]) {
     const store = await loadStore(storage);
     store.getState().setXray(true);
-    store.getState().setSelected('arcam');
+    store.getState().setSelected('rusich_a2');
     assert.equal(store.getState().xray, true);
-    assert.equal(store.getState().selected, 'arcam');
+    assert.equal(store.getState().selected, 'rusich_a2');
   }
 });
 
@@ -88,7 +88,7 @@ test('assembled equipment starts above its own shelf and below the next', () => 
   const { shelves, drops, expectedYByUnit, totalHeight } = computeCabinetLayout();
   assert.equal(drops.length, 6);
   assert.equal(shelves.length, 4);
-  assert.ok(Math.abs(totalHeight - 0.9198) < 1e-10);
+  assert.ok(Math.abs(totalHeight - 1.0528) < 1e-10);
   MAIN_RACK.tiers.forEach((tier, index) => {
     for (const { equipmentId } of tier.items) {
       const drop = drops.find((unit) => unit.equipmentId === equipmentId);
@@ -102,7 +102,7 @@ test('assembled equipment starts above its own shelf and below the next', () => 
 });
 
 test('rack supports an open top turntable and keeps the heavy amplifier at the bottom', () => {
-  assert.deepEqual(MAIN_RACK.tiers[0].items.map(item => item.equipmentId), ['arcam']);
+  assert.deepEqual(MAIN_RACK.tiers[0].items.map(item => item.equipmentId), ['rusich_a2']);
   assert.deepEqual(MAIN_RACK.tiers.at(-1).items.map(item => item.equipmentId), ['turntable']);
   assert.equal(MAIN_RACK.tiers.at(-1).openTop, true);
   assert.deepEqual(validateRackConstraints(), []);

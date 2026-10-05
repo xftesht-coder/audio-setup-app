@@ -3,7 +3,8 @@ import CabinetView3D from './CabinetView3D';
 import MaterialPicker from './MaterialPicker';
 import { useCabinetStore } from '../stores/useCabinetStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
-import { CABINET_FINISHES, EQUIPMENT_PHYSICAL } from '../data/cabinetSpecs';
+import { CABINET_FINISHES } from '../data/cabinetSpecs';
+import { equipmentName, equipmentPhysical, completeListeningRack } from '../data/equipmentProfiles';
 import { DEVICE_SPECS } from '../data/devicePorts';
 import { ENGINEERING_SOURCES, manufacturingBOM, migrateLegacyProject, sortedShelves, shelfHoles, validateConstruction } from '../data/workshop';
 import { routeAllCables } from '../data/cableRouting';
@@ -70,9 +71,12 @@ export default function CabinetPanel() {
   const issues = useMemo(() => [...validateConstruction(p), ...routes.flatMap(r => r.issues.map(message => ({ severity: 'error', message: `${r.cable.name}: ${message}` })))], [p, routes]);
   const shelf = p.shelves.find(s => selection?.type === 'shelf' && s.id === selection.id) || shelves[0];
   const eq = p.equipment.find(e => selection?.type === 'equipment' && e.id === selection.id) || p.equipment[0];
+  const eqPhysical = eq ? equipmentPhysical(eq) : null;
   const route = routes.find(r => selection?.type === 'cable' && r.cable.id === selection.id) || routes.find(r => r.cable.id === 'p_rusich_a2') || routes[0];
   const height = Math.max(...p.shelves.map(s => s.y + s.thickness));
-  const routingDepth = Math.ceil(p.depth / 2 - Math.min(...routes.flatMap(r => r.points.map(pt => pt[2]))));
+  const outerWidth = Math.max(p.width, ...p.shelves.map(s => s.width + 2 * Math.abs(s.x)));
+  const outerDepth = Math.max(p.depth, ...p.shelves.map(s => s.depth + 2 * Math.abs(s.z)));
+  const routingDepth = routes.length ? Math.ceil(p.depth / 2 - Math.min(...routes.flatMap(r => r.points.map(pt => pt[2])))) : p.depth + p.rearGap;
   useEffect(() => {
     const keydown = e => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || !(e.ctrlKey || e.metaKey)) return;
@@ -97,7 +101,7 @@ export default function CabinetPanel() {
     <div className="cabinet-layout cad-layout"><div className="cabinet-main">
       <CabinetView3D />
       <div className="cad-view-options">{[['showEquipment', 'Аппараты'], ['showCables', 'Кабели'], ['showDimensions', 'Размеры']].map(([key, label]) => <label key={key}><input type="checkbox" checked={state[key]} onChange={() => state.toggle(key)} />{label}</label>)}<label><input type="checkbox" checked={xray} onChange={() => setXray()} />X-ray</label><label><input type="checkbox" checked={exploded} onChange={() => setExploded()} />Разнести детали</label></div>
-      <div className="cad-stats"><div><small>СТОЙКА, Ш × В × Г</small><b>{p.width} × {Math.round(height)} × {p.depth}<i> мм</i></b></div><div><small>С КАБЕЛЬНОЙ ЗОНОЙ</small><b>{routingDepth}<i> мм в глубину</i></b></div><div><small>В ПРОЕКТЕ</small><b>{p.shelves.length}<i> полки · </i>{p.cables.length}<i> линий</i></b></div></div>
+      <div className="cad-stats"><div><small>СТОЙКА, Ш × В × Г</small><b>{outerWidth} × {Math.round(height)} × {outerDepth}<i> мм</i></b></div><div><small>С КАБЕЛЬНОЙ ЗОНОЙ</small><b>{routingDepth}<i> мм в глубину</i></b></div><div><small>В ПРОЕКТЕ</small><b>{p.shelves.length}<i> полки · </i>{p.equipment.length}<i> аппаратов · </i>{routes.length}<i> рассчитанных линий</i></b></div></div>
       <details className={`cad-validation ${issues.length ? 'has-issues' : ''}`} open={issues.some(i => i.severity === 'error')}><summary>{issues.length ? `${issues.length} замечаний к компоновке` : 'Геометрия: пересечений с мебелью и техникой не найдено'}</summary><p>Проверяются отверстия, размещение аппаратов, заданные зазоры, длина и изгибы трасс. Размеры разъёмов и профили кабелей требуют измерений.</p>{issues.map((issue, i) => <p key={i}>• {issue.message}</p>)}</details>
       {mode === 'production' && <div className="cad-drawing"><h2>{shelf.name} · карта сверловки</h2><div dangerouslySetInnerHTML={{ __html: panelSVG(p, shelf) }} /><p>DXF — 1:1 в миллиметрах. Все отверстия сквозные. Просмотр не задаёт допуски изготовления.</p></div>}
     </div>
@@ -110,13 +114,15 @@ export default function CabinetPanel() {
         <Group title="Узел опоры M16"><p className="cad-help">Полка зажата между шайбами и гайками. Сквозная шпилька M16×2, отверстие Ø18; шайбы 17×30×3; гайки S24, H14,8. Чёрные втулки закрывают шпильку между полками. Резьба показана условно.</p><p className="cad-help">Подбор класса прочности, опорной площади и затяжки — после расчёта нагрузки и выбора древесины.</p></Group>
       </>}
       {mode === 'equipment' && <>
-        <Group title="Выберите аппарат"><div className="cad-part-list">{p.equipment.map(e => <button key={e.id} aria-pressed={eq?.id === e.id} onClick={() => select({ type: 'equipment', id: e.id })}><b>{DEVICE_SPECS[e.id].name}</b><span>{p.shelves.find(s => s.id === e.shelfId).name}</span></button>)}</div></Group>
-        {eq && <Group title={DEVICE_SPECS[eq.id].name}>{EQUIPMENT_PHYSICAL[eq.id].photo && <img className="cad-device-photo" src={EQUIPMENT_PHYSICAL[eq.id].photo} alt={DEVICE_SPECS[eq.id].name} />}<p className="cad-help">{EQUIPMENT_PHYSICAL[eq.id].dims.w} × {EQUIPMENT_PHYSICAL[eq.id].dims.h} × {EQUIPMENT_PHYSICAL[eq.id].depthIsPlaceholder ? 'глубина неизвестна' : EQUIPMENT_PHYSICAL[eq.id].dims.d} мм · {EQUIPMENT_PHYSICAL[eq.id].weight == null ? 'масса неизвестна' : `${EQUIPMENT_PHYSICAL[eq.id].weight} кг`}</p>{EQUIPMENT_PHYSICAL[eq.id].geometryNote && <p className="cad-alert">{EQUIPMENT_PHYSICAL[eq.id].geometryNote}</p>}{eq.id === 'rusich_a2' && <p className="cad-help">Источник: {DEVICE_SPECS[eq.id].sourceDoc}</p>}<label className="cad-select">Полка<select value={eq.shelfId} onChange={e => state.editEquipment(eq.id, { shelfId: e.target.value })}>{shelves.map(s => <option key={s.id} value={s.id}>{s.name} · Y {s.y}</option>)}</select></label><div className="cad-fields"><NumberField label="X на полке" value={eq.x} min={-1000} max={1000} onChange={v => state.editEquipment(eq.id, { x: v })} /><NumberField label="Z на полке" value={eq.z} min={-600} max={600} onChange={v => state.editEquipment(eq.id, { z: v })} /></div><p className="cad-help">Аппарат стоит на выбранной полке. При перемещении кабельные трассы пересчитываются.</p></Group>}
+        <p className="cad-help">Активный тракт выбирается в <a href="/#system">разделе «Система»</a>. Неиспользуемые кандидаты остаются на полках.</p>
+        {!p.equipment.some(e => e.modelId === 'fiio-warmer-r2r') && <button className="cad-button" onClick={() => { try { state.commit(completeListeningRack(p)); } catch (err) { setImportError(err.message); } }}>Добавить полку Freya + WARMER</button>}
+        <Group title="Выберите аппарат"><div className="cad-part-list">{p.equipment.map(e => <button key={e.id} aria-pressed={eq?.id === e.id} onClick={() => select({ type: 'equipment', id: e.id })}><b>{equipmentName(e)}</b><span>{p.shelves.find(s => s.id === e.shelfId).name}</span></button>)}</div></Group>
+        {eq && <Group title={equipmentName(eq)}>{eqPhysical.photo && <img className="cad-device-photo" src={eqPhysical.photo} alt={equipmentName(eq)} />}<p className="cad-help">{eqPhysical.dims.w} × {eqPhysical.dims.h} × {eqPhysical.depthIsPlaceholder ? 'глубина неизвестна' : eqPhysical.dims.d} мм · {eqPhysical.weight == null ? 'масса неизвестна' : `${eqPhysical.weight} кг`}</p>{eqPhysical.geometryNote && <p className="cad-alert">{eqPhysical.geometryNote}</p>}{eq.id === 'rusich_a2' && <p className="cad-help">Источник: {DEVICE_SPECS[eq.id].sourceDoc}</p>}<label className="cad-select">Полка<select value={eq.shelfId} onChange={e => state.editEquipment(eq.id, { shelfId: e.target.value })}>{shelves.map(s => <option key={s.id} value={s.id}>{s.name} · Y {s.y}</option>)}</select></label><div className="cad-fields"><NumberField label="X на полке" value={eq.x} min={-1000} max={1000} onChange={v => state.editEquipment(eq.id, { x: v })} /><NumberField label="Z на полке" value={eq.z} min={-600} max={600} onChange={v => state.editEquipment(eq.id, { z: v })} /></div><p className="cad-help">Аппарат стоит на выбранной полке. При перемещении кабельные трассы пересчитываются.</p></Group>}
       </>}
       {mode === 'cables' && <>
         <Group title="Задняя кабельная зона"><div className="cad-fields"><NumberField label="Вылет за кромку" value={p.rearGap} min={80} max={700} onChange={v => update({ rearGap: v })} /><NumberField label="Разнос зон питания" value={p.powerGap} min={60} max={400} onChange={v => update({ powerGap: v })} /></div><p className="cad-help">Чёрный — сигнал, синий — сеть, серый — низковольтное питание. Золотистые точки — держатели; линии — эскиз их опор. Внешние БП и распределитель требуют отдельной компоновки.</p></Group>
-        <label className="cad-select">Кабель<select value={route.cable.id} onChange={e => select({ type: 'cable', id: e.target.value })}>{routes.map(r => <option key={r.cable.id} value={r.cable.id}>{r.cable.name}</option>)}</select></label>
-        <CableEditor state={state} route={route} />
+        {route && <label className="cad-select">Кабель<select value={route.cable.id} onChange={e => select({ type: 'cable', id: e.target.value })}>{routes.map(r => <option key={r.cable.id} value={r.cable.id}>{r.cable.name}</option>)}</select></label>}
+        {route ? <CableEditor state={state} route={route} /> : <p className="cad-help">Для новых моделей сначала нужны координаты разъёмов. Непроверенные трассы скрыты.</p>}
       </>}
       {mode === 'production' && <>
         <Group title="Файлы для согласования"><div className="cad-downloads"><button onClick={() => downloadText('rack-panels.dxf', projectDXF(p), 'application/dxf')}>↓ DXF · контуры и отверстия</button><button onClick={() => downloadText('rack-bom.csv', bomCSV(p), 'text/csv;charset=utf-8')}>↓ CSV · детали и крепёж</button><button onClick={() => downloadText('rack-drilling.csv', drillingCSV(p), 'text/csv;charset=utf-8')}>↓ CSV · координаты сверловки</button><button onClick={() => downloadText('rack-review.html', reviewHTML(p), 'text/html;charset=utf-8')}>↓ Альбом · чертежи и проверки</button><button onClick={() => downloadText('rack-project.json', JSON.stringify(p, null, 2), 'application/json')}>↓ JSON · редактируемый проект</button></div></Group>

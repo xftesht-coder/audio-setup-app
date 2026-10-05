@@ -108,4 +108,7 @@ export function routeCable(p, c) {
   return { cable: c, points, vertices, connectors: [[a, tipA], [b, tipB]], length, mass: (length - 2 * c.connectorLength) / 1000 * c.massPerM + 2 * c.connectorMass, supports,
     spanLoad: c.massPerM / 1000 * Math.min(c.supportSpan, length) / 1000 * 9.81, issues, radius: rounded.radius };
 }
-export function routeAllCables(p) { return p.cables.map(c => routeCable(p, c)); }
+export function routeAllCables(p) {
+  const unmeasured = new Set(p.equipment.filter(e => e.modelId).map(e => e.id));
+  return p.cables.filter(c => !unmeasured.has(c.from) && !unmeasured.has(c.to)).map(c => routeCable(p, c));
+}

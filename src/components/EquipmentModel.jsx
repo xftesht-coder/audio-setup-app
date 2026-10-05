@@ -175,7 +175,30 @@ function RusichA2({ w, h, d, selected }) {
   </group>;
 }
 
+function CatalogEnvelope({ profile, w, h, d, selected }) {
+  const freya = profile.id === 'schiit-freya_2';
+  const warmer = profile.id === 'fiio-warmer-r2r';
+  const bodyH = freya ? .0508 : h - .007;
+  const map = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 180;
+    const c = canvas.getContext('2d'); c.fillStyle = '#c6c8c7'; c.fillRect(0, 0, 1024, 180);
+    c.fillStyle = '#252c2c'; c.font = '28px sans-serif'; c.fillText(profile.name.toUpperCase(), 35, 65);
+    c.font = '18px sans-serif'; c.fillText('PLANNED / ENVELOPE', 35, 140);
+    if (warmer) { c.fillStyle = '#e8c880'; c.fillRect(400, 75, 245, 85); c.fillStyle = '#353532'; c.font = '18px serif'; c.fillText('VU', 505, 120); c.beginPath(); c.moveTo(530, 145); c.lineTo(480, 92); c.stroke(); }
+    const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; return texture;
+  }, [profile.name, warmer]);
+  useEffect(() => () => map.dispose(), [map]);
+  return <group>
+    <RoundedBox args={[w, bodyH, d]} radius={.003} smoothness={3} position={[0, -h / 2 + .007 + bodyH / 2, 0]} castShadow receiveShadow><meshStandardMaterial color={selected ? '#bac9c4' : '#aeb4b3'} metalness={.75} roughness={.27} /></RoundedBox>
+    <mesh position={[0, -h / 2 + .007 + bodyH / 2, d / 2 + .0005]}><planeGeometry args={[w - .006, bodyH - .006]} /><meshStandardMaterial map={map} metalness={.35} roughness={.35} /></mesh>
+    <Feet w={w} h={h} d={d} />
+    {(freya || warmer) && <Knob position={[w * .37, -h / 2 + .007 + bodyH / 2, d / 2 + .004]} radius={freya ? .015 : .012} />}
+    {freya && [-.105, -.035, .035, .105].map(x => <group key={x} position={[x, -h / 2 + bodyH + (h - bodyH) / 2, -.018]}><mesh castShadow><cylinderGeometry args={[.014, .015, h - bodyH, 24]} /><meshPhysicalMaterial color="#b7c4c5" transparent opacity={.48} roughness={.12} metalness={.15} /></mesh><mesh><cylinderGeometry args={[.005, .006, (h - bodyH) * .6, 10]} /><meshStandardMaterial color="#775241" emissive="#af3b05" emissiveIntensity={.25} /></mesh></group>)}
+  </group>;
+}
+
 export default function EquipmentModel(props) {
+  if (props.profile) return <CatalogEnvelope {...props} />;
   if (props.equipmentId === 'rusich_a2') return <RusichA2 {...props} />;
   return props.equipmentId === 'turntable' ? <Turntable {...props} /> : <Electronics {...props} />;
 }

@@ -1,18 +1,19 @@
 import { create } from 'zustand';
 import { defaultProject, migrateLegacyProject, projectSchema } from '../data/workshop.js';
+import { completeListeningRack } from '../data/equipmentProfiles.js';
 
 const KEY = 'audio_workshop_v1';
 function restore() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return defaultProject();
+    if (!raw) return projectSchema.parse(completeListeningRack(defaultProject()));
     const parsed = JSON.parse(raw);
     const migrated = migrateLegacyProject(parsed);
     const project = projectSchema.parse(migrated);
     if (migrated !== parsed) localStorage.setItem(KEY, JSON.stringify(project));
     return project;
   }
-  catch { return defaultProject(); }
+  catch { return projectSchema.parse(completeListeningRack(defaultProject())); }
 }
 export const useWorkshopStore = create((set, get) => {
   const save = project => {

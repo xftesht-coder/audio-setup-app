@@ -3,6 +3,8 @@ import { POWER_STRIP } from './powerDistribution.js';
 import { MAIN_RACK, EQUIPMENT_PHYSICAL, RACK_CABLES } from './cabinetSpecs.js';
 import { computeCabinetLayout } from './cabinetLayout.js';
 import { DEVICE_SPECS } from './devicePorts.js';
+import { AUDIO_MODELS } from './audioModels.js';
+import { equipmentName, equipmentPhysical } from './equipmentProfiles.js';
 
 const number = (min, max) => z.number().finite().min(min).max(max);
 const point = z.tuple([number(-4000, 4000), number(-4000, 4000), number(-4000, 4000)]);
@@ -25,12 +27,13 @@ export const projectSchema = z.object({
     y: number(60, 2200), thickness: number(18, 80), width: number(300, 1800), depth: number(250, 1000),
     x: number(-300, 300), z: number(-300, 300), holes: z.array(hole).max(30),
   })).min(1).max(10),
-  equipment: z.array(z.object({ id: z.string(), shelfId: z.string(), x: number(-1000, 1000), z: number(-600, 600) })).min(1).max(6),
+  equipment: z.array(z.object({ id: z.string().max(100), modelId: z.string().optional(), shelfId: z.string(), x: number(-1000, 1000), z: number(-600, 600) })).min(1).max(24),
   cables: z.array(cable).min(1).max(30),
 }).superRefine((p, ctx) => {
   const fail = message => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
   for (const list of [p.shelves, p.equipment, p.cables]) if (new Set(list.map(x => x.id)).size !== list.length) fail('Повторяющиеся идентификаторы');
-  if (p.equipment.some(e => !Object.hasOwn(EQUIPMENT_PHYSICAL, e.id) || EQUIPMENT_PHYSICAL[e.id].notOnRack || !p.shelves.some(s => s.id === e.shelfId))) fail('Неизвестный аппарат или полка');
+  if (p.equipment.some(e => e.modelId && (!AUDIO_MODELS[e.modelId]?.envelope || ['w', 'h', 'd'].some(key => !Number.isFinite(AUDIO_MODELS[e.modelId].envelope[key]))))) fail('Для выбранной модели нет проверенного полного габарита');
+  if (p.equipment.some(e => (!e.modelId && !Object.hasOwn(EQUIPMENT_PHYSICAL, e.id)) || EQUIPMENT_PHYSICAL[e.id]?.notOnRack || !p.shelves.some(s => s.id === e.shelfId))) fail('Неизвестный аппарат или полка');
   if (p.cables.some(c => !p.equipment.some(e => e.id === c.from) || (c.to !== 'service' && !p.equipment.some(e => e.id === c.to)))) fail('Неизвестная точка подключения');
   if (p.cables.some(c => (c.fromPort && !DEVICE_SPECS[c.from]?.ports.some(port => port.id === c.fromPort && port.position === 'rear')) || (c.toPort && !DEVICE_SPECS[c.to]?.ports.some(port => port.id === c.toPort && port.position === 'rear')))) fail('Неподдерживаемый порт: выберите существующий задний разъём');
   if (p.shelves.some(s => new Set(s.holes.map(h => h.id)).size !== s.holes.length)) fail('Повторяющиеся отверстия');
@@ -97,8 +100,8 @@ export function migrateLegacyProject(project) {
     const above = ordered[index + 1];
     if (!above) return;
     const equipmentOnShelf = equipment.filter(e => e.shelfId === shelf.id);
-    const tallest = Math.max(0, ...equipmentOnShelf.map(e => EQUIPMENT_PHYSICAL[e.id].dims.h));
-    const required = Math.max(20, ...equipmentOnShelf.map(e => EQUIPMENT_PHYSICAL[e.id].heat === 'high' ? 150 : EQUIPMENT_PHYSICAL[e.id].heat === 'medium' ? 100 : 20));
+    const tallest = Math.max(0, ...equipmentOnShelf.map(e => equipmentPhysical(e).dims.h));
+    const required = Math.max(20, ...equipmentOnShelf.map(e => equipmentPhysical(e).heat === 'high' ? 150 : equipmentPhysical(e).heat === 'medium' ? 100 : 20));
     const delta = Math.max(0, required - (above.y - shelf.y - shelf.thickness - tallest));
     for (const upper of ordered.slice(index + 1)) upper.y += delta;
   });
@@ -109,7 +112,7 @@ export const shelfHoles = (p, s) => [...postCenters(p).map(([x, z], i) => ({ id:
 export function equipmentBoxes(p) {
   return p.equipment.map(e => {
     const s = p.shelves.find(s => s.id === e.shelfId);
-    const { w, h, d } = EQUIPMENT_PHYSICAL[e.id].dims;
+    const { w, h, d } = equipmentPhysical(e).dims;
     return { ...e, w, h, d, center: [s.x + e.x, s.y + s.thickness + h / 2, s.z + e.z] };
   });
 }
@@ -143,12 +146,14 @@ export function validateConstruction(p) {
   }
   for (const e of eqs) {
     const s = p.shelves.find(s => s.id === e.shelfId);
-    const physical = EQUIPMENT_PHYSICAL[e.id];
+    const physical = equipmentPhysical(e);
+    if (e.modelId) add(`${equipmentName(e)}: габаритная модель. Новые координаты разъёмов не проверены; связанные кабельные трассы исключены из расчёта до обмеров.`, 'warning');
+    if (physical.approximateHeight) add(`${equipmentName(e)}: производитель указывает приблизительный габарит; уточни перед изготовлением полок.`, 'warning');
     if (physical.depthIsPlaceholder) add(`${e.id}: глубина корпуса пока условная; измерь усилитель и уточни кабельный вылет до выпуска стойки в производство.`, 'warning');
     if (physical.weight == null) add(`${e.id}: масса неизвестна; учесть её до расчёта нагрузки на полки, опоры и пол.`, 'warning');
     if (Math.abs(e.x) + e.w / 2 > s.width / 2 || Math.abs(e.z) + e.d / 2 > s.depth / 2) add(`${e.id}: корпус выступает за свою полку.`);
     const next = shelves.find(s => s.y > e.center[1] - e.h / 2 + 0.1);
-    const required = EQUIPMENT_PHYSICAL[e.id].openTop ? 350 : EQUIPMENT_PHYSICAL[e.id].heat === 'high' ? 150 : EQUIPMENT_PHYSICAL[e.id].heat === 'medium' ? 100 : 20;
+    const required = physical.openTop ? 350 : physical.heat === 'high' ? 150 : physical.heat === 'medium' ? 100 : 20;
     if (next && next.y - (e.center[1] + e.h / 2) < required) add(`${e.id}: верхний зазор ${(next.y - e.center[1] - e.h / 2).toFixed(1)} мм; проектный ориентир ${required} мм.`, 'warning');
     for (const o of obstacles(p).filter(o => o.id !== e.id && o.id !== e.shelfId)) if (boxesOverlap({ center: e.center, size: [e.w, e.h, e.d] }, o)) add(`${e.id}: пересечение с ${o.name}.`);
   }
@@ -172,5 +177,9 @@ export function manufacturingBOM(p, routes = []) {
   rows.push({ part: 'Мягкий кабельный держатель', quantity: routes.reduce((sum, r) => sum + r.supports.length, 0), description: 'Ø по кабелю; площадки на задней раме, без пережатия оболочки' });
   routes.forEach(r => rows.push({ part: r.cable.name, quantity: 1, description: `Трасса ${Math.ceil(r.length)} + запас ${r.cable.reserve} мм; масса ${(r.mass / 1000).toFixed(2)} кг`, length: Math.ceil(r.length + r.cable.reserve) }));
   rows.push({ part: POWER_STRIP.name, quantity: 1, description: `${POWER_STRIP.article} · 8 Schuko · 3 м · 635 × 100 × 65 мм; размещение по отдельной схеме питания` });
+  p.equipment.forEach(e => {
+    const physical = equipmentPhysical(e), shelf = p.shelves.find(s => s.id === e.shelfId);
+    rows.push({ part: `Аппарат · ${equipmentName(e)}`, quantity: 1, description: `${shelf.name}; Ш×В×Г ${physical.dims.w} × ${physical.dims.h} × ${physical.depthIsPlaceholder ? 'неизвестно' : physical.dims.d} мм; ${physical.weight == null ? 'масса неизвестна' : `${physical.weight} кг`}${e.modelId ? '; планируемый габарит, разъёмы не обмерены' : ''}` });
+  });
   return rows;
 }

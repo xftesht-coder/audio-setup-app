@@ -11,5 +11,5 @@ export const POWER_OUTLETS = [
   { device: 'phono', cable: 'Кастом · Furutech' },
   { device: 'turntable', cable: 'Штатный внешний БП' },
   { device: 'streamer_wiim', cable: 'Адаптер 5 В → USB-C' },
-  { device: null, cable: 'Свободно' }, { device: null, cable: 'Свободно' },
+  { device: 'freya2', name: 'Schiit Freya 2 · план', cable: 'Сетевой кабель уточнить' }, { device: 'warmer_r2r', name: 'FiiO WARMER R2R · кандидат', cable: 'Версия 220–240 В, кабель уточнить' },
 ];

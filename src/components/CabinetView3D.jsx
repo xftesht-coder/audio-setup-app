@@ -9,6 +9,7 @@ import { useCabinetStore } from '../stores/useCabinetStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
 import { equipmentBoxes, sortedShelves } from '../data/workshop';
 import { routeAllCables } from '../data/cableRouting';
+import { AUDIO_MODELS } from '../data/audioModels';
 
 function Movable({ selected, position, equipment, onMove, children }) {
   const controls = useRef();
@@ -60,7 +61,7 @@ function Scene({ readOnly = false }) {
       const s = p.shelves.find(s => s.id === e.shelfId), index = shelves.findIndex(s => s.id === e.shelfId);
       const position = e.center.map(v => v / 1000); if (exploded) position[1] += index * 0.16 + 0.06;
       return <Movable key={`${e.id}-${e.center.join(':')}`} equipment selected={!readOnly && !exploded && selection?.type === 'equipment' && selection.id === e.id} position={position} onMove={([x, _y, z]) => editEquipment(e.id, { x: x - s.x, z: z - s.z })}>
-        <group onClick={readOnly ? undefined : ev => { ev.stopPropagation(); select({ type: 'equipment', id: e.id }); }}><EquipmentModel equipmentId={e.id} w={e.w / 1000} h={e.h / 1000} d={e.d / 1000} selected={!readOnly && selection?.id === e.id} /></group>
+        <group onClick={readOnly ? undefined : ev => { ev.stopPropagation(); select({ type: 'equipment', id: e.id }); }}><EquipmentModel equipmentId={e.id} profile={AUDIO_MODELS[e.modelId]} w={e.w / 1000} h={e.h / 1000} d={e.d / 1000} selected={!readOnly && selection?.id === e.id} /></group>
       </Movable>;
     })}
     {showCables && !exploded && <RoutedCables project={p} routes={routes} selection={readOnly ? null : selection} select={readOnly ? () => {} : select} detail={!readOnly && mode === 'cables'} />}

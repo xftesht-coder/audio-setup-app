@@ -1,4 +1,4 @@
-import { REL_QUAKE } from './listeningRoom';
+import { REL_QUAKE } from './listeningRoom.js';
 
 // ============================================================
 // ПОЛНАЯ БАЗА ДАННЫХ ПОРТОВ УСТРОЙСТВ
