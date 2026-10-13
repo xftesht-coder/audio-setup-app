@@ -31,6 +31,9 @@ function RoomModel({ walking, view, lighting, onReady }) {
       object.material=Array.isArray(object.material)?object.material.map(cloneMaterial):cloneMaterial(object.material);
       const materials=Array.isArray(object.material)?object.material:[object.material];
       materials.forEach(material => {
+        // Batched bevels have degenerate UV tangents at caps. Keep the brushed
+        // colour/roughness maps, but avoid anisotropic BRDF NaNs in WebGL.
+        if (material.name.startsWith('Brushed silver')) material.anisotropy = 0;
         for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
           if (texture && texture.anisotropy !== anisotropy) {
             texture.anisotropy = anisotropy;
