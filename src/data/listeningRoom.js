@@ -23,8 +23,9 @@ export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
 }));
 
 export const LISTENING_ROOM = {
-  model: '/models/listening-room.glb?v=service-1', poster: '/images/listening-room.jpg?v=service-1',
-  cablePoster: '/images/listening-room-cables.jpg?v=service-1',
+  model: '/models/listening-room.glb?v=atelier-2', poster: '/images/listening-room.jpg?v=atelier-2',
+  cablePoster: '/images/listening-room-cables.jpg?v=atelier-2',
+  eveningPoster: '/images/listening-room-evening.jpg?v=atelier-2', detailPoster: '/images/listening-room-detail.jpg?v=atelier-2',
   cabling: {
     note: 'Свободные петли за полками, мягкие держатели у заднего края и широкие дуги тяжёлых шнуров. Напольные линии провисают между деревянными опорами, питание проходит отдельно. Укладка воссоздана по референсам; длины, жёсткость и допустимые радиусы конкретных кабелей ещё не измерены.',
     reference: 'https://ca.pinterest.com/pin/38069559342458139/',

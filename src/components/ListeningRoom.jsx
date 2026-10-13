@@ -16,28 +16,33 @@ class RoomBoundary extends Component {
 export default function ListeningRoom({ compact = false }) {
   const [mode, setMode] = useState('photo');
   const [view, setView] = useState('room');
+  const [lighting, setLighting] = useState('day');
   const [device,setDevice]=useState('freya');
   const [front,setFront]=useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const stage=useRef();
   const [fullscreenError,setFullscreenError]=useState('');
   const interactive=mode!=='photo';
+  const photoDetail = mode === 'photo' && view === 'system';
+  const photoCables = mode === 'photo' && view === 'cables';
+  const poster = photoCables ? LISTENING_ROOM.cablePoster : photoDetail ? LISTENING_ROOM.detailPoster : lighting === 'evening' ? LISTENING_ROOM.eveningPoster : LISTENING_ROOM.poster;
   return <section className={`listening-room ${compact ? 'listening-room-compact' : ''}`} aria-label="Комната аудиосистемы">
     {!compact && <header className="room-heading"><h1>Комната для музыки</h1><p>AE320 · 2 × REL · Gliver ДеФранс</p></header>}
     <div className="room-toolbar">
       <div role="group" aria-label="Режим просмотра">{[['photo', 'Фото'], ['3d', '3D'], ['walk', 'Прогулка'], ['patch','За стойку']].map(([id, label]) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</div>
       {mode==='patch'&&<div role="group" aria-label="Сторона аппарата"><button aria-pressed={!front} onClick={()=>setFront(false)}>Разъёмы</button><button aria-pressed={front} onClick={()=>setFront(true)}>Передняя панель</button></div>}
-      {mode === 'photo' && <div role="group" aria-label="Ракурс фотографии"><button aria-pressed={view !== 'cables'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели крупно</button></div>}
+      {mode === 'photo' && <div role="group" aria-label="Ракурс фотографии"><button aria-pressed={!['cables','system'].includes(view)} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели крупно</button><button aria-pressed={view === 'system'} onClick={() => setView('system')}>Аппаратура крупно</button></div>}
       {mode === '3d' && <div role="group" aria-label="Ракурс камеры"><button aria-pressed={view === 'room'} onClick={() => setView('room')}>Комната</button><button aria-pressed={view === 'system'} onClick={() => setView('system')}>Система</button><button aria-pressed={view === 'cables'} onClick={() => setView('cables')}>Кабели</button><button aria-pressed={view === 'seat'} onClick={() => setView('seat')}>Кресло</button></div>}
+      {(interactive || (!photoDetail && !photoCables)) && <div role="group" aria-label="Освещение">{[['day','День'],['evening','Вечер']].map(([id,label]) => <button key={id} aria-pressed={lighting===id} onClick={()=>setLighting(id)}>{label}</button>)}</div>}
       {interactive && mode!=='patch' && <button className="room-fullscreen" onClick={async()=>{try{await stage.current.requestFullscreen();setFullscreenError('');}catch{setFullscreenError('Полный экран недоступен в этом браузере. Прогулка работает в окне.');}}}>На весь экран</button>}
       <span>{mode==='patch'?'СХЕМА СОХРАНЯЕТСЯ АВТОМАТИЧЕСКИ':'ЛИЧНАЯ АУДИОСИСТЕМА'}</span>
     </div>
     <div className={`room-workspace ${mode==='patch'?'is-patching':''}`}><div ref={stage} className={`room-stage ${mode==='walk'?'room-stage-walk':''} ${mode==='patch'?'room-stage-patch':''}`}>
       <button className="room-exit-fullscreen" onClick={()=>document.exitFullscreen?.()}>Выйти из полного экрана</button>
-      <img className="room-poster" src={mode === 'photo' && view === 'cables' ? LISTENING_ROOM.cablePoster : LISTENING_ROOM.poster} alt={mode === 'photo' && view === 'cables' ? 'Вид за стойкой: свободные кабельные петли, мягкие держатели и напольные опоры; задняя стена скрыта для осмотра' : 'Аудиосистема с чёрными глянцевыми AE320, двумя серыми REL Quake, белым ковром и двумя лампами в светлой комнате'} />
-      {interactive && !unavailable && <div className="room-canvas"><RoomBoundary><Suspense fallback={<p className="room-loading" role="status">Готовим 3D…</p>}><RoomView3D view={mode==='patch'?'service':view} walking={mode==='walk'} editing={mode==='patch'} device={device} front={front} onEdit={()=>{setFront(false);setMode('patch');}} onUnavailable={() => setUnavailable(true)} /></Suspense></RoomBoundary></div>}
-      {unavailable && interactive && <p className="room-error" role="status">3D недоступно — показываем рендер комнаты.</p>}
-      {!['walk','patch'].includes(mode) && <div className="room-caption"><b>{mode==='3d'&&view==='seat'?'Gliver ДеФранс · молочный велюр':view === 'cables' ? 'Свободные петли · мягкие крепления' : 'AE320 · Piano Gloss Black'}</b><span>{mode==='3d'&&view==='seat'?'900 × 1080 × 850 мм · по твоей спецификации':view === 'cables' ? 'Общие выходы Rusich → AE320 + REL HIGH LEVEL' : 'Молочный ДеФранс · белый Quincey · тёплый свет'}</span></div>}
+      <img className="room-poster" src={poster} alt={photoDetail ? 'Крупный план аппаратуры: металлические панели, лампы Freya и деревянная стойка' : photoCables ? 'Вид за стойкой: свободные кабельные петли, мягкие держатели и напольные опоры; задняя стена скрыта для осмотра' : 'Аудиосистема с чёрными глянцевыми AE320, двумя серыми REL Quake, белым ковром и двумя лампами в светлой комнате'} />
+      {interactive && !unavailable && <div className="room-canvas"><RoomBoundary><Suspense fallback={<p className="room-loading" role="status">Готовим 3D…</p>}><RoomView3D view={mode==='patch'?'service':view} walking={mode==='walk'} editing={mode==='patch'} device={device} front={front} lighting={lighting} onEdit={()=>{setFront(false);setMode('patch');}} onUnavailable={() => setUnavailable(true)} /></Suspense></RoomBoundary></div>}
+      {unavailable && interactive && <p className="room-error" role="status">3D недоступно — показываем рендер комнаты. <button onClick={()=>setUnavailable(false)}>Повторить запуск 3D</button></p>}
+      {!['walk','patch'].includes(mode) && <div className="room-caption"><b>{photoDetail?'Аппаратура · фактуры и детали':mode==='3d'&&view==='seat'?'Gliver ДеФранс · молочный велюр':view === 'cables' ? 'Свободные петли · мягкие крепления' : 'AE320 · Piano Gloss Black'}</b><span>{photoDetail?'Лампы · шлифованный алюминий · дерево':mode==='3d'&&view==='seat'?'900 × 1080 × 850 мм · по твоей спецификации':view === 'cables' ? 'Общие выходы Rusich → AE320 + REL HIGH LEVEL' : lighting==='evening'?'Вечер · тёплые лампы и мягкие отражения':'День · боковой свет и натуральные фактуры'}</span></div>}
     </div>{mode==='patch'&&<RoomPatchInspector device={device} onDevice={setDevice}/>}</div>
     <p className="share-footnote">{mode==='patch'?'Выход → вход: выбери точки на панели или разъёмы в списке. Кабель можно вынуть с любой стороны; зелёным отмечены совместимые разъёмы.':mode==='walk'?'WASD / стрелки — шаг · мышь — обзор · Esc — пауза. «Зайти за стойку» переносит в проход сзади.':mode === '3d' ? 'Вращай мышью или пальцем. Колесо — приблизить. Для подключения открой «За стойку».' : 'Сохранённый рендер Blender. Изменённые подключения видны в 3D.'}</p>
     {fullscreenError && <p className="share-note" role="status">{fullscreenError}</p>}

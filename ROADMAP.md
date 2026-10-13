@@ -85,3 +85,10 @@ Hi-Fi Market позднее даёт цены. Порядок: проблема 
 ## Чего не обещаем
 
 Не оцениваем звук по стоимости, бренду или внешности. Не придумываем размеры, распайку, измерения, цены и степень уверенности. Не выдаём одинаковый разъём за доказанное согласование и не называем прототип инженерно сертифицированным CAD.
+
+### Visual patch — 14 October 2026
+
+- [x] Refine Blender materials from inspected visual references; retain source/provenance notes.
+- [x] Add day/evening room lighting and an equipment close-up.
+- [x] Reuse the loaded 3D room across camera changes instead of rebuilding its clone.
+- [ ] Validate exact panel geometry and every electrical property per revision; artistic reconstruction remains labelled.

@@ -5,15 +5,15 @@ ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT.parents[1]/'artifacts'/'blender'
 tempfile.tempdir=str(OUT/'gltf-temporary')
 
-def finish_room(scene,col):
+def finish_room(scene,col,stem='service',samples=160,detail=False):
     scene['geometry_status']='Photo-reference reconstruction, not factory CAD. Freya 2 tube cluster right 2x2. Rusich panels from owner PDF; depth provisional. A90 revision unconfirmed.'
     scene['chair_status']='Owner: Gliver DeFrance, milk Vertical velour, 900x1080x850mm. Soft form reconstructed from drawing.'
     scene['interactive_wiring']='10 audio and 8 equipment power cables. Same atlas in Blender and web. Lamp feeds and wall wiring static. REL XLR HIGH LEVEL pinout unknown.'
     hero=scene.camera;hero.location=(2.20,-4.65,1.90);hero.rotation_euler=(Vector((-.20,-.60,.73))-hero.location).to_track_quat('-Z','Y').to_euler();hero.data.lens=28
     hero.data.dof.use_dof=True;hero.data.dof.focus_distance=(Vector((-.20,-.60,.73))-hero.location).length;hero.data.dof.aperture_fstop=9
     scene.render.filepath=str(ROOT/'public/images/listening-room.jpg')
-    scene.cycles.samples=160
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'audio-setup-listening-room-service.blend'))
+    scene.cycles.samples=samples
+    bpy.ops.wm.save_as_mainfile(filepath=str(OUT/f'audio-setup-listening-room-{stem}.blend'))
     if os.environ.get('AUDIO_SKIP_RENDER')!='1':
         bpy.ops.render.render(write_still=True);print('SERVICE_HERO_DONE',flush=True)
         d=bpy.data.cameras.new('Equipment rear detail');cam=bpy.data.objects.new('Equipment rear detail',d);col.objects.link(cam);cam.location=(1.25,2.5,1.50)
@@ -25,6 +25,13 @@ def finish_room(scene,col):
         for o in hidden:o.hide_render=False
         bpy.data.objects.remove(lo,do_unlink=True);scene.camera=hero
         print('SERVICE_REAR_DONE',flush=True)
+        if detail:
+            cam.location=(.79,-1.45,1.12)
+            cam.rotation_euler=(Vector((0,0,.88))-cam.location).to_track_quat('-Z','Y').to_euler()
+            d.lens=53;d.dof.use_dof=True;d.dof.focus_distance=(Vector((0,0,.88))-cam.location).length;d.dof.aperture_fstop=6.3
+            scene.camera=cam;scene.render.filepath=str(ROOT/'public/images/listening-room-detail.jpg')
+            bpy.ops.render.render(write_still=True);scene.camera=hero
+            print('SERVICE_DETAIL_DONE',flush=True)
     
     # Keep dynamic audio cables out of glTF: Three.js renders the persisted patch.
     export=bpy.data.scenes.new('Service room web export');bpy.context.window.scene=export;dg=scene.view_layers[0].depsgraph;groups={}

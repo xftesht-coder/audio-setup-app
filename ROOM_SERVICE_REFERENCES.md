@@ -25,3 +25,13 @@ Audio and equipment power cables can be disconnected at either end, reconnected,
 Local storage is versioned and restored defensively. JSON export is a record of the patch, not a manufacturing drawing or an electrical safety certificate. Port placement, cable length, flexibility and bend radii are not measured. Scene wiring remains independent of the separate system-planning and cabinet editors, and the UI states this limitation.
 
 Validation includes preset topology, persistent disconnect/reconnect history, connector retention, invalid saved state, finished-floor and shelf clearance, and a traversable rear walking route. Photos show the default patch; edited patches appear in interactive 3D.
+
+## Atelier visual pass — 14 October 2026
+
+Visual references inspected on Pinterest: [light wood listening room](https://dk.pinterest.com/pin/509188301595058556/) and [Massif wooden equipment rack](https://ca.pinterest.com/pin/592364157249810784/). Used as references for directional wood grain, side lighting, edge reflections and contrast between soft textiles and hard equipment finishes. No reference photographs are shipped with the app; these are visual references, not evidence of acoustic performance.
+
+`refine_room_atelier.py` starts from the service scene and saves a separate `audio-setup-listening-room-atelier.blend`. Packed procedural base-colour, roughness and normal maps refine wood, brushed aluminium and milk velour. Lacquer, rubber, glass and textiles use distinct reflection responses. The scene includes day/evening hero photographs and a dedicated equipment close-up. The interactive scene provides its own day/evening light rigs; it is not a pixel-identical Cycles render or a calibrated lighting simulation.
+
+Changing the interactive camera now updates cutaway visibility without cloning the whole room again. Materials are cloned once per loaded scene and disposed independently of the shared GLB cache.
+
+The context-loss listener now detaches when the Canvas unmounts, so switching from 3D to a photograph does not poison later 3D views. Genuine context loss exposes an explicit retry action.
