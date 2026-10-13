@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { DEFAULT_ROOM_CABLES, ROOM_PORT_MAP } from '../data/roomEquipment.js';
 import { connectionCheck, restoreRoomCables, roomPreset } from '../data/roomWiring.js';
+import { parseRoomBackup } from '../data/roomBackup.js';
 
 let storageFailed=false;
 const storage=createJSONStorage(()=>({
@@ -42,4 +43,5 @@ export const useRoomWiring=create(persist((set,get)=>({
   undo(){const s=get();if(!s.past.length)return;set({cables:s.past.at(-1),past:s.past.slice(0,-1),future:[s.cables,...s.future],selectedPort:null,selectedCable:null,message:'Действие отменено.'});},
   redo(){const s=get();if(!s.future.length)return;set({cables:s.future[0],past:[...s.past,s.cables],future:s.future.slice(1),selectedPort:null,selectedCable:null,message:'Действие повторено.'});},
   preset(name){get().commit(roomPreset(name),'Схема применена. Это проект подключения; выбор активных входов выполняется на аппаратах.');},
+  importFile(text){const cables=parseRoomBackup(text);get().commit(cables,`Загружено кабелей: ${cables.length}. Предыдущую схему можно вернуть кнопкой «Отменить».`);},
 }),{name:'audio-room-wiring-v1',version:1,storage,partialize:s=>({cables:s.cables}),merge:(saved,current)=>({...current,cables:restoreRoomCables(saved?.cables??DEFAULT_ROOM_CABLES)})}));

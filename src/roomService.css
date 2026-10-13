@@ -45,3 +45,6 @@
 .room-chair-fact p {margin:6px 0 0;font-size:11px;color:#73816e;}
 @media(max-width:850px){.room-workspace.is-patching{grid-template-columns:1fr}.room-stage-patch{position:relative;top:auto;height:55vh;min-height:320px}.room-patch{display:block}.patch-ports{grid-template-columns:1fr 1fr}.patch-message{min-height:0}.room-heading h1{font-size:21px}.room-toolbar>div{flex-wrap:wrap}.patch-title{margin-bottom:9px}}
 @media(max-width:420px){.patch-ports{grid-template-columns:1fr}.app-navigation button{font-size:10px;padding:6px 8px}.room-heading{margin-top:6px}.room-toolbar button{font-size:11px;padding:6px 9px}}
+.patch-import-help{font-size:10px;color:#6b7768;line-height:1.5;margin:7px 0}
+.patch-import-error{font-size:11px;color:#8d4528;line-height:1.5;margin:8px 0}
+.patch-history a{font-size:11px;align-self:center;text-decoration:underline}

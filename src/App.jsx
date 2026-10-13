@@ -9,7 +9,8 @@ const CabinetPanel = lazy(() => import('./components/CabinetPanel'));
 const ShareView = lazy(() => import('./components/ShareView'));
 const LightingCatalog = lazy(() => import('./components/LightingCatalog'));
 const SystemBuilder = lazy(() => import('./components/SystemBuilder'));
-const getSection = () => ({ '#cabinet': 'cabinet', '#room': 'room', '#lighting': 'lighting', '#system': 'system' }[window.location.hash] || 'patch');
+const SystemIntelligence = lazy(() => import('./components/SystemIntelligence'));
+const getSection = () => ({ '#cabinet': 'cabinet', '#room': 'room', '#lighting': 'lighting', '#system': 'system', '#intelligence': 'intelligence' }[window.location.hash] || 'patch');
 
 export default function App() {
   const [section, setSectionState] = useState(getSection);
@@ -32,6 +33,7 @@ export default function App() {
         <div className="app-navigation flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setSection('room')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'room' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Комната</button>
           <button onClick={() => setSection('system')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'system' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Система · Schiit</button>
+          <button onClick={() => setSection('intelligence')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'intelligence' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Проверка системы</button>
           <button onClick={() => setSection('lighting')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'lighting' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Свет · Govee</button>
           <button
             onClick={() => setSection('patch')}
@@ -47,10 +49,10 @@ export default function App() {
           </button>
         </div>
 
-        {!['lighting', 'system','room'].includes(section) && <PowerDistribution />}
+        {!['lighting', 'system','room','intelligence'].includes(section) && <PowerDistribution />}
         {section === 'patch' && <p className="system-legacy-note">Сохранённая схема с A90. Выбрать Freya, WARMER или другой аппарат и проверить новый тракт можно в <a href="/#system">конфигураторе системы ↗</a>.</p>}
         <PageBoundary key={section}><Suspense fallback={<p className="page-loading" role="status">Открываем раздел…</p>}>
-          {section === 'patch' ? <PatchPanel /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}
+          {section === 'patch' ? <PatchPanel /> : section === 'intelligence' ? <SystemIntelligence /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}
         </Suspense></PageBoundary>
       </main>
     </div>
