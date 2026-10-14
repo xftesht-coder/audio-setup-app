@@ -5,12 +5,13 @@ import PageBoundary from './components/PageBoundary';
 
 const Sidebar = lazy(() => import('./components/Sidebar'));
 const PatchPanel = lazy(() => import('./components/PatchPanel'));
+const LegacyPatchPanel = lazy(() => import('./components/LegacyPatchPanel'));
 const CabinetPanel = lazy(() => import('./components/CabinetPanel'));
 const ShareView = lazy(() => import('./components/ShareView'));
 const LightingCatalog = lazy(() => import('./components/LightingCatalog'));
 const SystemBuilder = lazy(() => import('./components/SystemBuilder'));
 const SystemIntelligence = lazy(() => import('./components/SystemIntelligence'));
-const getSection = () => ({ '#cabinet': 'cabinet', '#room': 'room', '#lighting': 'lighting', '#system': 'system', '#intelligence': 'intelligence' }[window.location.hash] || 'patch');
+const getSection = () => ({ '#cabinet': 'cabinet', '#room': 'room', '#lighting': 'lighting', '#system': 'system', '#intelligence': 'intelligence', '#legacy-patch': 'legacy-patch' }[window.location.hash] || 'patch');
 
 export default function App() {
   const [section, setSectionState] = useState(getSection);
@@ -28,7 +29,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex bg-paper">
-      {section === 'patch' && <PageBoundary><Suspense fallback={null}><Sidebar /></Suspense></PageBoundary>}
+      {section === 'legacy-patch' && <PageBoundary><Suspense fallback={null}><Sidebar /></Suspense></PageBoundary>}
       <main className="flex-1 min-w-0 p-4">
         <div className="app-navigation flex gap-2 mb-4 flex-wrap">
           <button onClick={() => setSection('room')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'room' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Комната</button>
@@ -49,10 +50,10 @@ export default function App() {
           </button>
         </div>
 
-        {!['lighting', 'system','room','intelligence'].includes(section) && <PowerDistribution />}
-        {section === 'patch' && <p className="system-legacy-note">Сохранённая схема с A90. Выбрать Freya, WARMER или другой аппарат и проверить новый тракт можно в <a href="/#system">конфигураторе системы ↗</a>.</p>}
+        {['cabinet', 'legacy-patch'].includes(section) && <PowerDistribution />}
+        {section === 'legacy-patch' && <p className="system-legacy-note">Архивный редактор примеров. Эти соединения не меняют комнату и не сохраняются после перезагрузки. <a href="#patch">Открыть общую схему ↗</a></p>}
         <PageBoundary key={section}><Suspense fallback={<p className="page-loading" role="status">Открываем раздел…</p>}>
-          {section === 'patch' ? <PatchPanel /> : section === 'intelligence' ? <SystemIntelligence /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}
+          {section === 'legacy-patch' ? <LegacyPatchPanel /> : section === 'patch' ? <PatchPanel /> : section === 'intelligence' ? <SystemIntelligence /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}
         </Suspense></PageBoundary>
       </main>
     </div>
