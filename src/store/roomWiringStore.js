@@ -3,13 +3,16 @@ import { DEFAULT_ROOM_CABLES, ROOM_PORT_MAP } from '../data/roomEquipment.js';
 import { connectionCheck, roomPreset } from '../data/roomWiring.js';
 import { parseRoomSnapshot, roomSnapshot } from '../data/roomBackup.js';
 import { defaultListening, parseListening } from '../data/roomListening.js';
+import { defaultComponents, inferComponents } from '../data/roomComponents.js';
+import { previewReplacement, replacementBase } from '../data/roomReplacement.js';
 
-export const ROOM_STORAGE_KEY = 'audio-room-state-v2';
+export const ROOM_STORAGE_KEY = 'audio-room-state-v3';
+export const PREVIOUS_ROOM_STORAGE_KEY = 'audio-room-state-v2';
 export const LEGACY_ROOM_STORAGE_KEY = 'audio-room-wiring-v1';
-const snapshot = s => ({ cables: s.cables, listening: s.listening });
+const snapshot = s => ({ cables: s.cables, listening: s.listening, components: s.components });
 
 export function createRoomWiringStore(storage = () => globalThis.localStorage, makeId = () => crypto.randomUUID()) {
-  let initial = { cables: structuredClone(DEFAULT_ROOM_CABLES), listening: defaultListening() };
+  let initial = { cables: structuredClone(DEFAULT_ROOM_CABLES), listening: defaultListening(), components: defaultComponents() };
   let raw = null, unreadableRaw = null, readFailed = false, readComplete = false, storageError = '';
   let message = 'Выбери разъём на аппарате или в списке.';
   try {
@@ -18,9 +21,13 @@ export function createRoomWiringStore(storage = () => globalThis.localStorage, m
     raw = target.getItem(ROOM_STORAGE_KEY);
     if (raw !== null) { readComplete = true; initial = parseRoomSnapshot(raw); }
     else {
-      const legacy = target.getItem(LEGACY_ROOM_STORAGE_KEY);
+      const previous = target.getItem(PREVIOUS_ROOM_STORAGE_KEY);
+      const legacy = previous === null ? target.getItem(LEGACY_ROOM_STORAGE_KEY) : null;
       readComplete = true;
-      if (legacy !== null) {
+      if (previous !== null) {
+        initial = parseRoomSnapshot(previous);
+        message = 'Подключения и входы перенесены. Прежняя копия сохранена.';
+      } else if (legacy !== null) {
         const saved = JSON.parse(legacy);
         if (saved?.version !== 1 || !saved.state) throw new Error('legacy version');
         initial = parseRoomSnapshot(JSON.stringify({ version: 1, cables: saved.state.cables }));
@@ -49,8 +56,23 @@ export function createRoomWiringStore(storage = () => globalThis.localStorage, m
       } catch { set({ storageError: 'Изменения работают в этой вкладке, но не сохранены. Скачай схему перед закрытием; исходные записи не удалены.' }); }
     };
     return {
-  ...initial,storageError,past:[],future:[],selectedPort:null,selectedCable:null,message,
-  commit(cables,message,listening=get().listening) {const s=get();persist({cables,listening,past:[...s.past,snapshot(s)].slice(-30),future:[],selectedPort:null,selectedCable:null,message});},
+  ...initial,storageError,past:[],future:[],selectedPort:null,selectedCable:null,message,replacement:null,
+  commit(cables,message,listening=get().listening,components) {
+    const s=get();
+    if(!components){const inferred=cables===s.cables?{}:inferComponents(cables);components={...s.components,...Object.fromEntries(Object.entries(inferred).filter(([,id])=>id!==null))};}
+    persist({cables,listening,components,past:[...s.past,snapshot(s)].slice(-30),future:[],selectedPort:null,selectedCable:null,message,replacement:null});
+  },
+  previewReplacement(choices) {const proposal=previewReplacement(get(),{...get().replacement?.choices,...choices});set({replacement:proposal.swaps.length?proposal:null});},
+  cancelReplacement() {set({replacement:null});},
+  applyReplacement() {
+    const s=get(),proposal=s.replacement;
+    if(!proposal)return false;
+    if(proposal.base!==replacementBase(s)){set({replacement:previewReplacement(s,proposal.choices),message:'Схема изменилась. Проверь обновлённый предпросмотр и примени ещё раз.'});return false;}
+    if(proposal.problems.length||!proposal.swaps.length)return false;
+    const next=parseRoomSnapshot(JSON.stringify({version:3,...proposal.next}));
+    s.commit(next.cables,'Замена применена к комнате и проверке. Аппараты остаются на полках; действие можно отменить.',next.listening,next.components);
+    return true;
+  },
   setListening(changes) {
     const s=get(),listening=parseListening({...s.listening,...changes,inputs:{...s.listening.inputs,...changes.inputs}});
     if(JSON.stringify(listening)===JSON.stringify(s.listening))return;
@@ -82,10 +104,10 @@ export function createRoomWiringStore(storage = () => globalThis.localStorage, m
   },
   remove(id){const s=get();s.commit(s.cables.filter(c=>c.id!==id),'Кабель убран. Действие можно отменить.');},
   cancel(){set({selectedPort:null,selectedCable:null,message:'Выбери разъём или кабель.'});},
-  undo(){const s=get();if(!s.past.length)return;persist({...s.past.at(-1),past:s.past.slice(0,-1),future:[snapshot(s),...s.future],selectedPort:null,selectedCable:null,message:'Действие отменено.'});},
-  redo(){const s=get();if(!s.future.length)return;persist({...s.future[0],past:[...s.past,snapshot(s)],future:s.future.slice(1),selectedPort:null,selectedCable:null,message:'Действие повторено.'});},
-  preset(name){if(!['a90','bifrost','warmer'].includes(name))return;const s=get();s.commit(roomPreset(name),'Схема применена. Входы не переключались; сверь их с новым трактом.');},
-  importFile(text){const {cables,listening}=parseRoomSnapshot(text);get().commit(cables,`Загружено кабелей: ${cables.length}. Схему и настройки можно вернуть кнопкой «Отменить».`,listening);},
+  undo(){const s=get();if(!s.past.length)return;persist({...s.past.at(-1),past:s.past.slice(0,-1),future:[snapshot(s),...s.future],selectedPort:null,selectedCable:null,replacement:null,message:'Действие отменено.'});},
+  redo(){const s=get();if(!s.future.length)return;persist({...s.future[0],past:[...s.past,snapshot(s)],future:s.future.slice(1),selectedPort:null,selectedCable:null,replacement:null,message:'Действие повторено.'});},
+  preset(name){if(!['a90','bifrost','warmer'].includes(name))return;const s=get(),cables=roomPreset(name);s.commit(cables,'Схема применена. Входы не переключались; сверь их с новым трактом.',s.listening,inferComponents(cables));},
+  importFile(text){const {cables,listening,components}=parseRoomSnapshot(text);get().commit(cables,`Загружено кабелей: ${cables.length}. Схему, состав и настройки можно вернуть кнопкой «Отменить».`,listening,components);},
     };
   });
 }

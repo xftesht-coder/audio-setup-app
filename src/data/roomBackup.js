@@ -1,6 +1,7 @@
 import { ROOM_PORT_MAP } from './roomEquipment.js';
 import { connectionCheck, restoreRoomCables } from './roomWiring.js';
 import { defaultListening, parseListening } from './roomListening.js';
+import { inferComponents, parseComponents } from './roomComponents.js';
 
 export const MAX_ROOM_BACKUP_BYTES = 128 * 1024;
 export function parseRoomBackup(text) {
@@ -8,14 +9,14 @@ export function parseRoomBackup(text) {
 }
 
 export function roomSnapshot(state) {
-  return { version: 2, cables: state.cables, listening: state.listening };
+  return { version: 3, cables: state.cables, listening: state.listening, components: state.components };
 }
 
 export function parseRoomSnapshot(text) {
   if (typeof text !== 'string' || text.length > MAX_ROOM_BACKUP_BYTES) throw new Error('Файл слишком большой. Максимум 128 КБ.');
   let data;
   try { data = JSON.parse(text); } catch { throw new Error('Файл не является корректным JSON.'); }
-  if (![1, 2].includes(data?.version) || !Array.isArray(data.cables) || data.cables.length > 100) throw new Error('Нужна резервная копия комнаты версии 1 или 2 (до 100 кабелей).');
+  if (![1, 2, 3].includes(data?.version) || !Array.isArray(data.cables) || data.cables.length > 100) throw new Error('Нужна резервная копия комнаты версии 1, 2 или 3 (до 100 кабелей).');
   const listening = data.version === 1 ? defaultListening() : parseListening(data.listening);
   for (const c of data.cables) {
     if (!c || typeof c.id !== 'string' || !c.id.length || c.id.length > 120) throw new Error('Некорректный идентификатор кабеля.');
@@ -37,7 +38,8 @@ export function parseRoomSnapshot(text) {
   }
   const cables = restoreRoomCables(data.cables);
   if (cables.length !== data.cables.length) throw new Error('В файле есть дубликаты, занятые порты или несовместимые соединения. Текущая схема сохранена.');
-  return { cables, listening };
+  const components = data.version === 3 ? parseComponents(data.components) : inferComponents(cables);
+  return { cables, listening, components };
 }
 
 export function downloadJson(filename, value) {

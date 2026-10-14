@@ -3,6 +3,7 @@ import { LISTENING_ROOM, REL_QUAKE, SIDE_POWER_STRIPS } from '../data/listeningR
 import RoomPatchInspector from './RoomPatchInspector';
 import PowerDistribution from './PowerDistribution';
 import { GLIVER_CHAIR } from '../data/roomEquipment';
+import RoomComponentSummary from './RoomComponentSummary';
 
 const RoomView3D = lazy(() => import('./RoomView3D'));
 class RoomBoundary extends Component {
@@ -14,7 +15,7 @@ class RoomBoundary extends Component {
 }
 
 export default function ListeningRoom({ compact = false }) {
-  const [mode, setMode] = useState('photo');
+  const [mode, setMode] = useState(() => !compact && new URLSearchParams(window.location.search).get('room') === 'patch' ? 'patch' : 'photo');
   const [view, setView] = useState('room');
   const [lighting, setLighting] = useState('day');
   const [device,setDevice]=useState('freya');
@@ -28,6 +29,7 @@ export default function ListeningRoom({ compact = false }) {
   const poster = photoCables ? LISTENING_ROOM.cablePoster : photoDetail ? LISTENING_ROOM.detailPoster : lighting === 'evening' ? LISTENING_ROOM.eveningPoster : LISTENING_ROOM.poster;
   return <section className={`listening-room ${compact ? 'listening-room-compact' : ''}`} aria-label="Комната аудиосистемы">
     {!compact && <header className="room-heading"><h1>Комната для музыки</h1><p>AE320 · 2 × REL · Gliver ДеФранс</p></header>}
+    {!compact && <RoomComponentSummary />}
     <div className="room-toolbar">
       <div role="group" aria-label="Режим просмотра">{[['photo', 'Фото'], ['3d', '3D'], ['walk', 'Прогулка'], ['patch','За стойку']].map(([id, label]) => <button key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</div>
       {mode==='patch'&&<div role="group" aria-label="Сторона аппарата"><button aria-pressed={!front} onClick={()=>setFront(false)}>Разъёмы</button><button aria-pressed={front} onClick={()=>setFront(true)}>Передняя панель</button></div>}

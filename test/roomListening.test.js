@@ -63,7 +63,7 @@ test('legacy storage migrates without guessing selectors or overwriting the orig
   assert.deepEqual(reloaded.getState().listening, digital());
   assert.deepEqual(reloaded.getState().cables, store.getState().cables);
   assert.equal(storage.getItem(LEGACY_ROOM_STORAGE_KEY), legacy);
-  assert.deepEqual(parseRoomSnapshot(storage.getItem(ROOM_STORAGE_KEY)), { cables: store.getState().cables, listening: digital() });
+  assert.deepEqual(parseRoomSnapshot(storage.getItem(ROOM_STORAGE_KEY)), { cables: store.getState().cables, listening: digital(), components: store.getState().components });
 });
 
 test('intentionally empty legacy and v2 rooms stay empty on migration and reload', () => {
@@ -79,7 +79,7 @@ test('backups and undo/redo retain both cables and inputs; v1 import resets unkn
   store.getState().unplug('digital', 'to');
   const saved = roomSnapshot(store.getState());
   const roundTrip = parseRoomSnapshot(JSON.stringify(saved));
-  assert.deepEqual(JSON.parse(JSON.stringify(roundTrip)), JSON.parse(JSON.stringify({ cables: saved.cables, listening: saved.listening })));
+  assert.deepEqual(JSON.parse(JSON.stringify(roundTrip)), JSON.parse(JSON.stringify({ cables: saved.cables, listening: saved.listening, components: saved.components })));
   store.getState().importFile(JSON.stringify({ version: 1, cables: [] }));
   assert.deepEqual(store.getState().listening, defaultListening());
   store.getState().undo();
