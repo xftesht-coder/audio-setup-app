@@ -15,7 +15,7 @@ export default function RoomSystemEditor({ compact = false }) {
   const report = useMemo(() => auditRoom(s.cables, s.listening.source, s.listening), [s.cables, s.listening]);
   const choices = p?.choices || s.components;
   return <section id={compact ? undefined : 'room-system-editor'} className={`room-system-editor ${compact ? 'room-system-compact' : ''}`} aria-label="Замена устройств комнаты">
-    <header><div><small>КАТАЛОГ ↔ КОМНАТА · 0.4</small><h2>Тракт в комнате</h2></div>{!compact && <RoomServiceLink />}</header>
+    <header><div><small>КАТАЛОГ ↔ КОМНАТА · 0.5</small><h2>Тракт в комнате</h2></div>{!compact && <RoomServiceLink />}</header>
     <p>ЦАП и предусилитель меняются вместе с подключениями. Все четыре аппарата остаются на полках; это проект системы, а не подтверждение покупки.</p>
     <div className="room-component-selectors">{Object.entries(ROOM_COMPONENTS).map(([role, options]) => <label key={role}>{role === 'dac' ? 'ЦАП в комнате' : 'Предусилитель в комнате'}<select value={choices[role] || ''} onChange={e => s.previewReplacement({ [role]: e.target.value })}>
       <option value="" disabled>Не определён по старой схеме</option>{options.map(d => <option key={d.id} value={d.id}>{name(d.id)}</option>)}

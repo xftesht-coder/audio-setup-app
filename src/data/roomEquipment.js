@@ -1,7 +1,7 @@
 // Metres, Blender axes (x right, y rear, z up). Port positions are traced from
 // reference photographs, not factory CAD. A stereo pair is one patch operation.
 export const ROOM_DEVICES = [
-  { id:'freya', name:'Schiit Freya 2', center:[-.14,0,.9702], size:[.4064,.2032,.0508], status:'Планируется', source:'https://www.schiit.com/products/freya_2', accuracy:'Передняя и задняя панели по официальным фото; лампы 2 × 2 справа.' },
+  { id:'freya', name:'Schiit Freya 2', center:[-.14,0,.9702], size:[.4064,.2032,.0508], status:'Планируется', source:'https://www.schiit.com/products/freya-2', accuracy:'Передняя и задняя панели по официальным фото; лампы 2 × 2 справа.' },
   { id:'warmer', name:'FiiO WARMER R2R', center:[.207,0,.9782], size:[.2235,.213,.0588], status:'Кандидат', source:'https://www.fiio.com/WARMERR2R_picture', accuracy:'Две стрелочные шкалы; ручка выбирает вход, выход фиксированный.' },
   { id:'skoll', name:'Schiit Skoll F', center:[-.135,-.094,.7878], size:[.2286,.1524,.034], source:'https://www.schiit.com/products/skoll-f', accuracy:'Панели по официальным фото. Внешний трансформатор 24/6 VAC.' },
   { id:'wiim', name:'WiiM Pro Plus', center:[.135,-.10,.7898], size:[.14,.14,.038], source:'https://wiimhome.com/wiimpro/specs', accuracy:'Габарит производителя; расположение портов по фото, без обмеров.' },

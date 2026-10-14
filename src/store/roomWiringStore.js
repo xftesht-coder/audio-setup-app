@@ -6,8 +6,9 @@ import { defaultListening, parseListening } from '../data/roomListening.js';
 import { defaultComponents, inferComponents } from '../data/roomComponents.js';
 import { previewReplacement, replacementBase } from '../data/roomReplacement.js';
 
-export const ROOM_STORAGE_KEY = 'audio-room-state-v3';
-export const PREVIOUS_ROOM_STORAGE_KEY = 'audio-room-state-v2';
+export const ROOM_STORAGE_KEY = 'audio-room-state-v4';
+export const PREVIOUS_ROOM_STORAGE_KEY = 'audio-room-state-v3';
+export const V2_ROOM_STORAGE_KEY = 'audio-room-state-v2';
 export const LEGACY_ROOM_STORAGE_KEY = 'audio-room-wiring-v1';
 const snapshot = s => ({ cables: s.cables, listening: s.listening, components: s.components });
 
@@ -21,7 +22,7 @@ export function createRoomWiringStore(storage = () => globalThis.localStorage, m
     raw = target.getItem(ROOM_STORAGE_KEY);
     if (raw !== null) { readComplete = true; initial = parseRoomSnapshot(raw); }
     else {
-      const previous = target.getItem(PREVIOUS_ROOM_STORAGE_KEY);
+      const previous = target.getItem(PREVIOUS_ROOM_STORAGE_KEY) ?? target.getItem(V2_ROOM_STORAGE_KEY);
       const legacy = previous === null ? target.getItem(LEGACY_ROOM_STORAGE_KEY) : null;
       readComplete = true;
       if (previous !== null) {
@@ -69,7 +70,7 @@ export function createRoomWiringStore(storage = () => globalThis.localStorage, m
     if(!proposal)return false;
     if(proposal.base!==replacementBase(s)){set({replacement:previewReplacement(s,proposal.choices),message:'Схема изменилась. Проверь обновлённый предпросмотр и примени ещё раз.'});return false;}
     if(proposal.problems.length||!proposal.swaps.length)return false;
-    const next=parseRoomSnapshot(JSON.stringify({version:3,...proposal.next}));
+    const next=parseRoomSnapshot(JSON.stringify({version:4,...proposal.next}));
     s.commit(next.cables,'Замена применена к комнате и проверке. Аппараты остаются на полках; действие можно отменить.',next.listening,next.components);
     return true;
   },

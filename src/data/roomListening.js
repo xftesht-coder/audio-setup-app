@@ -1,10 +1,11 @@
 import { ROOM_PORTS } from './roomEquipment.js';
+import { FREYA_MODES } from './roomPassports.js';
 
 export const LISTENING_SOURCES = [{ id: 'wiim', name: 'WiiM Pro Plus · стриминг' }, { id: 'e1', name: 'Pro-Ject E1 · винил' }];
 // These are project declarations, not remote control or measured device state.
 export const INPUT_DEVICES = ['bifrost', 'warmer', 'skoll', 'a90', 'freya', 'rusich'];
 export const INPUT_OPTIONS = Object.fromEntries(INPUT_DEVICES.map(id => [id, ROOM_PORTS.filter(p => p.device === id && p.direction === 'in' && ['digital', 'usb', 'phono', 'line'].includes(p.signal))]));
-export const defaultListening = () => ({ source: 'wiim', mode: 'possible', inputs: Object.fromEntries(INPUT_DEVICES.map(id => [id, null])) });
+export const defaultListening = () => ({ source: 'wiim', mode: 'possible', freyaMode: null, inputs: Object.fromEntries(INPUT_DEVICES.map(id => [id, null])) });
 
 export function parseListening(value) {
   if (!value || !LISTENING_SOURCES.some(s => s.id === value.source) || !['possible', 'selected'].includes(value.mode) || !value.inputs || typeof value.inputs !== 'object' || Array.isArray(value.inputs)) throw new Error('Некорректные настройки прослушивания.');
@@ -15,7 +16,9 @@ export function parseListening(value) {
     if (port !== null && !INPUT_OPTIONS[id].some(p => p.id === port)) throw new Error('Выбранный вход не принадлежит аппарату или отсутствует.');
     inputs[id] = port;
   }
-  return { source: value.source, mode: value.mode, inputs };
+  const freyaMode = value.freyaMode === undefined ? null : value.freyaMode;
+  if (freyaMode !== null && (typeof freyaMode !== 'string' || !Object.hasOwn(FREYA_MODES, freyaMode))) throw new Error('Неизвестный режим Freya 2.');
+  return { source: value.source, mode: value.mode, inputs, freyaMode };
 }
 
 export function assessInputPath(path, listening) {

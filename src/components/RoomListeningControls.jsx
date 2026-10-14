@@ -1,6 +1,7 @@
 import { ROOM_DEVICE_MAP } from '../data/roomEquipment';
 import { INPUT_DEVICES, INPUT_OPTIONS, LISTENING_SOURCES } from '../data/roomListening';
 import { useRoomWiring } from '../store/roomWiringStore';
+import { FREYA_MODES } from '../data/roomPassports';
 import '../roomListening.css';
 
 function InputSelect({ device }) {
@@ -23,6 +24,7 @@ export default function RoomListeningControls({ device }) {
       <label>Проверка<select value={listening.mode} onChange={e => setListening({ mode: e.target.value })}><option value="possible">По кабелям</option><option value="selected">С выбранными входами</option></select></label>
     </div>
     {device ? INPUT_DEVICES.includes(device) && <InputSelect device={device} /> : <details open={listening.mode === 'selected'}><summary>Рабочие входы аппаратов</summary><div className="listening-inputs">{INPUT_DEVICES.map(id => <InputSelect key={id} device={id} />)}</div></details>}
+    {(!device || device === 'freya') && <label>Режим Freya 2 в проекте<select value={listening.freyaMode || ''} onChange={e => setListening({ freyaMode: e.target.value || null })}><option value="">Не указан</option>{Object.entries(FREYA_MODES).map(([id, m]) => <option key={id} value={id}>{m.label}</option>)}</select></label>}
     <p className="listening-note">{listening.mode === 'possible' ? 'Проверяем возможные пути по кабелям. Выбранные входы пока не учитываются.' : 'Входы учитываются в проверке. Неуказанные считаются неизвестными.'} Это настройки проекта; переключатели, питание и громкость реальных аппаратов меняются вручную.</p>
     {storageError && <p className="listening-error" role="alert">{storageError}</p>}
   </div>;

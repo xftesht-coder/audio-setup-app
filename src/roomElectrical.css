@@ -1,0 +1,19 @@
+.room-electrical{margin:24px 0;padding:22px;border:1px solid #c8d5cc;border-radius:14px;background:#f8faf5;color:#2b4135}
+.room-electrical>header,.electrical-links article>header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.room-electrical>header small{font-size:10px;letter-spacing:.12em;color:#6b7d6d}
+.room-electrical h2{margin:5px 0 12px;font-size:25px;letter-spacing:-.03em}.room-electrical h3{font-size:14px;margin:0}
+.room-electrical p{font-size:12px;line-height:1.65;margin:9px 0}.room-electrical>header>span{font-size:11px;white-space:nowrap}
+.electrical-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.electrical-links article{border:1px solid #d4ddd0;background:#fff;border-radius:10px;padding:17px;min-width:0}
+.electrical-links article>header span{font-size:10px;color:#6b7d6d}
+.electrical-result,.electrical-missing{display:grid;gap:5px;padding:13px;background:#eaf0e5;border-radius:7px;font-size:12px}
+.electrical-result b{font-size:14px}.electrical-result small{font-size:10px;color:#657361}
+.electrical-missing{background:#f1eee4}.electrical-missing p{font-size:11px;margin:2px 0}
+.room-electrical .electrical-headroom{font-size:11px;color:#6d7468}
+.room-electrical summary{cursor:pointer;font-size:12px;color:#365940}.room-electrical details{margin-top:13px}
+.electrical-fact{display:grid;gap:4px;border-top:1px solid #e2e6dc;padding:12px 0;font-size:11px;line-height:1.6}
+.electrical-fact b{font-size:12px}.electrical-fact small{font-size:10px;color:#75816e}.electrical-fact a{font-size:10px;text-decoration:underline}
+.electrical-method,.electrical-gain,.electrical-digital,.electrical-passports{border-top:1px solid #d3ddcc;padding-top:15px;margin-top:15px}
+.electrical-method code{display:block;margin:12px 0;white-space:normal;font-size:12px}.room-electrical a{font-size:11px;text-decoration:underline}
+.electrical-passports>details{padding:12px;background:white;border:1px solid #d9e0d4;border-radius:7px}.passport-port{margin-top:14px}.passport-port h4{font-size:12px;font-weight:650;margin:0}
+@media(max-width:760px){.room-electrical{padding:14px}.electrical-links{grid-template-columns:1fr}.room-electrical>header{display:block}.room-electrical h2{font-size:22px}.electrical-links article{padding:13px}}

@@ -30,7 +30,7 @@ export default function PatchPanel() {
     inspector.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   return <section className="room-patch-panel" aria-labelledby="patch-panel-title">
-    <header className="patch-panel-heading"><div><small>ОДНА СХЕМА · 0.4</small><h1 id="patch-panel-title">Подключения системы</h1><p>Комната, каталог и эта панель используют одни кабели. Изменения сохраняются вместе.</p></div><RoomServiceLink /></header>
+    <header className="patch-panel-heading"><div><small>ОДНА СХЕМА · 0.5</small><h1 id="patch-panel-title">Подключения системы</h1><p>Комната, каталог и эта панель используют одни кабели. Изменения сохраняются вместе.</p></div><RoomServiceLink /></header>
     <RoomComponentSummary />
     <button className="patch-inspector-jump" onClick={() => inspector.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Аппарат, входы и действия ↓</button>
     <div className="patch-route-tabs" role="group" aria-label="Проследить путь до акустики">

@@ -2950,7 +2950,7 @@ export default {
       "manufacturer": "Schiit",
       "name": "Freya 2",
       "category": "Preamps",
-      "source": "https://www.schiit.com/products/freya_2",
+      "source": "https://www.schiit.com/products/freya-2",
       "availability": "catalog",
       "image": "https://www.schiit.com/public/upload/images/freya%202%20front%20blk%201920.jpg",
       "facts": [
