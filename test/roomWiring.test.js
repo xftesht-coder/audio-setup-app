@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_ROOM_CABLES, ROOM_PORT_MAP } from '../src/data/roomEquipment.js';
 import { cablePaths, connectionCheck, restoreRoomCables, roomPreset } from '../src/data/roomWiring.js';
-import { useRoomWiring } from '../src/store/roomWiringStore.js';
+import { createRoomWiringStore } from '../src/store/roomWiringStore.js';
 import { WALK_ROOM, isWalkPositionClear, moveInRoom } from '../src/data/roomNavigation.js';
 
-useRoomWiring.persist.setOptions({storage:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}});
+const useRoomWiring = createRoomWiringStore(() => ({getItem:()=>null,setItem:()=>{}}));
 test('room presets have compatible unoccupied endpoints and preserve owner speaker/high-level branches',()=>{
   for(const name of ['a90','bifrost','warmer']){
     const cables=roomPreset(name);

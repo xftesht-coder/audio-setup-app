@@ -1,0 +1,14 @@
+.listening-controls{margin:16px 0;padding:15px;background:#f2f4ed;border:1px solid #d4ddcf;border-radius:10px;color:#334b3d}
+.listening-selectors,.listening-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.listening-controls label{display:grid;gap:5px;min-width:0;font-size:12px;font-weight:600}
+.listening-controls select{width:100%;min-width:0;background:#fffdf8;border:1px solid #bacbbb;border-radius:7px;padding:9px;color:#283b34;font-size:12px}
+.listening-controls details{margin-top:12px}
+.listening-controls summary{cursor:pointer;font-weight:600;font-size:12px}
+.listening-inputs{margin-top:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.listening-controls .listening-note{font-size:11px;line-height:1.6;color:#5d7063;margin-top:12px}
+.listening-error{font-size:12px;color:#953e29;margin-top:10px}
+.patch-listening-status{font-size:11px;margin-bottom:12px}
+.patch-listening-status a{text-decoration:underline}
+.listening-compact{padding:10px}
+.listening-compact .listening-selectors{grid-template-columns:1fr;gap:8px;margin-bottom:8px}
+@media(max-width:640px){.listening-inputs{grid-template-columns:1fr 1fr}.listening-selectors{grid-template-columns:1fr}}

@@ -8,6 +8,9 @@
 .intelligence-scope{background:#e5ebe3;border:1px solid #ced9ce;border-radius:12px;padding:16px 20px}
 .intelligence-scope p{font-size:12px;margin-top:5px;color:#53675c}
 .intelligence-controls{display:flex;gap:12px;align-items:end;justify-content:space-between;margin:18px 0}
+.intelligence-actions{display:flex;gap:8px;flex-wrap:wrap}
+.intelligence-controls button:disabled{opacity:.4;cursor:default}
+.intelligence-route-note{font-size:12px;color:#8d5936;margin-bottom:12px}
 .intelligence-controls label{display:grid;gap:5px;font-size:12px;font-weight:600}
 .intelligence-controls select,.intelligence-controls button{background:#fffdf8;border:1px solid #c6d0c6;border-radius:8px;padding:9px 12px;color:#283b34;font-size:13px}
 .system-intelligence :focus-visible{outline:3px solid #688b65;outline-offset:3px}

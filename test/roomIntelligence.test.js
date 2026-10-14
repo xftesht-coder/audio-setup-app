@@ -4,7 +4,7 @@ import { auditRoom } from '../src/data/roomIntelligence.js';
 import { DEFAULT_ROOM_CABLES } from '../src/data/roomEquipment.js';
 import { roomPreset } from '../src/data/roomWiring.js';
 import { parseRoomBackup } from '../src/data/roomBackup.js';
-import { useRoomWiring } from '../src/store/roomWiringStore.js';
+import { createRoomWiringStore } from '../src/store/roomWiringStore.js';
 
 const backup = cables => JSON.stringify({ version: 1, cables });
 test('all presets reach four targets through the selected source without treating power as signal', () => {
@@ -57,7 +57,7 @@ test('malformed, foreign, duplicate, incompatible and oversized imports fail as 
   ]) assert.throws(() => parseRoomBackup(backup([...DEFAULT_ROOM_CABLES, cable])));
 });
 test('failed imports preserve the current graph and valid imports are undoable', () => {
-  useRoomWiring.persist.setOptions({ storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} } });
+  const useRoomWiring = createRoomWiringStore(() => ({ getItem: () => null, setItem: () => {} }));
   useRoomWiring.setState({ cables: structuredClone(DEFAULT_ROOM_CABLES), past: [], future: [] });
   assert.throws(() => useRoomWiring.getState().importFile('bad'));
   assert.deepEqual(useRoomWiring.getState().cables, DEFAULT_ROOM_CABLES);
