@@ -28,27 +28,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex bg-paper">
+    <div className="app-shell min-h-screen flex bg-paper">
       {section === 'legacy-patch' && <PageBoundary><Suspense fallback={null}><Sidebar /></Suspense></PageBoundary>}
-      <main className="flex-1 min-w-0 p-4">
-        <div className="app-navigation flex gap-2 mb-4 flex-wrap">
-          <button onClick={() => setSection('room')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'room' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Комната</button>
-          <button onClick={() => setSection('system')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'system' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Система · Schiit</button>
-          <button onClick={() => setSection('intelligence')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'intelligence' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Проверка системы</button>
-          <button onClick={() => setSection('lighting')} className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'lighting' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}>Свет · Govee</button>
-          <button
-            onClick={() => setSection('patch')}
-            className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'patch' ? 'bg-signal-wash border-signal text-signal' : 'border-rule text-muted bg-card'}`}
-          >
-            🔌 Патч-панель
-          </button>
-          <button
-            onClick={() => setSection('cabinet')}
-            className={`text-sm font-bold px-4 py-2 rounded-md border ${section === 'cabinet' ? 'bg-go-wash border-go text-go' : 'border-rule text-muted bg-card'}`}
-          >
-            🪵 Тумба (3D)
-          </button>
-        </div>
+      <main className="app-main flex-1 min-w-0 p-4">
+        <nav className="app-navigation" aria-label="Разделы Audio Setup">
+          {[['room','Комната'],['system','Система · Schiit'],['intelligence','Проверка системы'],['lighting','Свет · Govee'],['patch','Роутинг'],['cabinet','Стойка · CAD']].map(([id,label]) => <button key={id} aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>{label}</button>)}
+        </nav>
 
         {['cabinet', 'legacy-patch'].includes(section) && <PowerDistribution />}
         {section === 'legacy-patch' && <p className="system-legacy-note">Архивный редактор примеров. Эти соединения не меняют комнату и не сохраняются после перезагрузки. <a href="#patch">Открыть общую схему ↗</a></p>}

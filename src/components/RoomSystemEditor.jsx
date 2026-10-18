@@ -10,11 +10,11 @@ import '../roomReplacement.css';
 
 const cableText = c => c ? `${portLabel(c.from)} → ${portLabel(c.to)}` : 'Новый кабель';
 const name = id => ROOM_DEVICE_MAP[id]?.name || 'Не определён';
-export default function RoomSystemEditor({ compact = false }) {
+export default function RoomSystemEditor({ compact = false, sidebar = false }) {
   const s = useRoomWiring(), p = s.replacement;
   const report = useMemo(() => auditRoom(s.cables, s.listening.source, s.listening), [s.cables, s.listening]);
   const choices = p?.choices || s.components;
-  return <section id={compact ? undefined : 'room-system-editor'} className={`room-system-editor ${compact ? 'room-system-compact' : ''}`} aria-label="Замена устройств комнаты">
+  return <section id={compact ? undefined : 'room-system-editor'} className={`room-system-editor ${compact ? 'room-system-compact' : ''} ${sidebar ? 'room-system-sidebar' : ''}`} aria-label="Замена устройств комнаты">
     <header><div><small>КАТАЛОГ ↔ КОМНАТА · 0.5</small><h2>Тракт в комнате</h2></div>{!compact && <RoomServiceLink />}</header>
     <p>ЦАП и предусилитель меняются вместе с подключениями. Все четыре аппарата остаются на полках; это проект системы, а не подтверждение покупки.</p>
     <div className="room-component-selectors">{Object.entries(ROOM_COMPONENTS).map(([role, options]) => <label key={role}>{role === 'dac' ? 'ЦАП в комнате' : 'Предусилитель в комнате'}<select value={choices[role] || ''} onChange={e => s.previewReplacement({ [role]: e.target.value })}>
@@ -32,7 +32,7 @@ export default function RoomSystemEditor({ compact = false }) {
       <p className="replacement-note">Питание прежних аппаратов остаётся. Для наушников A90 отдельная ветка автоматически не добавляется. Совместимость разъёмов не подтверждает уровни сигнала; длину и запас кабелей после перестановки нужно проверить.</p>
       <div className="replacement-actions"><button className="replacement-apply" disabled={p.problems.length > 0} onClick={s.applyReplacement}>Применить замену</button><button onClick={s.cancelReplacement}>Отказаться от замены</button></div>
     </section>}
-    {!compact && <RoomListeningControls />}
+    {!compact && (sidebar ? <details className="editor-listening"><summary>Источник и рабочие входы</summary><RoomListeningControls /></details> : <RoomListeningControls />)}
     <div className="room-live-path" role="status"><b>Сейчас в схеме: {report.connected} / 4 пути</b><p>{report.routes.find(r => r.path.length)?.path.map((c, i) => `${i ? '' : name(ROOM_PORT_MAP[c.from].device) + ' → '}${name(ROOM_PORT_MAP[c.to].device)}`).join(' → ') || 'Полного пути к акустике нет.'}</p></div>
     <div className="replacement-actions"><button disabled={!s.past.length} onClick={s.undo}>↶ Отменить в комнате</button><button disabled={!s.future.length} onClick={s.redo}>↷ Повторить в комнате</button>{!compact && <button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>Скачать схему комнаты</button>}<a href="#patch">Патч-панель ↗</a><a href="#intelligence">Проверить систему ↗</a></div>
     <p className="replacement-message" role="status">{s.storageError || s.message}</p>

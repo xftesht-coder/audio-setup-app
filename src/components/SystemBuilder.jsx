@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AUDIO_MODELS, AUDIO_ROLES, SCHIIT_CATALOG, productEnvelope } from '../data/audioModels';
 import { IMPEDANCE_REFERENCE, systemShareUrl } from '../data/systemMatching';
 import { equipmentName, plannedRack } from '../data/equipmentProfiles';
@@ -6,6 +6,7 @@ import { useSystemPlanStore } from '../stores/useSystemPlanStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
 import SystemSummary from './SystemSummary';
 import SystemVariants from './SystemVariants';
+import WorkspaceHeader from './WorkspaceHeader';
 import RoomSystemEditor from './RoomSystemEditor';
 import { useRoomWiring } from '../store/roomWiringStore';
 import { roomInstance } from '../data/roomComponents';
@@ -34,7 +35,9 @@ function CatalogCard({ product, onSelect, active }) {
 export default function SystemBuilder() {
   const { plan, update, storageError, undo, redo, past, future } = useSystemPlanStore();
   const room = useRoomWiring();
-  const [draftOpen, setDraftOpen] = useState(false);
+  const [view, setView] = useState('catalog');
+  const catalogMain = useRef(null);
+  useEffect(() => { catalogMain.current?.scrollTo({ top: 0 }); }, [view]);
   const project = useWorkshopStore(s => s.project), commit = useWorkshopStore(s => s.commit);
   const [query, setQuery] = useState(''), [category, setCategory] = useState('all'), [visible, setVisible] = useState(18), [message, setMessage] = useState('');
   useEffect(() => {
@@ -45,11 +48,11 @@ export default function SystemBuilder() {
   const filtered = useMemo(() => SCHIIT_CATALOG.products.filter(p => (category === 'all' || category === p.category) && p.name.toLowerCase().includes(query.trim().toLowerCase())), [category, query]);
   const shareUrl = systemShareUrl(plan, window.location.origin);
   const set = (key, value) => update({ [key]: value });
-  const chooseDraft = (role, id) => { set(role, id); setMessage('Каталожный черновик обновлён. Для замены в комнате используй предпросмотр выше.'); };
+  const chooseDraft = (role, id) => { set(role, id); setMessage('Каталожный черновик обновлён. Для замены в комнате используй блок «Тракт в комнате».'); };
   const choose = (role, id) => {
     const instance = roomInstance(role, id);
     if (instance) { room.previewReplacement({ [role]: instance }); document.getElementById('room-system-editor').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-    else { chooseDraft(role, id); setDraftOpen(true); }
+    else { chooseDraft(role, id); setView('draft'); }
   };
   const applyRack = () => {
     try {
@@ -58,10 +61,15 @@ export default function SystemBuilder() {
       setMessage(`На стойке ${next.equipment.length} аппаратов. Сохранены оба ЦАПа, Freya и A90. Проверь зазоры в мастерской; перенос можно отменить там.`);
     } catch (error) { setMessage(error.message); }
   };
-  return <section className="system-builder" aria-label="Конфигуратор аудиосистемы">
-    <header className="lighting-heading"><div><p className="share-eyebrow">AUDIO SETUP · SYSTEM LAB</p><h1>Собираем свой звук.</h1><p>Примеряй аппараты и проверяй изменения подключения до замены.</p></div><a className="system-primary" href="#schiit-catalog" onClick={e => { e.preventDefault(); document.getElementById('schiit-catalog').scrollIntoView({ behavior: 'smooth' }); }}>Каталог Schiit · {SCHIIT_CATALOG.products.length}</a></header>
-    <RoomSystemEditor />
-    <details className="system-draft" open={draftOpen} onToggle={e => setDraftOpen(e.currentTarget.open)}><summary>Другие модели и сохранённые каталожные варианты</summary><p>Черновик для сравнения всего каталога. Его параметры хранятся отдельно; импорт старых вариантов не перезаписывает комнату. Для четырёх аппаратов на полках доступен перенос через предпросмотр.</p>
+  return <section className="system-builder studio-page catalog-studio" aria-label="Конфигуратор аудиосистемы">
+    <WorkspaceHeader title="Система и каталог" symbol="▤" subtitle={'Schiit · позиций: ' + SCHIIT_CATALOG.products.length + ' · данные производителя'}><a href="#room">Комната ↗</a><a href="#patch">Роутинг ↗</a></WorkspaceHeader>
+    <div className="catalog-toolbar">
+      <div className="workspace-segments" role="group" aria-label="Вид каталога"><button aria-pressed={view==='catalog'} onClick={()=>setView('catalog')}>Каталог Schiit <span>{SCHIIT_CATALOG.products.length}</span></button><button aria-pressed={view==='draft'} onClick={()=>setView('draft')}>Варианты и сравнение</button></div>
+      <span className="workspace-toolbar-note">Каталог ↔ комната</span>
+      <button className="catalog-inspector-jump" onClick={()=>document.getElementById('room-system-editor')?.scrollIntoView({behavior:'smooth',block:'start'})}>Тракт комнаты ↓</button>
+    </div>
+    <div className="catalog-workspace"><div className="catalog-main" ref={catalogMain} tabIndex={0} aria-label="Модели и варианты системы">
+    <div className="system-draft" hidden={view!=='draft'}><h2>Каталожные варианты</h2><p>Черновики для сравнения хранятся отдельно от комнаты. ЦАП и предусилитель можно перенести через предпросмотр в блоке «Тракт в комнате».</p>
     <SystemVariants />
     <section className="system-controls" aria-label="Выбор компонентов черновика"><div className="system-section-title"><h2>Каталожный черновик</h2><div className="plan-history"><button disabled={!past.length} onClick={() => { undo(); setMessage('Изменение черновика отменено.'); }}>↶ Отменить</button><button disabled={!future.length} onClick={() => { redo(); setMessage('Изменение черновика повторено.'); }}>↷ Повторить</button></div></div><div className="system-select-grid">
       {Object.entries(AUDIO_ROLES).map(([role, label]) => <SelectField key={role} label={label} value={plan[role] || ''} onChange={value => chooseDraft(role, value || null)} options={[...(['eq', 'headphoneAmp'].includes(role) ? [['', 'Не используется']] : []), ...roleModels[role].map(m => [m.id, m.name + (m.availability === 'preorder' ? ' · предзаказ' : '')])]} />)}
@@ -76,13 +84,14 @@ export default function SystemBuilder() {
     <SystemSummary plan={plan} detailed />
     <button className="system-primary" disabled={!roomInstance('dac', plan.dac) || !roomInstance('preamp', plan.preamp)} onClick={() => { room.previewReplacement({ dac: roomInstance('dac', plan.dac), preamp: roomInstance('preamp', plan.preamp) }); document.getElementById('room-system-editor').scrollIntoView({ behavior: 'smooth' }); }}>Примерить ЦАП и предусилитель из черновика</button><p>Переносятся только эти два аппарата. Типы кабелей и остальные подключения берутся из комнаты.</p>
     <section className="system-inventory"><div className="system-section-title"><div><p className="share-eyebrow">ФИЗИЧЕСКОЕ РАЗМЕЩЕНИЕ</p><h2>Остаются на полках</h2></div><a href="/#cabinet">Открыть стойку ↗</a></div><ul>{project.equipment.map(item => <li key={item.id}>{equipmentName(item)}</li>)}</ul><p>Смена тракта сохраняет остальные аппараты. Кнопка добавит недостающие кандидаты на отдельные полки. Для моделей без полного габарита перенос будет остановлен; новые кабели требуют координат разъёмов.</p><button className="system-primary" onClick={applyRack}>Разместить выбранные аппараты</button></section>
-    <section className="system-sharing"><h2>Показать другу черновик</h2><p>Ссылка содержит каталожный план. Проводка комнаты переносится отдельной резервной копией через кнопку «Скачать схему комнаты» выше.</p><div><a className="system-primary" href={shareUrl} target="_blank" rel="noreferrer">Открыть просмотр ↗</a><button onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); setMessage('Ссылка на черновик скопирована.'); } catch { setMessage('Скопируйте ссылку из поля ниже.'); } }}>Копировать ссылку</button></div><input aria-label="Ссылка на выбранную систему" readOnly value={shareUrl} onFocus={e => e.target.select()} /></section>
-    </details>
+    <section className="system-sharing"><h2>Показать другу черновик</h2><p>Ссылка содержит каталожный план. Проводка комнаты переносится отдельной резервной копией через кнопку «Скачать схему комнаты» в боковой панели.</p><div><a className="system-primary" href={shareUrl} target="_blank" rel="noreferrer">Открыть просмотр ↗</a><button onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); setMessage('Ссылка на черновик скопирована.'); } catch { setMessage('Скопируйте ссылку из поля ниже.'); } }}>Копировать ссылку</button></div><input aria-label="Ссылка на выбранную систему" readOnly value={shareUrl} onFocus={e => e.target.select()} /></section>
+    </div>
     {(message || storageError) && <div className="system-feedback" role="status"><p>{storageError || message}</p>{!storageError && <button aria-label="Закрыть уведомление" onClick={() => setMessage('')}>×</button>}</div>}
-    <section id="schiit-catalog" className="schiit-library" aria-label="Каталог Schiit"><div className="system-section-title"><div><p className="share-eyebrow">ОФИЦИАЛЬНАЯ ЛИНЕЙКА</p><h2>Schiit · {SCHIIT_CATALOG.products.length} позиций</h2></div><small>Сверено {SCHIIT_CATALOG.checkedAt.split('-').reverse().join('.')}</small></div><p>{SCHIIT_CATALOG.scope}</p>
+    <section id="schiit-catalog" className="schiit-library" aria-label="Каталог Schiit" hidden={view!=='catalog'}>
       <div className="lighting-filters"><label className="lighting-search">Найти Schiit<input type="search" placeholder="Freya, Bifrost, Yggdrasil…" value={query} onChange={e => { setQuery(e.target.value); setVisible(18); }} /></label><SelectField label="Категория Schiit" value={category} onChange={v => { setCategory(v); setVisible(18); }} options={ [['all', 'Все категории'], ...categories.map(c => [c, CATEGORIES[c] || c])] } /></div>
-      <p role="status" className="lighting-results">Найдено: {filtered.length}</p><div className="schiit-grid">{filtered.slice(0, visible).map(p => <CatalogCard key={p.id} product={p} onSelect={choose} active={['dac','preamp'].some(role => roomInstance(role, p.id) && roomInstance(role, p.id) === room.components[role])} />)}</div>{!filtered.length && <p>Совпадений нет. Попробуй другое название или категорию.</p>}{visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 18)}>Показать ещё</button>}
-      <footer className="lighting-provenance"><p>Каталог сохраняет паспортные факты производителя. Для согласования отдельно проверены основные ЦАПы, предусилители, фонокорректоры и усилители мощности; неизвестные параметры не считаются совпадением.</p><div><a href={SCHIIT_CATALOG.source} target="_blank" rel="noreferrer">Официальный каталог Schiit ↗</a><a href="https://fiio.com/WARMERR2R_parameters" target="_blank" rel="noreferrer">Паспорт FiiO WARMER R2R ↗</a><a href={IMPEDANCE_REFERENCE} target="_blank" rel="noreferrer">Rane: согласование сопротивлений ↗</a></div></footer>
+      <p role="status" className="lighting-results">Найдено: {filtered.length} <span>Сверено {SCHIIT_CATALOG.checkedAt.split('-').reverse().join('.')}</span></p><div className="schiit-grid">{filtered.slice(0, visible).map(p => <CatalogCard key={p.id} product={p} onSelect={choose} active={['dac','preamp'].some(role => roomInstance(role, p.id) && roomInstance(role, p.id) === room.components[role])} />)}</div>{!filtered.length && <p>Совпадений нет. Попробуй другое название или категорию.</p>}{visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 18)}>Показать ещё</button>}
+      <footer className="lighting-provenance"><p>{SCHIIT_CATALOG.scope}</p><p>Каталог сохраняет паспортные факты производителя. Для согласования отдельно проверены основные ЦАПы, предусилители, фонокорректоры и усилители мощности; неизвестные параметры не считаются совпадением.</p><div><a href={SCHIIT_CATALOG.source} target="_blank" rel="noreferrer">Официальный каталог Schiit ↗</a><a href="https://fiio.com/WARMERR2R_parameters" target="_blank" rel="noreferrer">Паспорт FiiO WARMER R2R ↗</a><a href={IMPEDANCE_REFERENCE} target="_blank" rel="noreferrer">Rane: согласование сопротивлений ↗</a></div></footer>
     </section>
+    </div><aside className="catalog-inspector" aria-label="Тракт комнаты"><RoomSystemEditor sidebar /></aside></div>
   </section>;
 }

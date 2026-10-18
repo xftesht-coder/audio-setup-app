@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import WorkspaceHeader from './WorkspaceHeader';
 import catalog from '../data/goveeCatalog.json';
 import { useLightingStore } from '../stores/useLightingStore';
 
@@ -44,6 +45,7 @@ function ProductCard({ product, planned, onAdd }) {
 }
 
 export default function LightingCatalog() {
+  const planPanel = useRef(null);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [region, setRegion] = useState('all');
@@ -58,13 +60,21 @@ export default function LightingCatalog() {
     (region === 'all' || p.regions.includes(region)) &&
     query.trim().toLowerCase().split(/\s+/).every(word => SEARCH.get(p.id).includes(word))), [query, category, region]);
   const update = (setter, value) => { setter(value); setVisible(24); };
-  return <section className="lighting-catalog" aria-label="Каталог освещения Govee">
-    <header className="lighting-heading">
-      <div><p className="share-eyebrow">AUDIO SETUP · LIGHTING LIBRARY</p><h1>Свет для музыки.</h1><p>Вся линейка Govee — от торшеров у сабвуферов до света во всём доме.</p></div>
-      <div className="lighting-stats"><b>{catalog.counts.series}</b><span>серий и аксессуаров</span><small>{catalog.counts.variants} региональных комплектаций · {catalog.regions.length} рынка</small></div>
-    </header>
-    <aside className="lighting-plan">
-      <div><p className="share-eyebrow">НАША СИСТЕМА · ПЛАН ОСВЕЩЕНИЯ</p><h2>Govee рядом с двумя REL Quake</h2><p>С каждой стороны предусмотрена розетка для лампы. Выбираем конкретные модели; светильники в рендере пока условные.</p></div>
+  return <section className="lighting-catalog studio-page lighting-studio" aria-label="Каталог освещения Govee">
+    <WorkspaceHeader title="Освещение" symbol="☼" subtitle={'Govee · ' + catalog.counts.series + ' серий · ' + catalog.counts.variants + ' комплектаций'}><a href="#room">Комната ↗</a><a href="#system">Аудиокаталог ↗</a></WorkspaceHeader>
+    <div className="catalog-toolbar"><span className="workspace-toolbar-label">Каталог Govee</span><span className="workspace-toolbar-note">{catalog.regions.length} региональных каталога</span><button className="catalog-inspector-jump" onClick={()=>planPanel.current?.scrollIntoView({behavior:'smooth',block:'start'})}>План · {planned.length} ↓</button></div>
+    <div className="catalog-workspace"><div className="catalog-main" tabIndex={0} aria-label="Модели освещения">
+    <div className="lighting-filters">
+      <label className="lighting-search">Найти модель<input type="search" placeholder="Floor Lamp 3, H6022, Neon…" value={query} onChange={e => update(setQuery, e.target.value)} /></label>
+      <label>Категория освещения<select value={category} onChange={e=>update(setCategory,e.target.value)}><option value="all">Все · {PRODUCTS.length}</option>{ORDER.map(key=><option key={key} value={key}>{CATEGORIES[key]} · {counts[key]}</option>)}</select></label>
+      <label>Регион каталога<select value={region} onChange={e => update(setRegion, e.target.value)}><option value="all">Все регионы</option>{catalog.regions.map(r => <option key={r.region}>{r.region}</option>)}</select></label>
+    </div>
+    <p className="lighting-results" role="status">Найдено: {filtered.length} · Сверено {catalog.checkedAt.split('-').reverse().join('.')}</p>
+    {filtered.length ? <div className="lighting-grid">{filtered.slice(0, visible).map(product => <ProductCard key={product.id} product={product} planned={selected.has(product.id)} onAdd={add} />)}</div> : <div className="lighting-empty"><h2>Такой модели в выборке нет</h2><p>Попробуй название на английском или код Hxxxx.</p><button onClick={() => { setQuery(''); setCategory('all'); setRegion('all'); }}>Сбросить фильтры</button></div>}
+    {visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 24)}>Показать ещё · осталось {filtered.length - visible}</button>}
+    <footer className="lighting-provenance"><p>{catalog.scope}</p><p>Паспортные таблицы доступны для {catalog.counts.passports} серий. Пустые поля не заменены догадками. Наличие, цены, тип вилки и совместимость с электросетью уточняются для выбранного артикула.</p><div>{catalog.regions.map(r => <a key={r.region} href={r.source} target="_blank" rel="noreferrer">Официальный каталог {r.region} ↗</a>)}</div></footer>
+    </div>    <aside className="lighting-plan catalog-inspector" ref={planPanel} aria-label="План освещения">
+      <div className="lighting-plan-heading"><h2>План освещения</h2><span role="status">Моделей: {planned.length}</span></div><p>По лампе рядом с каждым REL. В рендере пока показаны только места установки.</p>{!planned.length && <div className="lighting-plan-empty"><span aria-hidden="true">☼</span><b>Выбери свет для комнаты</b><p>Добавь модель из каталога. Здесь можно задать количество.</p></div>}
       {planned.length > 0 && <ul>{planned.map(item => <li key={item.id}>
         <b>{item.name}</b>
         <label>Количество<input aria-label={`Количество ${item.name}`} type="number" min="1" max="20" value={item.quantity} onChange={e => setQuantity(item.id, e.target.value)} /></label>
@@ -72,17 +82,6 @@ export default function LightingCatalog() {
       </li>)}</ul>}
       <small>Выбор сохраняется в этом браузере. Это список кандидатов; он пока не меняет 3D-сцену, схему питания и публичную ссылку.</small>
     </aside>
-    <div className="lighting-filters">
-      <label className="lighting-search">Найти модель<input type="search" placeholder="Floor Lamp 3, H6022, Neon…" value={query} onChange={e => update(setQuery, e.target.value)} /></label>
-      <label>Регион каталога<select value={region} onChange={e => update(setRegion, e.target.value)}><option value="all">Все регионы</option>{catalog.regions.map(r => <option key={r.region}>{r.region}</option>)}</select></label>
     </div>
-    <div className="lighting-categories" role="group" aria-label="Категории освещения">
-      <button aria-pressed={category === 'all'} onClick={() => update(setCategory, 'all')}>Все · {PRODUCTS.length}</button>
-      {ORDER.map(key => <button key={key} aria-pressed={category === key} onClick={() => update(setCategory, key)}>{CATEGORIES[key]} · {counts[key]}</button>)}
-    </div>
-    <p className="lighting-results" role="status">Найдено: {filtered.length} · Сверено {catalog.checkedAt.split('-').reverse().join('.')}</p>
-    {filtered.length ? <div className="lighting-grid">{filtered.slice(0, visible).map(product => <ProductCard key={product.id} product={product} planned={selected.has(product.id)} onAdd={add} />)}</div> : <div className="lighting-empty"><h2>Такой модели в выборке нет</h2><p>Попробуй название на английском или код Hxxxx.</p><button onClick={() => { setQuery(''); setCategory('all'); setRegion('all'); }}>Сбросить фильтры</button></div>}
-    {visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 24)}>Показать ещё · осталось {filtered.length - visible}</button>}
-    <footer className="lighting-provenance"><p>{catalog.scope}</p><p>Паспортные таблицы доступны для {catalog.counts.passports} серий. Пустые поля не заменены догадками. Наличие, цены, тип вилки и совместимость с электросетью уточняются для выбранного артикула.</p><div>{catalog.regions.map(r => <a key={r.region} href={r.source} target="_blank" rel="noreferrer">Официальный каталог {r.region} ↗</a>)}</div></footer>
   </section>;
 }

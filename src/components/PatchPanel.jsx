@@ -4,6 +4,7 @@ import { auditRoom } from '../data/roomIntelligence';
 import { roomPatchRows } from '../data/roomPatchView';
 import { roomCableStyle } from '../data/roomRackLayout';
 import { useRoomWiring } from '../store/roomWiringStore';
+import WorkspaceHeader from './WorkspaceHeader';
 import RoomPatchInspector from './RoomPatchInspector';
 import RoomServiceLink from './RoomServiceLink';
 import RoomRackView from './RoomRackView';
@@ -26,10 +27,9 @@ export default function PatchPanel() {
   const inspectCable = c => { s.selectCable(c.id); chooseDevice(ROOM_PORT_MAP[c.to || c.from].device); };
   const clearFilters = () => { setQuery(''); setKind('audio'); setTarget(''); };
   return <section className="room-patch-panel patch-studio" aria-labelledby="patch-panel-title">
-    <header className="studio-heading">
-      <div className="studio-identity"><span className="studio-symbol" aria-hidden="true">⌁</span><div><h1 id="patch-panel-title">Роутинг <small>0.5.2</small></h1><p>{ROOM_DEVICE_MAP[s.components.dac]?.name || 'ЦАП не выбран'} <span>→</span> {ROOM_DEVICE_MAP[s.components.preamp]?.name || 'Предусилитель не выбран'}</p></div></div>
-      <div className="studio-heading-actions"><span className={'studio-health ' + (report.connected < 4 ? 'needs-check' : '')}><i />Пути {report.connected}/4 <small>{s.listening.mode === 'selected' ? 'по входам' : 'по кабелям'}</small></span><RoomServiceLink>Комната ↗</RoomServiceLink><a href="#intelligence">Проверка ↗</a></div>
-    </header>
+    <WorkspaceHeader id="patch-panel-title" title="Роутинг" version="0.5.3" subtitle={<>{ROOM_DEVICE_MAP[s.components.dac]?.name || 'ЦАП не выбран'} <span>→</span> {ROOM_DEVICE_MAP[s.components.preamp]?.name || 'Предусилитель не выбран'}</>}>
+      <span className={'studio-health ' + (report.connected < 4 ? 'needs-check' : '')}><i />Пути {report.connected}/4 <small>{s.listening.mode === 'selected' ? 'по входам' : 'по кабелям'}</small></span><RoomServiceLink>Комната ↗</RoomServiceLink><a href="#intelligence">Проверка ↗</a>
+    </WorkspaceHeader>
     <div className="studio-toolbar">
       <div className="studio-segments" role="group" aria-label="Вид роутинга"><button aria-pressed={view === 'diagram'} onClick={() => setView('diagram')}>Схема</button><button aria-pressed={view === 'list'} onClick={() => setView('list')}>Кабели <span>{s.cables.length}</span></button></div>
       <div className="studio-layers" role="group" aria-label="Слой схемы">{Object.entries(layers).map(([id, label]) => <button key={id} aria-pressed={kind === id} onClick={() => { setKind(id); setTarget(''); }}>{label}</button>)}</div>
