@@ -42,3 +42,22 @@ test('an empty diagram can expose unconnected sockets without manufacturing conn
   for (const id of ['a90', 'freya', 'bifrost', 'warmer']) assert.ok(all.cards.some(c => c.id === id));
   assert.ok(Object.keys(all.ports).every(id => !['power', 'ground'].includes(ROOM_PORT_MAP[id].signal)));
 });
+
+test('compact ports retain every wire, shared branch and loose end inside the canvas', () => {
+  for (const preset of ['a90', 'bifrost', 'warmer']) {
+    const rows = roomPatchRows(roomPreset(preset), { kind: 'audio' });
+    const compact = roomRackLayout(rows, { connectedOnly: true });
+    const expected = [...new Set(rows.flatMap(c => [c.from, c.to]).filter(Boolean))].sort();
+    assert.deepEqual(Object.keys(compact.ports).sort(), expected);
+    assert.equal(compact.wires.length, rows.length);
+    assert.equal(compact.wires.find(w => w.id === 'speaker0').start, compact.wires.find(w => w.id === 'sub0').start);
+    assert.ok(compact.cards.find(c => c.id === 'ae0').column === compact.cards.find(c => c.id === 'rel0').column);
+    for (const row of rows) for (const end of ['from', 'to']) {
+      const layout = roomRackLayout([{ ...row, [end]: null }], { kind: 'loose', connectedOnly: true });
+      for (const p of [layout.wires[0].start, layout.wires[0].end]) assert.ok(p.x >= 0 && p.y >= 0 && p.x <= layout.width && p.y <= layout.height);
+    }
+  }
+  const idle = roomRackLayout([], { showIdle: true, connectedOnly: true });
+  assert.ok(idle.ports['freya.xlr1']);
+  assert.equal(idle.wires.length, 0);
+});
