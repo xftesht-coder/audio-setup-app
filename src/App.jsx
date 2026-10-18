@@ -28,14 +28,14 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell min-h-screen flex bg-paper">
+    <div className={'app-shell min-h-screen flex bg-paper' + (section === 'legacy-patch' ? '' : ' compact-shell')}>
       {section === 'legacy-patch' && <PageBoundary><Suspense fallback={null}><Sidebar /></Suspense></PageBoundary>}
       <main className="app-main flex-1 min-w-0 p-4">
         <nav className="app-navigation" aria-label="Разделы Audio Setup">
           {[['room','Комната'],['system','Система · Schiit'],['intelligence','Проверка системы'],['lighting','Свет · Govee'],['patch','Роутинг'],['cabinet','Стойка · CAD']].map(([id,label]) => <button key={id} aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>{label}</button>)}
         </nav>
 
-        {['cabinet', 'legacy-patch'].includes(section) && <PowerDistribution />}
+        {section === 'legacy-patch' && <PowerDistribution />}
         {section === 'legacy-patch' && <p className="system-legacy-note">Архивный редактор примеров. Эти соединения не меняют комнату и не сохраняются после перезагрузки. <a href="#patch">Открыть общую схему ↗</a></p>}
         <PageBoundary key={section}><Suspense fallback={<p className="page-loading" role="status">Открываем раздел…</p>}>
           {section === 'legacy-patch' ? <LegacyPatchPanel /> : section === 'patch' ? <PatchPanel /> : section === 'intelligence' ? <SystemIntelligence /> : section === 'system' ? <SystemBuilder /> : section === 'lighting' ? <LightingCatalog /> : section === 'room' ? <ListeningRoom /> : <CabinetPanel />}

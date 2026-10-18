@@ -36,6 +36,8 @@ export default function SystemBuilder() {
   const { plan, update, storageError, undo, redo, past, future } = useSystemPlanStore();
   const room = useRoomWiring();
   const [view, setView] = useState('catalog');
+  const [mobilePanel, setMobilePanel] = useState(false);
+  const showRoom = () => { setMobilePanel(true); document.getElementById('room-system-editor')?.closest('.catalog-inspector')?.scrollTo({ top: 0 }); };
   const catalogMain = useRef(null);
   useEffect(() => { catalogMain.current?.scrollTo({ top: 0 }); }, [view]);
   const project = useWorkshopStore(s => s.project), commit = useWorkshopStore(s => s.commit);
@@ -51,7 +53,7 @@ export default function SystemBuilder() {
   const chooseDraft = (role, id) => { set(role, id); setMessage('Каталожный черновик обновлён. Для замены в комнате используй блок «Тракт в комнате».'); };
   const choose = (role, id) => {
     const instance = roomInstance(role, id);
-    if (instance) { room.previewReplacement({ [role]: instance }); document.getElementById('room-system-editor').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    if (instance) { room.previewReplacement({ [role]: instance }); showRoom(); }
     else { chooseDraft(role, id); setView('draft'); }
   };
   const applyRack = () => {
@@ -61,12 +63,12 @@ export default function SystemBuilder() {
       setMessage(`На стойке ${next.equipment.length} аппаратов. Сохранены оба ЦАПа, Freya и A90. Проверь зазоры в мастерской; перенос можно отменить там.`);
     } catch (error) { setMessage(error.message); }
   };
-  return <section className="system-builder studio-page catalog-studio" aria-label="Конфигуратор аудиосистемы">
+  return <section className="system-builder studio-page catalog-studio" aria-label="Конфигуратор аудиосистемы" data-mobile-panel={mobilePanel}>
     <WorkspaceHeader title="Система и каталог" symbol="▤" subtitle={'Schiit · позиций: ' + SCHIIT_CATALOG.products.length + ' · данные производителя'}><a href="#room">Комната ↗</a><a href="#patch">Роутинг ↗</a></WorkspaceHeader>
     <div className="catalog-toolbar">
-      <div className="workspace-segments" role="group" aria-label="Вид каталога"><button aria-pressed={view==='catalog'} onClick={()=>setView('catalog')}>Каталог Schiit <span>{SCHIIT_CATALOG.products.length}</span></button><button aria-pressed={view==='draft'} onClick={()=>setView('draft')}>Варианты и сравнение</button></div>
+      <div className="workspace-segments" role="group" aria-label="Вид каталога"><button aria-pressed={view==='catalog'} onClick={()=>{setView('catalog');setMobilePanel(false);}}>Каталог Schiit <span>{SCHIIT_CATALOG.products.length}</span></button><button aria-pressed={view==='draft'} onClick={()=>{setView('draft');setMobilePanel(false);}}>Варианты и сравнение</button></div>
       <span className="workspace-toolbar-note">Каталог ↔ комната</span>
-      <button className="catalog-inspector-jump" onClick={()=>document.getElementById('room-system-editor')?.scrollIntoView({behavior:'smooth',block:'start'})}>Тракт комнаты ↓</button>
+      <button className="catalog-inspector-jump" aria-pressed={mobilePanel} onClick={()=>setMobilePanel(!mobilePanel)}>{mobilePanel ? 'К каталогу' : 'Тракт комнаты'}</button>
     </div>
     <div className="catalog-workspace"><div className="catalog-main" ref={catalogMain} tabIndex={0} aria-label="Модели и варианты системы">
     <div className="system-draft" hidden={view!=='draft'}><h2>Каталожные варианты</h2><p>Черновики для сравнения хранятся отдельно от комнаты. ЦАП и предусилитель можно перенести через предпросмотр в блоке «Тракт в комнате».</p>
@@ -82,7 +84,7 @@ export default function SystemBuilder() {
       <SelectField label="Усилителей мощности" value={plan.powerAmpQuantity} onChange={v => set('powerAmpQuantity', Number(v))} options={ [[1, 'Один аппарат'], [2, 'Два аппарата для стерео']] } />
     </div></section>
     <SystemSummary plan={plan} detailed />
-    <button className="system-primary" disabled={!roomInstance('dac', plan.dac) || !roomInstance('preamp', plan.preamp)} onClick={() => { room.previewReplacement({ dac: roomInstance('dac', plan.dac), preamp: roomInstance('preamp', plan.preamp) }); document.getElementById('room-system-editor').scrollIntoView({ behavior: 'smooth' }); }}>Примерить ЦАП и предусилитель из черновика</button><p>Переносятся только эти два аппарата. Типы кабелей и остальные подключения берутся из комнаты.</p>
+    <button className="system-primary" disabled={!roomInstance('dac', plan.dac) || !roomInstance('preamp', plan.preamp)} onClick={() => { room.previewReplacement({ dac: roomInstance('dac', plan.dac), preamp: roomInstance('preamp', plan.preamp) }); showRoom(); }}>Примерить ЦАП и предусилитель из черновика</button><p>Переносятся только эти два аппарата. Типы кабелей и остальные подключения берутся из комнаты.</p>
     <section className="system-inventory"><div className="system-section-title"><div><p className="share-eyebrow">ФИЗИЧЕСКОЕ РАЗМЕЩЕНИЕ</p><h2>Остаются на полках</h2></div><a href="/#cabinet">Открыть стойку ↗</a></div><ul>{project.equipment.map(item => <li key={item.id}>{equipmentName(item)}</li>)}</ul><p>Смена тракта сохраняет остальные аппараты. Кнопка добавит недостающие кандидаты на отдельные полки. Для моделей без полного габарита перенос будет остановлен; новые кабели требуют координат разъёмов.</p><button className="system-primary" onClick={applyRack}>Разместить выбранные аппараты</button></section>
     <section className="system-sharing"><h2>Показать другу черновик</h2><p>Ссылка содержит каталожный план. Проводка комнаты переносится отдельной резервной копией через кнопку «Скачать схему комнаты» в боковой панели.</p><div><a className="system-primary" href={shareUrl} target="_blank" rel="noreferrer">Открыть просмотр ↗</a><button onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); setMessage('Ссылка на черновик скопирована.'); } catch { setMessage('Скопируйте ссылку из поля ниже.'); } }}>Копировать ссылку</button></div><input aria-label="Ссылка на выбранную систему" readOnly value={shareUrl} onFocus={e => e.target.select()} /></section>
     </div>

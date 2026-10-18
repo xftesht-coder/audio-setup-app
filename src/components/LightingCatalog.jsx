@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import WorkspaceHeader from './WorkspaceHeader';
 import catalog from '../data/goveeCatalog.json';
 import { useLightingStore } from '../stores/useLightingStore';
@@ -45,7 +45,7 @@ function ProductCard({ product, planned, onAdd }) {
 }
 
 export default function LightingCatalog() {
-  const planPanel = useRef(null);
+  const [mobilePanel, setMobilePanel] = useState(false);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [region, setRegion] = useState('all');
@@ -60,9 +60,9 @@ export default function LightingCatalog() {
     (region === 'all' || p.regions.includes(region)) &&
     query.trim().toLowerCase().split(/\s+/).every(word => SEARCH.get(p.id).includes(word))), [query, category, region]);
   const update = (setter, value) => { setter(value); setVisible(24); };
-  return <section className="lighting-catalog studio-page lighting-studio" aria-label="Каталог освещения Govee">
+  return <section className="lighting-catalog studio-page lighting-studio" aria-label="Каталог освещения Govee" data-mobile-panel={mobilePanel}>
     <WorkspaceHeader title="Освещение" symbol="☼" subtitle={'Govee · ' + catalog.counts.series + ' серий · ' + catalog.counts.variants + ' комплектаций'}><a href="#room">Комната ↗</a><a href="#system">Аудиокаталог ↗</a></WorkspaceHeader>
-    <div className="catalog-toolbar"><span className="workspace-toolbar-label">Каталог Govee</span><span className="workspace-toolbar-note">{catalog.regions.length} региональных каталога</span><button className="catalog-inspector-jump" onClick={()=>planPanel.current?.scrollIntoView({behavior:'smooth',block:'start'})}>План · {planned.length} ↓</button></div>
+    <div className="catalog-toolbar"><span className="workspace-toolbar-label">Каталог Govee</span><span className="workspace-toolbar-note">{catalog.regions.length} региональных каталога</span><button className="catalog-inspector-jump" aria-pressed={mobilePanel} onClick={()=>setMobilePanel(!mobilePanel)}>{mobilePanel ? 'К каталогу' : 'План · ' + planned.length}</button></div>
     <div className="catalog-workspace"><div className="catalog-main" tabIndex={0} aria-label="Модели освещения">
     <div className="lighting-filters">
       <label className="lighting-search">Найти модель<input type="search" placeholder="Floor Lamp 3, H6022, Neon…" value={query} onChange={e => update(setQuery, e.target.value)} /></label>
@@ -73,7 +73,7 @@ export default function LightingCatalog() {
     {filtered.length ? <div className="lighting-grid">{filtered.slice(0, visible).map(product => <ProductCard key={product.id} product={product} planned={selected.has(product.id)} onAdd={add} />)}</div> : <div className="lighting-empty"><h2>Такой модели в выборке нет</h2><p>Попробуй название на английском или код Hxxxx.</p><button onClick={() => { setQuery(''); setCategory('all'); setRegion('all'); }}>Сбросить фильтры</button></div>}
     {visible < filtered.length && <button className="lighting-more" onClick={() => setVisible(n => n + 24)}>Показать ещё · осталось {filtered.length - visible}</button>}
     <footer className="lighting-provenance"><p>{catalog.scope}</p><p>Паспортные таблицы доступны для {catalog.counts.passports} серий. Пустые поля не заменены догадками. Наличие, цены, тип вилки и совместимость с электросетью уточняются для выбранного артикула.</p><div>{catalog.regions.map(r => <a key={r.region} href={r.source} target="_blank" rel="noreferrer">Официальный каталог {r.region} ↗</a>)}</div></footer>
-    </div>    <aside className="lighting-plan catalog-inspector" ref={planPanel} aria-label="План освещения">
+    </div>    <aside className="lighting-plan catalog-inspector" aria-label="План освещения">
       <div className="lighting-plan-heading"><h2>План освещения</h2><span role="status">Моделей: {planned.length}</span></div><p>По лампе рядом с каждым REL. В рендере пока показаны только места установки.</p>{!planned.length && <div className="lighting-plan-empty"><span aria-hidden="true">☼</span><b>Выбери свет для комнаты</b><p>Добавь модель из каталога. Здесь можно задать количество.</p></div>}
       {planned.length > 0 && <ul>{planned.map(item => <li key={item.id}>
         <b>{item.name}</b>

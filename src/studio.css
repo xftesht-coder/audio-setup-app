@@ -1,4 +1,7 @@
 /* Shared visual language for routing, room and the two product libraries. */
+/* All workspaces use the same controls and adaptive panel sizes. */
+/* On small screens, the workspace and inspector share one pane. */
+
 :root{--studio-ink:#27384a;--studio-muted:#73808b;--studio-line:#dbe1e6;--studio-accent:#315d82;--paper:#eef1f2;--ink:#27384a;--muted:#73808b;--rule:#dbe1e6;--signal:#315d82;--signal-wash:#edf3f7;--go:#315d82;--go-wash:#edf3f7}
 .app-main{padding:16px;min-width:0}
 .app-main .app-navigation{display:flex;gap:4px;margin:0 auto 12px;max-width:1600px;overflow-x:auto;flex-wrap:nowrap;padding:0 0 2px;scrollbar-width:thin}
@@ -134,3 +137,44 @@
 .room-studio .has-room-inspector .room-stage:fullscreen{height:100dvh;width:100vw;max-height:none;min-height:0}
 @media(max-width:760px){.room-studio .has-room-inspector .room-stage.room-stage-photo{height:auto;min-height:0;aspect-ratio:3/2}}
 @media(max-width:760px){.room-studio .room-workspace.has-room-inspector{grid-template-columns:1fr;height:auto}.room-studio .has-room-inspector .room-stage{height:56dvh;min-height:330px}.room-scene-inspector{border-left:0;border-top:1px solid var(--studio-line);padding:14px}.room-scene-inspector [role=group]{grid-template-columns:repeat(3,minmax(0,1fr))}.scene-facts dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}.scene-facts{margin-top:12px;padding-top:10px}.scene-links{grid-template-columns:1fr 1fr}.scene-hint{margin-top:10px}.room-studio .room-stage:fullscreen{height:100vh;min-height:0}}
+/* The workspace grows into the available window; only detail panes scroll. */
+.workspace-history{display:flex;gap:3px;margin-left:auto;flex-shrink:0}.workspace-history button{font-size:17px;line-height:1;padding:6px 8px;color:#66869e;border-radius:4px}.workspace-history button:hover{background:#f1f5f8}.workspace-history button:disabled{opacity:.3;cursor:default}
+.workspace-panel-toggle{display:none;font-size:11px;padding:6px 9px;border:1px solid #dbe3e9;border-radius:4px;color:#537e9e}
+.workspace-footnote{display:flex;justify-content:space-between;gap:12px;margin:0;padding:8px 2px 0;font-size:9px;color:#91a0ac;flex-shrink:0;line-height:1.6}.workspace-footnote a{color:#7b95a9;white-space:nowrap}
+.compact-shell .app-main{height:100dvh;display:flex;flex-direction:column;min-height:0}
+.compact-shell .app-navigation{width:100%;flex-shrink:0}
+.compact-shell .app-main>:is(.studio-page,.patch-studio){display:flex;flex-direction:column;flex:1;min-height:0;width:100%;max-width:1600px;margin:0 auto}
+.compact-shell :is(.studio-heading,.catalog-toolbar,.room-toolbar,.studio-toolbar){flex-shrink:0}
+.compact-shell :is(.catalog-workspace,.room-studio .room-workspace.has-room-inspector,.patch-studio .studio-grid){height:auto;min-height:0;flex:1}
+.compact-shell .room-studio .has-room-inspector .room-stage{height:100%;min-height:0}
+.compact-shell .room-studio>.room-specs{max-height:30dvh;overflow:auto;flex-shrink:0;scrollbar-width:thin}
+.compact-shell .room-studio>.share-footnote{flex-shrink:0}
+.compact-shell .patch-studio .studio-footer{flex-shrink:0;margin-bottom:0}
+@media(max-width:760px){
+.workspace-panel-toggle{display:block}
+.compact-shell .app-main>:is(.intelligence-studio,.cabinet-studio){min-height:0}
+.compact-shell .app-main:has(>.intelligence-studio),.compact-shell .app-main:has(>.cabinet-studio){padding:10px}
+.intelligence-studio>.studio-heading,.cabinet-studio>.studio-heading{margin-bottom:10px}
+.intelligence-studio .studio-heading-actions,.cabinet-studio .studio-heading-actions{width:auto;margin-left:auto}
+.intelligence-studio .studio-heading p,.cabinet-studio .studio-heading p{display:none}
+.intelligence-studio .studio-heading h1,.cabinet-studio .studio-heading h1{font-size:18px}
+.intelligence-studio>.workspace-footnote>span,.cabinet-studio>.workspace-footnote>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media(max-width:760px){
+.compact-shell .app-main:has(>.room-studio),.compact-shell .app-main:has(>.catalog-studio),.compact-shell .app-main:has(>.lighting-studio),.compact-shell .app-main:has(>.patch-studio){height:100dvh;min-height:0}
+.compact-shell :is(.catalog-workspace,.room-studio .room-workspace.has-room-inspector,.patch-studio .studio-grid){flex:1;min-height:0;height:auto;grid-template-rows:minmax(0,1fr)}
+.compact-shell :is(.catalog-main,.catalog-inspector,.room-scene-inspector,.room-inspector,.patch-studio .studio-inspector){min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain}
+.compact-shell :is(.catalog-studio,.lighting-studio)[data-mobile-panel=false] .catalog-inspector,.compact-shell :is(.catalog-studio,.lighting-studio)[data-mobile-panel=true] .catalog-main{display:none}
+.compact-shell .room-studio[data-mobile-panel=false] :is(.room-scene-inspector,.room-inspector),.compact-shell .room-studio[data-mobile-panel=true] .room-stage{display:none}
+.compact-shell .patch-studio[data-mobile-panel=false]>.studio-grid>.studio-inspector,.compact-shell .patch-studio[data-mobile-panel=true]>.studio-grid>.studio-canvas{display:none}
+.compact-shell .patch-studio .studio-canvas{height:auto;min-height:0}
+.compact-shell .patch-studio .rack-scroll{min-height:0}
+.compact-shell .room-studio .has-room-inspector .room-stage,.compact-shell .room-studio .has-room-inspector .room-stage.room-stage-photo{height:100%;min-height:0;aspect-ratio:auto}
+.compact-shell .studio-heading p{display:none}.compact-shell .studio-heading-actions{font-size:10px;gap:12px}.compact-shell .studio-heading{gap:6px;margin-bottom:10px}
+.compact-shell .catalog-toolbar .workspace-segments{max-width:100%;overflow:auto}
+.compact-shell :is(.catalog-inspector-jump,.studio-inspector-jump){font-size:11px;padding:6px 9px;border:1px solid #dbe3e9;border-radius:4px;color:#537e9e}
+.compact-shell .room-studio>.room-toolbar>.workspace-panel-toggle{display:block;border:1px solid #dbe3e9;margin-left:auto}
+.compact-shell .room-studio>.share-footnote{max-height:3.2em;overflow:auto;padding:5px 2px;line-height:1.5}
+.compact-shell .patch-studio .studio-footer details[open]{max-height:22dvh;overflow:auto}
+}
+.compact-shell .room-studio .has-room-inspector .room-stage:fullscreen{height:100dvh;width:100vw;max-height:none;min-height:0}
