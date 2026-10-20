@@ -1,23 +1,34 @@
 import { create } from 'zustand';
+import { tvConsoleProject } from '../data/workshopTv.js';
 import { defaultProject, migrateLegacyProject, projectSchema } from '../data/workshop.js';
 import { completeListeningRack } from '../data/equipmentProfiles.js';
 
-const KEY = 'audio_workshop_v1';
+const KEY = 'audio_workshop_variants_v2';
+const LEGACY_KEY = 'audio_workshop_v1';
 function restore() {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return projectSchema.parse(completeListeningRack(defaultProject()));
-    const parsed = JSON.parse(raw);
-    const migrated = migrateLegacyProject(parsed);
-    const project = projectSchema.parse(migrated);
-    if (migrated !== parsed) localStorage.setItem(KEY, JSON.stringify(project));
-    return project;
-  }
-  catch { return projectSchema.parse(completeListeningRack(defaultProject())); }
+    const raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.workspaceVersion === 2) {
+        if (!['rack', 'tv'].includes(parsed.activeVariant)) throw new Error('Неизвестный вариант');
+        const variants = { rack: projectSchema.parse(migrateLegacyProject(parsed.variants.rack)) };
+        if (parsed.variants.tv) variants.tv = projectSchema.parse(migrateLegacyProject(parsed.variants.tv));
+        if (!variants[parsed.activeVariant]) throw new Error('Вариант не найден');
+        return { project: variants[parsed.activeVariant], variants, activeVariant: parsed.activeVariant };
+      }
+      const project = projectSchema.parse(migrateLegacyProject(parsed));
+      return { project, variants: { rack: project }, activeVariant: 'rack' };
+    }
+  } catch { /* Keep the previous storage bytes; a new edit starts a valid project. */ }
+  const project = projectSchema.parse(completeListeningRack(defaultProject()));
+  return { project, variants: { rack: project }, activeVariant: 'rack' };
 }
 export const useWorkshopStore = create((set, get) => {
   const save = project => {
-    try { localStorage.setItem(KEY, JSON.stringify(project)); set({ storageError: '' }); }
+    const variants = { ...get().variants, [get().activeVariant]: project };
+    set({ variants });
+    try { localStorage.setItem(KEY, JSON.stringify({ workspaceVersion: 2, activeVariant: get().activeVariant, variants })); set({ storageError: '' }); }
     catch { set({ storageError: 'Браузер не сохранил проект. Скачайте JSON, чтобы не потерять изменения.' }); }
   };
   const commit = candidate => {
@@ -28,9 +39,19 @@ export const useWorkshopStore = create((set, get) => {
     save(result.data); return true;
   };
   return {
-    project: restore(), past: [], future: [], mode: 'structure', selection: null, cameraView: 'perspective', cameraRevision: 0,
+    ...restore(), past: [], future: [], mode: 'structure', selection: null, cameraView: 'perspective', cameraRevision: 0,
     showEquipment: true, showCables: true, showDimensions: true, dragging: false, snap: 5, editError: '', storageError: '',
     commit,
+    switchVariant: id => {
+      if (!['rack', 'tv'].includes(id) || id === get().activeVariant) return;
+      try {
+        const variants = { ...get().variants, [get().activeVariant]: get().project };
+        const project = variants[id] || tvConsoleProject(get().project);
+        set({ project, variants, activeVariant: id, past: [], future: [], selection: null, mode: 'structure', editError: '', cameraView: 'perspective', cameraRevision: get().cameraRevision + 1 });
+        save(project);
+      } catch (error) { set({ editError: error.message }); }
+    },
+    editTelevision: changes => get().project.television && commit({ ...get().project, television: { ...get().project.television, ...changes } }),
     update: changes => commit({ ...get().project, ...changes }),
     resize: (key, value) => {
       const p = get().project, delta = value - p[key];

@@ -81,8 +81,14 @@ export function routeCable(p, c) {
   const tipB = add(b, [0, 0, -c.connectorLength]);
   const start = add(tipA, [0, 0, -c.straight]);
   const end = add(tipB, [0, 0, -c.straight]);
+  // A low shelf may not leave room for two bends on the descent to a floor
+  // distributor. Lift the service loop behind the rack instead of shrinking R.
+  const lift = start[1] - end[1] < c.bendRadius * 2 + 10;
+  const loopY = start[1] + c.bendRadius * 2 + 20;
   const vertices = c.waypoints.length ? [start, ...c.waypoints, end] : c.to === 'service'
-    ? [start, [start[0], start[1], back], [end[0], start[1], back], [end[0], end[1], back], end]
+    ? lift
+      ? [start, [start[0], start[1], back], [start[0], loopY, back], [end[0], loopY, back], [end[0], end[1], back], end]
+      : [start, [start[0], start[1], back], [end[0], start[1], back], [end[0], end[1], back], end]
     : [start, [start[0], start[1], back], [end[0], end[1], back], end];
   const rounded = roundedRoute(vertices, c.bendRadius);
   // Include the straight strain-relief portions in the same checks and length.

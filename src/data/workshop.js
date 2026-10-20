@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { televisionBox, televisionObstacles, televisionBase, TV_NOTE } from './television.js';
 import { POWER_STRIP } from './powerDistribution.js';
 import { MAIN_RACK, EQUIPMENT_PHYSICAL, RACK_CABLES } from './cabinetSpecs.js';
 import { computeCabinetLayout } from './cabinetLayout.js';
@@ -20,14 +21,16 @@ const cable = z.object({
 export const projectSchema = z.object({
   version: z.literal(1), units: z.literal('mm'), name: z.string().min(1).max(100),
   material: z.enum(['walnut', 'oak', 'alder']),
-  width: number(400, 1600), depth: number(300, 900), postInsetX: number(25, 180), postInsetZ: number(25, 180),
+  width: number(400, 2400), depth: number(300, 900), postInsetX: number(25, 180), postInsetZ: number(25, 180),
+  centerSupports: z.boolean().optional(),
+  television: z.object({ diagonal: number(32, 98), standHeight: number(30, 300), footSpan: number(300, 1600), footDepth: number(100, 600), x: number(-1500, 1500), z: number(-600, 600) }).optional(),
   postDiameter: number(30, 80), rearGap: number(80, 700), powerGap: number(60, 400),
   shelves: z.array(z.object({
     id: z.string().regex(/^[a-zA-Z0-9_-]+$/).max(80), name: z.string().min(1).max(80),
-    y: number(60, 2200), thickness: number(18, 80), width: number(300, 1800), depth: number(250, 1000),
+    y: number(60, 2200), thickness: number(18, 80), width: number(300, 2400), depth: number(250, 1000),
     x: number(-300, 300), z: number(-300, 300), holes: z.array(hole).max(30),
   })).min(1).max(10),
-  equipment: z.array(z.object({ id: z.string().max(100), modelId: z.string().optional(), shelfId: z.string(), x: number(-1000, 1000), z: number(-600, 600) })).min(1).max(24),
+  equipment: z.array(z.object({ id: z.string().max(100), modelId: z.string().optional(), shelfId: z.string(), x: number(-1400, 1400), z: number(-600, 600) })).min(1).max(24),
   cables: z.array(cable).min(1).max(30),
 }).superRefine((p, ctx) => {
   const fail = message => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
@@ -107,7 +110,7 @@ export function migrateLegacyProject(project) {
   });
   return { ...project, shelves, equipment, cables };
 }
-export const postCenters = p => [-1, 1].flatMap(a => [-1, 1].map(b => [a * (p.width / 2 - p.postInsetX), b * (p.depth / 2 - p.postInsetZ)]));
+export const postCenters = p => (p.centerSupports ? [-1, 0, 1] : [-1, 1]).flatMap(a => [-1, 1].map(b => [a * (p.width / 2 - p.postInsetX), b * (p.depth / 2 - p.postInsetZ)]));
 export const shelfHoles = (p, s) => [...postCenters(p).map(([x, z], i) => ({ id: `M16-${i + 1}`, x: x - s.x, z: z - s.z, diameter: HARDWARE.clearance, automatic: true })), ...s.holes];
 export function equipmentBoxes(p) {
   return p.equipment.map(e => {
@@ -122,6 +125,7 @@ export function boxesOverlap(a, b, margin = 0) {
 export function obstacles(p) {
   const height = Math.max(...p.shelves.map(s => s.y + s.thickness)) + 20;
   return [
+    ...televisionObstacles(p),
     ...p.shelves.map(s => ({ id: s.id, name: s.name, center: [s.x, s.y + s.thickness / 2, s.z], size: [s.width, s.thickness, s.depth] })),
     ...equipmentBoxes(p).map(e => ({ id: e.id, name: e.id, center: e.center, size: [e.w, e.h, e.d] })),
     ...postCenters(p).map(([x, z], i) => ({ id: `post${i}`, name: `Опора ${i + 1}`, center: [x, height / 2, z], size: [p.postDiameter, height, p.postDiameter] })),
@@ -132,6 +136,15 @@ export function validateConstruction(p) {
   const add = (message, severity = 'error') => issues.push({ severity, message });
   const shelves = sortedShelves(p);
   const eqs = equipmentBoxes(p);
+  if (p.width > 1400 && !p.centerSupports) add('Широкая стойка без промежуточных опор: требуется расчёт пролёта и прогиба.', 'warning');
+  if (p.television) {
+    add(TV_NOTE, 'warning');
+    const bodies = obstacles(p).filter(o => !o.id.startsWith('layout_tv'));
+    for (const tv of televisionObstacles(p)) for (const o of bodies) if (boxesOverlap(tv, o)) add('ТВ: пересечение с ' + o.name + '. Измени положение ТВ или аппарата.');
+    const shelf = televisionBase(p), t = p.television;
+    if (Math.abs(t.x - shelf.x) + t.footSpan / 2 + 22 > shelf.width / 2 || Math.abs(t.z - shelf.z) + t.footDepth / 2 > shelf.depth / 2) add('ТВ: ножки выходят за верхнюю полку. Уточни ширину опор и глубину основания.');
+    if (t.footSpan + 44 > televisionBox(p).size[0]) add('ТВ: разнос ножек шире условного корпуса; проверь габариты модели.', 'warning');
+  }
   for (const s of shelves) {
     const holes = shelfHoles(p, s);
     for (const h of holes) {
@@ -163,15 +176,16 @@ export function validateConstruction(p) {
 export function manufacturingBOM(p, routes = []) {
   const shelves = sortedShelves(p);
   const top = Math.max(...shelves.map(s => s.y + s.thickness));
+  const posts = postCenters(p).length;
   const rows = shelves.map(s => ({ part: s.name, quantity: 1, description: `${s.width} × ${s.depth} × ${s.thickness} мм; ${p.material}; ${shelfHoles(p, s).length} сквозных отверстий`, length: s.width, width: s.depth, thickness: s.thickness }));
-  rows.push({ part: 'Шпилька M16', quantity: 4, description: 'Резьба M16×2; длина по сборке, класс прочности уточнить', length: +(top + 23).toFixed(1) });
-  rows.push({ part: 'Гайка M16, ISO 4032', quantity: shelves.length * 8, description: 'S24; номинальная высота 14,8 мм' });
-  rows.push({ part: 'Шайба M16, ISO 7089', quantity: shelves.length * 8, description: '17 × 30 × 3 мм; проверить смятие древесины' });
+  rows.push({ part: 'Шпилька M16', quantity: posts, description: 'Резьба M16×2; длина по сборке, класс прочности уточнить', length: +(top + 23).toFixed(1) });
+  rows.push({ part: 'Гайка M16, ISO 4032', quantity: shelves.length * posts * 2, description: 'S24; номинальная высота 14,8 мм' });
+  rows.push({ part: 'Шайба M16, ISO 7089', quantity: shelves.length * posts * 2, description: '17 × 30 × 3 мм; проверить смятие древесины' });
   shelves.forEach((s, i) => {
     const bottom = i === 0 ? HARDWARE.footH : shelves[i - 1].y + shelves[i - 1].thickness + HARDWARE.nutH + HARDWARE.washerT;
-    rows.push({ part: `Декоративная втулка ${i + 1}`, quantity: 4, description: `Наружный Ø${p.postDiameter}; внутренний ≥28 мм, стенку согласовать`, length: +(s.y - HARDWARE.nutH - HARDWARE.washerT - bottom).toFixed(1) });
+    rows.push({ part: `Декоративная втулка ${i + 1}`, quantity: posts, description: `Наружный Ø${p.postDiameter}; внутренний ≥28 мм, стенку согласовать`, length: +(s.y - HARDWARE.nutH - HARDWARE.washerT - bottom).toFixed(1) });
   });
-  rows.push({ part: 'Опора M16 с эластомером', quantity: 4, description: 'Проектный габарит Ø66 × 26 мм; артикул и нагрузку выбрать' });
+  rows.push({ part: 'Опора M16 с эластомером', quantity: posts, description: 'Проектный габарит Ø66 × 26 мм; артикул и нагрузку выбрать' });
   const rearReach = routes.length ? Math.ceil(-Math.min(...routes.flatMap(r => r.points.map(pt => pt[2]))) + 30) : Math.ceil(p.depth / 2 + p.rearGap + p.powerGap + 290);
   rows.push({ part: 'Задняя сервисная рама / лоток БП', quantity: 1, description: `Оси задних стоек: X ±${p.width / 2 + 150}, Z −${rearReach} мм; крепление согласовать` });
   rows.push({ part: 'Мягкий кабельный держатель', quantity: routes.reduce((sum, r) => sum + r.supports.length, 0), description: 'Ø по кабелю; площадки на задней раме, без пережатия оболочки' });
@@ -181,5 +195,6 @@ export function manufacturingBOM(p, routes = []) {
     const physical = equipmentPhysical(e), shelf = p.shelves.find(s => s.id === e.shelfId);
     rows.push({ part: `Аппарат · ${equipmentName(e)}`, quantity: 1, description: `${shelf.name}; Ш×В×Г ${physical.dims.w} × ${physical.dims.h} × ${physical.depthIsPlaceholder ? 'неизвестно' : physical.dims.d} мм; ${physical.weight == null ? 'масса неизвестна' : `${physical.weight} кг`}${e.modelId ? '; планируемый габарит, разъёмы не обмерены' : ''}` });
   });
+  if (p.television) rows.push({ part: 'ТВ · ' + p.television.diagonal + '″ · на ножках', quantity: 1, description: 'Верхняя полка ' + televisionBase(p).name + '; разнос ножек ' + p.television.footSpan + ' мм, глубина основания ' + p.television.footDepth + ' мм, подъём корпуса ' + p.television.standHeight + ' мм. ' + TV_NOTE });
   return rows;
 }

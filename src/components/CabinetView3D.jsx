@@ -5,6 +5,8 @@ import ShelfMesh from './ShelfMesh';
 import RackFrame from './RackFrame';
 import EquipmentModel from './EquipmentModel';
 import RoutedCables from './RoutedCables';
+import TelevisionModel from './TelevisionModel';
+import { televisionBox } from '../data/television';
 import { useCabinetStore } from '../stores/useCabinetStore';
 import { useWorkshopStore } from '../stores/useWorkshopStore';
 import { equipmentBoxes, sortedShelves } from '../data/workshop';
@@ -30,18 +32,20 @@ function Scene({ readOnly = false }) {
   const shelves = useMemo(() => sortedShelves(p), [p]);
   const equipment = useMemo(() => equipmentBoxes(p), [p]);
   const routes = useMemo(() => routeAllCables(p), [p]);
-  const top = Math.max(...p.shelves.map(s => s.y + s.thickness)) / 1000 + (exploded ? (shelves.length - 1) * 0.16 : 0);
+  const tv = televisionBox(p);
+  const top = Math.max(...p.shelves.map(s => s.y + s.thickness), tv ? tv.center[1] + tv.size[1] / 2 : 0) / 1000 + (exploded ? (shelves.length - 1) * 0.16 : 0);
   const { camera, size } = useThree();
   const orbit = useRef();
   useEffect(() => {
-    const fit = Math.max(1, top / 0.9, p.width / 700) * Math.max(1, size.height / size.width * (size.width < 600 ? 1.12 : 0.85));
+    if (!size.width || !size.height) return;
+    const fit = Math.max(1, top / (p.television ? 1.3 : 0.9), p.width / (p.television ? 1800 : 1050)) * Math.max(1, size.height / size.width * (size.width < 600 ? (p.television ? 1.35 : 1.12) : 0.85));
     const target = [0, top / 2, showCables ? -0.18 : 0];
     const directions = { perspective: [1.3, 0.75, 1.9], front: [0, 0, 3], rear: [0, 0, -3], side: [3, 0, 0], top: [0, 3, 0.001] };
     const dir = directions[cameraView];
     camera.position.set(...dir.map((v, i) => target[i] + v * fit));
     if (camera.isOrthographicCamera) { camera.zoom = Math.min(size.width / (p.width / 1000 + 0.65), size.height / (top + 0.4)); camera.updateProjectionMatrix(); }
     camera.lookAt(...target); orbit.current?.target.set(...target); orbit.current?.update();
-  }, [camera, cameraView, cameraRevision, size.width, size.height, top, p.width, showCables]);
+  }, [camera, cameraView, cameraRevision, size.width, size.height, top, p.width, p.television, showCables]);
   return <>
     <color attach="background" args={['#e9e5df']} />
     <ambientLight intensity={0.6} /><hemisphereLight args={['#ffffff', '#c5b59c', 0.7]} />
@@ -50,6 +54,7 @@ function Scene({ readOnly = false }) {
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.002, 0]} receiveShadow><planeGeometry args={[200, 200]} /><meshStandardMaterial color="#e9e5df" roughness={0.94} /></mesh>
     <gridHelper args={[6, 120, '#b8beb8', '#d4d4cc']} position={[0, 0, 0]} />
     <RackFrame project={p} ghost={xray} exploded={exploded} />
+    {!exploded && <TelevisionModel project={p} dimensions={showDimensions} />}
     {shelves.map((s, i) => {
       const position = [s.x / 1000, s.y / 1000 + (exploded ? i * 0.16 : 0), s.z / 1000];
       return <Movable key={`${s.id}-${s.x}-${s.y}-${s.z}`} selected={!readOnly && !exploded && selection?.type === 'shelf' && selection.id === s.id} position={position} onMove={([x, y, z]) => editShelf(s.id, { x, y, z })}>
