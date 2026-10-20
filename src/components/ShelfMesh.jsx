@@ -3,7 +3,7 @@ import { ExtrudeGeometry, Path, Shape } from 'three';
 import { shelfHoles } from '../data/workshop';
 import useWoodTexture from './useWoodTexture';
 
-export default function ShelfMesh({ project, shelf, xray, selected, onClick }) {
+export default function ShelfMesh({ project, shelf, xray, selected, onClick, materialOverride }) {
   const grain = useWoodTexture();
   const geometry = useMemo(() => {
     const w = shelf.width / 1000, d = shelf.depth / 1000;
@@ -21,6 +21,6 @@ export default function ShelfMesh({ project, shelf, xray, selected, onClick }) {
   useEffect(() => () => geometry.dispose(), [geometry]);
   const colors = { walnut: '#795035', oak: '#BC9664', alder: '#C9A876' };
   return <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} castShadow receiveShadow onClick={onClick}>
-    <meshStandardMaterial color={colors[project.material]} map={grain} roughness={0.53} transparent={xray} opacity={xray ? 0.2 : 1} emissive={selected ? '#2d573e' : '#000'} emissiveIntensity={0.18} />
+    {materialOverride ? <primitive attach="material" object={materialOverride} /> : <meshStandardMaterial color={colors[project.material]} map={grain} roughness={0.53} transparent={xray} opacity={xray ? 0.2 : 1} emissive={selected ? '#2d573e' : '#000'} emissiveIntensity={0.18} />}
   </mesh>;
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Html, useGLTF } from '@react-three/drei';
 import { Curve, Vector3, TubeGeometry } from 'three';
 import { ROOM_PORTS, ROOM_PORT_MAP } from '../data/roomEquipment';
-import { cablePaths, connectionCheck, toWeb } from '../data/roomWiring';
+import { cablePaths, connectionCheck, sampleDrape, toWeb } from '../data/roomWiring';
 import { useRoomWiring } from '../store/roomWiringStore';
 import { LISTENING_ROOM } from '../data/listeningRoom';
 
@@ -32,9 +32,9 @@ function Lead({path,selected,onClick}) {
     </group>)}
   </group>;
 }
-function Cable({cable,editing,selected,onSelect}) {
-  const paths=useMemo(()=>cablePaths(cable),[cable]);
-  return <group>{paths.map((path,i)=><Lead key={i} path={path} selected={selected} onClick={editing?e=>{e.stopPropagation();onSelect(cable.id);}:undefined}/>)}</group>;
+function Cable({cable,layout,editing,selected,onSelect}) {
+  const paths=useMemo(()=>cablePaths(cable,layout),[cable,layout]);
+  return <group>{paths.map((path,i)=><group key={i}><Lead path={path} selected={selected} onClick={editing?e=>{e.stopPropagation();onSelect(cable.id);}:undefined}/>{path.supports?.map((p,j)=><mesh key={j} position={[p[0],(.004+p[2]-path.radius)/2,-p[1]]} castShadow receiveShadow><boxGeometry args={[.055,p[2]-path.radius-.004,.045]}/><meshStandardMaterial color="#70533c" roughness={.65}/></mesh>)}</group>)}</group>;
 }
 function Port({port,selected,compatible,onPick}) {
   const [hover,setHover]=useState(false);
@@ -45,11 +45,22 @@ function Port({port,selected,compatible,onPick}) {
     {(hover||selected)&&<Html center position={[0,.026,0]} style={{pointerEvents:'none'}}><span className="port-tooltip">{port.label}</span></Html>}
   </group>;
 }
-export default function RoomWiring3D({editing=false,device='freya'}) {
+function MainsFeed({layout}) {
+  // Illustrative wall feed; not an extra audio port or a certified power plan.
+  const [x,y]=layout.devices.pdu.center,wallX=Math.min(2.75,x+.28);
+  const path=useMemo(()=>{
+    const start=[x,y+.32,.035],end=[wallX,1.07,.18];
+    return {start,end,points:sampleDrape([start,[x,y+.39,.026],[x+.10,.83,.015],[wallX,.95,.020],[wallX,1.02,.11],end]),radius:.0055,color:'#242725',startAxis:'Y',endAxis:'Y',startPlug:false,endPlug:true};
+  },[x,y,wallX]);
+  return <group><Lead path={path}/><mesh position={[wallX,.18,-1.086]}><boxGeometry args={[.075,.075,.008]}/><meshStandardMaterial color="#e5e1d7" roughness={.4}/></mesh></group>;
+}
+export default function RoomWiring3D({editing=false,device='freya',layout}) {
   const {cables,selectedPort,selectedCable,pickPort,selectCable}=useRoomWiring();
+  const ports=layout?.ports||ROOM_PORTS,portMap=layout?.portMap||ROOM_PORT_MAP;
   return <group>
-    {cables.map(c=><Cable key={c.id} cable={c} editing={editing} selected={editing&&selectedCable===c.id} onSelect={selectCable}/>)}
-    {editing&&ROOM_PORTS.filter(p=>p.device===device).map(port=><Port key={port.id} port={port} selected={selectedPort===port.id} compatible={selectedPort&&connectionCheck(selectedPort,port.id,cables,selectedCable).ok} onPick={pickPort}/>)}
-    {editing&&selectedPort&&ROOM_PORT_MAP[selectedPort].device!==device&&<Port port={ROOM_PORT_MAP[selectedPort]} selected onPick={pickPort}/>}
+    {layout&&<MainsFeed layout={layout}/>}
+    {cables.map(c=><Cable key={c.id} cable={c} layout={layout} editing={editing} selected={editing&&selectedCable===c.id} onSelect={selectCable}/>)}
+    {editing&&ports.filter(p=>p.device===device&&(!layout||layout.devices[p.device].present)).map(port=><Port key={port.id} port={port} selected={selectedPort===port.id} compatible={selectedPort&&connectionCheck(selectedPort,port.id,cables,selectedCable).ok} onPick={pickPort}/>)}
+    {editing&&selectedPort&&portMap[selectedPort].device!==device&&<Port port={portMap[selectedPort]} selected onPick={pickPort}/>}
   </group>;
 }

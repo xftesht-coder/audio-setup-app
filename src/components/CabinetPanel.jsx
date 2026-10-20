@@ -156,6 +156,6 @@ export default function CabinetPanel() {
       </>}
       <details className="cabinet-reference"><summary>Инженерные источники</summary>{ENGINEERING_SOURCES.map(s => <p key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.name}</a></p>)}<p>Радиус по паспорту — для конкретной модели. Масса, шаг опор и разнос зон здесь задаются проектом. Редактор не утверждает улучшения звука от материалов кабеля.</p></details>
     </aside></div>
-    <footer className="workspace-footnote"><span>Проект на согласование · изменения мебели пока не перестраивают комнату</span><a href="#room">Комната ↗</a></footer>
+    <footer className="workspace-footnote"><span>Проект на согласование · мебель и аппараты синхронизированы с 3D-комнатой</span><a href="#room">Комната ↗</a></footer>
   </section>;
 }

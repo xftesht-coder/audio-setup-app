@@ -23,15 +23,15 @@ export const SIDE_POWER_STRIPS = ['left', 'right'].map((side, i) => ({
 }));
 
 export const LISTENING_ROOM = {
-  model: '/models/listening-room.glb?v=atelier-2', poster: '/images/listening-room.jpg?v=atelier-2',
+  model: '/models/listening-room-modular.glb?v=room-6x3-1', poster: '/images/listening-room.jpg?v=atelier-2',
   cablePoster: '/images/listening-room-cables.jpg?v=atelier-2',
   eveningPoster: '/images/listening-room-evening.jpg?v=atelier-2', detailPoster: '/images/listening-room-detail.jpg?v=atelier-2',
   cabling: {
-    note: 'Свободные петли за полками, мягкие держатели у заднего края и широкие дуги тяжёлых шнуров. Напольные линии провисают между деревянными опорами, питание проходит отдельно. Укладка воссоздана по референсам; длины, жёсткость и допустимые радиусы конкретных кабелей ещё не измерены.',
+    note: 'Свободные петли за полками и широкие дуги тяжёлых шнуров. Напольные линии провисают между деревянными опорами, питание проходит отдельно. Укладка воссоздана по референсам; длины, жёсткость и допустимые радиусы конкретных кабелей ещё не измерены.',
     reference: 'https://ca.pinterest.com/pin/38069559342458139/',
   },
   rug: { name: 'LAXMI Quincey', widthMm: 3000, depthMm: 2000, color: 'Белый', source: 'Размер и фотографии владельца', geometry: 'Рельеф и бахрома воссозданы по фото' },
-  room: { widthMm: 5400, depthMm: 6000, heightMm: 2800, status: 'concept' },
-  notes: 'Комната, окно, подвесная люстра, лампы и корпуса дополнительных фильтров — проектный вариант. Конкретная модель Govee ещё не выбрана. Габарит ковра — 200 × 300 см; кресла — по спецификации владельца. Детали панелей восстановлены по фото и чертежу; глубина Rusich и ревизия A90 пока не подтверждены.',
+  room: { widthMm: 6000, depthMm: 3300, heightMm: 2800, status: 'owner-dimensions', heightStatus: 'concept' },
+  notes: 'Комната 600 × 330 см, ТВ у стены 6 м; диван 210 × 108 см, светло-бежевый — по данным владельца. Высота 2,8 м, окно, люстра и лампы — проектные. Конкретная модель Govee не выбрана. Ковёр 200 × 300 см; Gliver — по спецификации владельца. Детали панелей восстановлены по фото и чертежу; глубина Rusich и ревизия A90 не подтверждены.',
   speakerSource: 'https://www.acoustic-energy.co.uk/wp-content/uploads/Acoustic-Energy-AE320-Info-Sheet.pdf',
 };

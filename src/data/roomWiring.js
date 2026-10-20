@@ -60,7 +60,8 @@ export function sampleDrape(knots,step=.009) {
   }))];
 }
 export const toWeb=([x,y,z])=>[x,z,-y];
-export function cablePaths(cable) {
+export function cablePaths(cable, layout) {
+  if (layout) return placedCablePaths(cable, layout);
   const a=ROOM_PORT_MAP[cable.from],b=ROOM_PORT_MAP[cable.to],anchor=a||b;
   if(!anchor)return [];
   const speaker=anchor.signal==='speaker',power=anchor.signal==='power';
@@ -114,6 +115,55 @@ export function cablePaths(cable) {
   if(high&&a)for(const [i,[dx,dz]] of a.jacks.entries()){
     const start=[a.position[0]+dx,a.position[1],a.position[2]+dz],end=paths[0].start;
     paths.push({points:sampleDrape([start,[start[0],start[1]+.065,start[2]],end]),radius:.0018,color:i?'#222827':'#7c2820',start,end,startAxis:'Y',endAxis:'Y',startPlug:true,endPlug:false});
+  }
+  return paths;
+}
+
+// Physical layout only. Logical port IDs and the saved audio patch never change.
+function placedCablePaths(cable, layout) {
+  const a=layout.portMap[cable.from], b=layout.portMap[cable.to], anchor=a||b;
+  if(!anchor || [a,b].some(p=>p&&!layout.devices[p.device].present))return [];
+  const power=anchor.signal==='power', speaker=anchor.signal==='speaker', high=(b?.connector||cable.toType)==='XLR_HIGH';
+  const radius=power?(b&&b.connector!=='IEC'?.0025:.0055):speaker?.004:anchor.signal==='ground'?.0012:anchor.connector==='OPTICAL'?.002:.003;
+  const count=high?1:a&&b?Math.max(a.jacks.length,b.jacks.length):anchor.jacks.length;
+  const salt=[...cable.id].reduce((n,c)=>n+c.charCodeAt(0),0)%7;
+  const rear=layout.rear + (power?.19:speaker?.10:.025) + salt*.008;
+  const paths=Array.from({length:count},(_,i)=>{
+    const jack=p=>{const off=p.jacks[Math.min(i,p.jacks.length-1)];return [p.position[0]+off[0],p.position[1],p.position[2]+off[1]+(p.axis==='Z'?.045:0)];};
+    const loose=[anchor.position[0]+.07,rear,Math.max(.045,anchor.position[2]-.16)];
+    const start=a?(high?[a.position[0],a.position[1]+.10,a.position[2]]:jack(a)):loose;
+    const end=b?jack(b):loose;
+    // Clear the shelf edge before allowing the jacket to sag. Long horizontal
+    // beams look weightless; the bend below is outside the furniture envelope.
+    const edge=p=>[p[0],Math.max(p[1]+.06,layout.rear-.075),p[2]];
+    const escape=p=>[p[0]+.012*(i?1:-1),rear+i*.016,Math.max(.045,p[2]-.055)];
+    let knots, supports=[];
+    if(speaker&&a&&b) {
+      const lane=rear+i*.018, s=end[0]<0?-1:1;
+      const low=.013+radius;
+      const x1=start[0]+s*.14, x2=end[0]-s*.12, span=x2-x1;
+      supports=[.30,.72].map(t=>[x1+span*t,lane,.039]);
+      knots=[start,edge(start),escape(start),[x1,lane,.10],
+        [x1,lane,low],supports[0],[x1+span*.52,lane+.015,low],supports[1],[x2,lane,low],
+        [end[0],lane,end[2]],[end[0],end[1]+.065,end[2]],end];
+    } else if(power&&a&&b) {
+      const lane=rear+i*.014, floor=.009+radius;
+      knots=[start,[start[0],start[1],start[2]+.07],[start[0]+.065,lane,.15],
+        [start[0]+.09,lane,floor],[(start[0]+end[0])/2,lane+.025,floor],
+        [end[0]+.06,lane,floor],[end[0],lane,Math.max(.11,end[2]-.13)],escape(end),edge(end),
+        [end[0],end[1]+.045,end[2]],end];
+    } else {
+      const low=Math.max(.035,Math.min(start[2],end[2])-.10-i*.016);
+      knots=[start,edge(start),escape(start),
+        [start[0]-.025,rear+.04,Math.max(low,start[2]-.08)],
+        [(start[0]+end[0])/2,rear+.07,low],
+        [end[0]+.025,rear+.04,Math.max(low,end[2]-.08)],escape(end),edge(end),end];
+    }
+    return {points:sampleDrape(knots),radius,color:i?'#30302b':'#161b1c',start,end,startAxis:a?.axis||'Y',endAxis:b?.axis||'Y',adapter:power&&b&&b.connector!=='IEC',startPlug:!high,endPlug:true,supports};
+  });
+  if(high&&a)for(const [i,[dx,dz]] of a.jacks.entries()){
+    const start=[a.position[0]+dx,a.position[1],a.position[2]+dz],end=paths[0].start;
+    paths.push({points:sampleDrape([start,[start[0],start[1]+.055,start[2]],end]),radius:.0018,color:i?'#222827':'#7c2820',start,end,startAxis:'Y',endAxis:'Y',startPlug:true,endPlug:false,supports:[]});
   }
   return paths;
 }
