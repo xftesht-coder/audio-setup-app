@@ -2,31 +2,29 @@ import { create } from 'zustand';
 import { DEFAULT_SYSTEM_PLAN } from '../data/audioModels.js';
 import { parseSystemPlan, validSystemPlan } from '../data/systemMatching.js';
 import { importVariants, MAX_VARIANTS, samePlan, validateVariants, variantName } from '../data/systemVariants.js';
+import { recoverableStorage } from '../data/recoverableStorage.js';
 
 export const SYSTEM_STORAGE_KEY = 'audio-system-workspace-v2';
 const LEGACY_KEY = 'audio-system-plan-v1';
 export function createSystemPlanStore(storage = () => globalThis.localStorage, makeId = () => crypto.randomUUID()) {
+  const persistence = recoverableStorage(SYSTEM_STORAGE_KEY, storage, makeId);
   const initial = { plan: { ...DEFAULT_SYSTEM_PLAN }, variants: [], storageError: '' };
   try {
-    const raw = storage()?.getItem(SYSTEM_STORAGE_KEY);
-    if (raw) {
+    const saved = persistence.read((raw, legacy) => {
       const data = JSON.parse(raw);
+      if (legacy) return { plan: parseSystemPlan(data), variants: [] };
       if (data.version !== 2) throw new Error('version');
       const plan = parseSystemPlan(data.plan), variants = validateVariants(data.variants);
-      Object.assign(initial, { plan, variants });
-    } else {
-      const legacy = storage()?.getItem(LEGACY_KEY);
-      if (legacy) initial.plan = parseSystemPlan(JSON.parse(legacy));
-    }
+      return { plan, variants };
+    }, LEGACY_KEY);
+    if (saved) Object.assign(initial, saved);
   } catch { initial.storageError = 'Сохранённые данные не удалось прочитать. Исходная запись сохранена; можно восстановить варианты из файла.'; }
   return create((set, get) => {
     const persist = changes => {
       set({ ...changes, storageError: '' });
       try {
         const { plan, variants } = get();
-        const target = storage();
-        if (!target) throw new Error('storage unavailable');
-        target.setItem(SYSTEM_STORAGE_KEY, JSON.stringify({ version: 2, plan, variants }));
+        persistence.write({ version: 2, plan, variants });
       } catch { set({ storageError: 'Браузер не сохранил изменения. Скачай варианты в файл или скопируй ссылку на текущую систему.' }); }
     };
     return {

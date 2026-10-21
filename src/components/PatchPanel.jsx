@@ -27,7 +27,7 @@ export default function PatchPanel() {
   const inspectCable = c => { s.selectCable(c.id); chooseDevice(ROOM_PORT_MAP[c.to || c.from].device); };
   const clearFilters = () => { setQuery(''); setKind('audio'); setTarget(''); };
   return <section className="room-patch-panel patch-studio" aria-labelledby="patch-panel-title" data-mobile-panel={mobilePanel}>
-    <WorkspaceHeader id="patch-panel-title" title="Роутинг" version="0.5.4" subtitle={<>{ROOM_DEVICE_MAP[s.components.dac]?.name || 'ЦАП не выбран'} <span>→</span> {ROOM_DEVICE_MAP[s.components.preamp]?.name || 'Предусилитель не выбран'}</>}>
+    <WorkspaceHeader id="patch-panel-title" title="Роутинг" subtitle={<>{ROOM_DEVICE_MAP[s.components.dac]?.name || 'ЦАП не выбран'} <span>→</span> {ROOM_DEVICE_MAP[s.components.preamp]?.name || 'Предусилитель не выбран'}</>}>
       <span className={'studio-health ' + (report.connected < 4 ? 'needs-check' : '')}><i />Пути {report.connected}/4 <small>{s.listening.mode === 'selected' ? 'по входам' : 'по кабелям'}</small></span><RoomServiceLink>Комната ↗</RoomServiceLink><a href="#intelligence">Проверка ↗</a>
     </WorkspaceHeader>
     <div className="studio-toolbar">

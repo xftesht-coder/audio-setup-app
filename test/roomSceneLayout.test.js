@@ -7,7 +7,7 @@ import { tvConsoleProject } from '../src/data/workshopTv.js';
 import { roomSceneLayout, sceneWalkRoom, ROOM_EQUIPMENT_IDS, BACKABRO_SOFA } from '../src/data/roomSceneLayout.js';
 import { ROOM_PORTS } from '../src/data/roomEquipment.js';
 import { cablePaths, roomPreset } from '../src/data/roomWiring.js';
-import { isWalkPositionClear, moveInRoom } from '../src/data/roomNavigation.js';
+import { isWalkPositionClear, moveInRoom, nearestWalkPosition } from '../src/data/roomNavigation.js';
 
 const rack=completeListeningRack(defaultProject()), tv=tvConsoleProject(rack);
 test('all eight detailed devices and their ports translate with both editable rack variants',()=>{
@@ -57,4 +57,22 @@ test('the production model contains independently movable device meshes and the 
   for(const id of [...Object.keys(ROOM_EQUIPMENT_IDS),'ae0','ae1','rel0','rel1','pdu','side0','side1'])assert.ok(names.some(n=>n.startsWith('Device_'+id+'__')),id);
   assert.ok(names.some(n=>n.startsWith('Sofa_')));
   assert.ok(!names.some(n=>n.startsWith('Shelf ')||n.startsWith('Graphite rack')));
+});
+test('all room presets and loose ends clear the cylindrical rack supports as well as the boards',()=>{
+  for(const project of [rack,tv])for(const name of ['a90','bifrost','warmer']){
+    const layout=roomSceneLayout(project);
+    for(const original of roomPreset(name))for(const cable of [original,{...original,from:null},{...original,to:null}])
+      for(const path of cablePaths(cable,layout))for(const [x,y,z] of path.points)
+        assert.ok(!layout.posts.some(post=>z<post.top+path.radius&&Math.hypot(x-post.x,y-post.y)<post.radius+path.radius),project.name+' '+name+' '+cable.id);
+  }
+});
+test('entry and rear shortcuts remain outside furniture after deep shelf edits and a displaced TV',()=>{
+  const deep=structuredClone(tv);
+  deep.shelves=deep.shelves.map(s=>({...s,depth:1000,z:300}));
+  deep.television.z=-600;
+  const room=sceneWalkRoom(roomSceneLayout(deep));
+  assert.notDeepEqual(room.start,{x:0,z:.72});
+  for(const point of [room.start,room.behind])assert.ok(point&&isWalkPositionClear(point.x,point.z,room));
+  assert.ok(room.obstacles.some(o=>o.name==='ТВ · условный габарит'));
+  assert.equal(nearestWalkPosition({x:0,z:0},{...room,obstacles:[{minX:-3,maxX:3,minZ:-2,maxZ:3}]}),null);
 });

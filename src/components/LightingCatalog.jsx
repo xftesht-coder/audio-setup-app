@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import WorkspaceHeader from './WorkspaceHeader';
 import catalog from '../data/goveeCatalog.json';
 import { useLightingStore } from '../stores/useLightingStore';
+import { downloadJson } from '../data/roomBackup';
 
 const CATEGORIES = {
   floor: 'Торшеры', table: 'Настольные', wall: 'Панели и настенные', strips: 'Ленты и неон',
@@ -51,6 +52,7 @@ export default function LightingCatalog() {
   const [region, setRegion] = useState('all');
   const [visible, setVisible] = useState(24);
   const planned = useLightingStore(state => state.planned);
+  const storageError = useLightingStore(state => state.storageError);
   const add = useLightingStore(state => state.add);
   const remove = useLightingStore(state => state.remove);
   const setQuantity = useLightingStore(state => state.setQuantity);
@@ -80,6 +82,8 @@ export default function LightingCatalog() {
         <label>Количество<input aria-label={`Количество ${item.name}`} type="number" min="1" max="20" value={item.quantity} onChange={e => setQuantity(item.id, e.target.value)} /></label>
         <button onClick={() => remove(item.id)} aria-label={`Убрать ${item.name}`}>Убрать</button>
       </li>)}</ul>}
+      {storageError && <p role="alert">{storageError}</p>}
+      {planned.length > 0 && <button onClick={() => downloadJson('audio-setup-lighting.json', { state: { planned }, version: 0 })}>Скачать план освещения</button>}
       <small>Выбор сохраняется в этом браузере. Это список кандидатов; он пока не меняет 3D-сцену, схему питания и публичную ссылку.</small>
     </aside>
     </div>

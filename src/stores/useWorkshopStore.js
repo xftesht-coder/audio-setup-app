@@ -2,13 +2,14 @@ import { create } from 'zustand';
 import { tvConsoleProject } from '../data/workshopTv.js';
 import { defaultProject, migrateLegacyProject, projectSchema } from '../data/workshop.js';
 import { completeListeningRack } from '../data/equipmentProfiles.js';
+import { recoverableStorage } from '../data/recoverableStorage.js';
 
-const KEY = 'audio_workshop_variants_v2';
+export const WORKSHOP_STORAGE_KEY = 'audio_workshop_variants_v2';
 const LEGACY_KEY = 'audio_workshop_v1';
-function restore() {
+function restore(persistence) {
+  let storageError = '';
   try {
-    const raw = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
-    if (raw) {
+    const saved = persistence.read(raw => {
       const parsed = JSON.parse(raw);
       if (parsed.workspaceVersion === 2) {
         if (!['rack', 'tv'].includes(parsed.activeVariant)) throw new Error('Неизвестный вариант');
@@ -19,16 +20,19 @@ function restore() {
       }
       const project = projectSchema.parse(migrateLegacyProject(parsed));
       return { project, variants: { rack: project }, activeVariant: 'rack' };
-    }
-  } catch { /* Keep the previous storage bytes; a new edit starts a valid project. */ }
+    }, LEGACY_KEY);
+    if (saved) return { ...saved, storageError };
+  } catch { storageError = 'Сохранённую стойку не удалось прочитать. Исходная запись сохранена; сейчас открыт базовый проект.'; }
   const project = projectSchema.parse(completeListeningRack(defaultProject()));
-  return { project, variants: { rack: project }, activeVariant: 'rack' };
+  return { project, variants: { rack: project }, activeVariant: 'rack', storageError };
 }
-export const useWorkshopStore = create((set, get) => {
+export function createWorkshopStore(storage = () => globalThis.localStorage, makeId = () => crypto.randomUUID()) {
+ const persistence = recoverableStorage(WORKSHOP_STORAGE_KEY, storage, makeId);
+ return create((set, get) => {
   const save = project => {
     const variants = { ...get().variants, [get().activeVariant]: project };
     set({ variants });
-    try { localStorage.setItem(KEY, JSON.stringify({ workspaceVersion: 2, activeVariant: get().activeVariant, variants })); set({ storageError: '' }); }
+    try { persistence.write({ workspaceVersion: 2, activeVariant: get().activeVariant, variants }); set({ storageError: '' }); }
     catch { set({ storageError: 'Браузер не сохранил проект. Скачайте JSON, чтобы не потерять изменения.' }); }
   };
   const commit = candidate => {
@@ -39,8 +43,8 @@ export const useWorkshopStore = create((set, get) => {
     save(result.data); return true;
   };
   return {
-    ...restore(), past: [], future: [], mode: 'structure', selection: null, cameraView: 'perspective', cameraRevision: 0,
-    showEquipment: true, showCables: true, showDimensions: true, dragging: false, snap: 5, editError: '', storageError: '',
+    ...restore(persistence), past: [], future: [], mode: 'structure', selection: null, cameraView: 'perspective', cameraRevision: 0,
+    showEquipment: true, showCables: true, showDimensions: true, dragging: false, snap: 5, editError: '',
     commit,
     switchVariant: id => {
       if (!['rack', 'tv'].includes(id) || id === get().activeVariant) return;
@@ -87,3 +91,5 @@ export const useWorkshopStore = create((set, get) => {
     },
   };
 });
+}
+export const useWorkshopStore = createWorkshopStore();

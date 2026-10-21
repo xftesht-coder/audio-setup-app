@@ -116,9 +116,10 @@ function Camera({ view, device, front, layout }) {
     minPolarAngle={.2} maxPolarAngle={Math.PI / 2 + (view==='service'?.25:-.015)} minAzimuthAngle={['cables','service','seat'].includes(view) ? -Infinity : -1.3} maxAzimuthAngle={['cables','service','seat'].includes(view) ? Infinity : 1.3} />;
 }
 
-export default function RoomView3D({ view = 'room', walking = false, editing=false, device='freya', front=false, lighting='day', onEdit, onUnavailable }) {
+export default function RoomView3D({ view = 'room', walking = false, editing=false, device='freya', front=false, lighting='day', onEdit, onUnavailable, previewScene = null }) {
   const controller=useRef();
-  const project=useWorkshopStore(s=>s.project);
+  const savedProject=useWorkshopStore(s=>s.project);
+  const project=previewScene?.project || savedProject;
   const layout=useMemo(()=>roomSceneLayout(project),[project]);
   const walkRoom=useMemo(()=>sceneWalkRoom(layout),[layout]);
   const [status,setStatus]=useState('ready'),[ready,setReady]=useState(false),[position,setPosition]=useState(walkRoom.start);
@@ -143,18 +144,18 @@ export default function RoomView3D({ view = 'room', walking = false, editing=fal
       <Lightformer form="ring" intensity={evening?3:1.5} color="#ffe0b3" scale={[1.1, 1.1, 1]} position={[0, 2.3, .8]} rotation={[Math.PI / 2, 0, 0]} />
     </Environment>
     <Suspense fallback={<Html center><span className="room-loading" role="status">Загружаем комнату…</span></Html>}><RoomModel walking={walking} view={view} lighting={lighting} onReady={setReady} layout={layout}/>
-      <LiveFurniture layout={layout}/><RoomWiring3D editing={editing&&!front} device={device} layout={layout}/>
-      <ContactShadows key={JSON.stringify(project)} position={[0,.005,.56]} scale={[6,3.3]} opacity={.28} blur={2.6} far={1.8} resolution={512} frames={2} color="#493c2d"/>
+      <LiveFurniture layout={layout}/><RoomWiring3D previewCables={previewScene?.cables} editing={editing&&!front} device={device} layout={layout}/>
+      <ContactShadows key={JSON.stringify([project,walking,view])} position={[0,.005,.56]} scale={[6,3.3]} opacity={.28} blur={2.6} far={1.8} resolution={512} frames={2} color="#493c2d"/>
       {walking ? <WalkCamera controller={controller} onStatus={setStatus} onPosition={setPosition} room={walkRoom}/> : <Camera view={view} device={device} front={front} layout={layout}/>}
     </Suspense>
   </Canvas>
     {walking && ready && <>
-      <div className="walk-status" role="status">{status==='locked'?'WASD · мышь · Esc — пауза':status==='drag'?'WASD · тяни изображение для поворота · Esc — пауза':'Прогулка по комнате'}</div>
+      <div className="walk-status" role="status">{status==='blocked'?'Нет свободного места для прогулки. Измени расстановку мебели.':status==='locked'?'WASD · мышь · Esc — пауза':status==='drag'?'WASD · тяни изображение для поворота · Esc — пауза':'Прогулка по комнате'}</div>
       {status==='ready' && <div className="walk-start"><button onClick={()=>controller.current?.enter()}>Войти в комнату</button><p>WASD или стрелки · мышь — обзор<br/>Esc — освободить курсор</p></div>}
       {status==='locked' && <span className="walk-crosshair" aria-hidden="true">+</span>}
-      <div className="walk-tools"><button onClick={()=>controller.current?.reset()}>К дивану</button><button onClick={()=>controller.current?.behind()}>Зайти за стойку</button><button onClick={()=>{controller.current?.pause();onEdit?.();}}>Подключить кабели</button><button onClick={()=>controller.current?.pause()}>Пауза</button></div>
+      <div className="walk-tools"><button onClick={()=>controller.current?.reset()}>К дивану</button><button onClick={()=>controller.current?.behind()}>Зайти за стойку</button>{onEdit && <button onClick={()=>{controller.current?.pause();onEdit();}}>Подключить кабели</button>}<button onClick={()=>controller.current?.pause()}>Пауза</button></div>
       <div className="walk-pad" role="group" aria-label="Шаги по комнате"><button aria-label="Шаг вперёд" onClick={()=>controller.current?.step(1,0)}>↑</button><div><button aria-label="Шаг влево" onClick={()=>controller.current?.step(0,-1)}>←</button><button aria-label="Шаг назад" onClick={()=>controller.current?.step(-1,0)}>↓</button><button aria-label="Шаг вправо" onClick={()=>controller.current?.step(0,1)}>→</button></div></div>
-      <svg className="walk-map" viewBox="-3.15 -1.24 6.3 3.6" role="img" aria-label="Положение в комнате: зелёная точка — вы"><title>План комнаты 600 × 330 см</title><rect x={walkRoom.minX} y={walkRoom.minZ} width={6} height={3.3} rx=".07" className="map-room"/>{walkRoom.obstacles.map((o,i)=><rect key={i} x={o.minX} y={o.minZ} width={o.maxX-o.minX} height={o.maxZ-o.minZ} className="map-furniture"/>)}<circle cx={position.x} cy={position.z} r=".14" className="map-person"/></svg>
+      <svg className="walk-map" viewBox="-3.15 -1.24 6.3 3.6" role="img" aria-label="Положение в комнате: зелёная точка — вы"><title>План комнаты 600 × 330 см</title><rect x={walkRoom.minX} y={walkRoom.minZ} width={6} height={3.3} rx=".07" className="map-room"/>{walkRoom.obstacles.map((o,i)=><rect key={i} x={o.minX} y={o.minZ} width={o.maxX-o.minX} height={o.maxZ-o.minZ} className="map-furniture"/>)}{position && <circle cx={position.x} cy={position.z} r=".14" className="map-person"/>}</svg>
     </>}
   </div>;
 }

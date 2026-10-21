@@ -9,6 +9,7 @@ export default function WalkCamera({ controller, onStatus, onPosition, room = WA
   const input = useRef({ keys:new Set(), active:false, yaw:0, pitch:0, drag:null, lastReport:0 });
   useEffect(() => {
     const state=input.current, canvas=gl.domElement, euler=new Euler(0,0,0,'YXZ');
+    if(!room.start){onStatus('blocked');return;}
     onStatus('ready');
     camera.position.set(room.start.x,room.eyeHeight,room.start.z);
     camera.fov=62; camera.updateProjectionMatrix(); camera.lookAt(0,1.1,0);
@@ -52,7 +53,7 @@ export default function WalkCamera({ controller, onStatus, onPosition, room = WA
     const up=()=>{state.drag=null;};
     const visibility=()=>{if(document.hidden)pause();};
     const focusOut=e=>{if(e.relatedTarget!==canvas && document.pointerLockElement!==canvas){state.keys.clear();state.active=false;onStatus('ready');}};
-    const goTo=(point,target)=>{pause();camera.position.set(point.x,room.eyeHeight,point.z);camera.lookAt(...target);euler.setFromQuaternion(camera.quaternion);state.yaw=euler.y;state.pitch=euler.x;invalidate();report();};
+    const goTo=(point,target)=>{if(!point)return;pause();camera.position.set(point.x,room.eyeHeight,point.z);camera.lookAt(...target);euler.setFromQuaternion(camera.quaternion);state.yaw=euler.y;state.pitch=euler.x;invalidate();report();};
     controller.current={ enter, pause, step:(f,r)=>{activate();for(let i=0;i<4;i++)move(f,r,.05);}, reset:()=>goTo(room.start,[0,1.1,0]), behind:()=>goTo(room.behind,[0,.85,0]) };
     const events=[[document,'keydown',keyDown],[document,'keyup',keyUp],[document,'mousemove',mouseMove],[document,'pointerlockchange',lockChange],[document,'pointerlockerror',lockError],[document,'visibilitychange',visibility],[window,'blur',pause],[canvas,'pointerdown',down],[canvas,'pointermove',pointerMove],[canvas,'pointerup',up],[canvas,'pointercancel',up],[canvas,'lostpointercapture',up],[canvas,'blur',focusOut]];
     events.forEach(([target,name,fn])=>target.addEventListener(name,fn));invalidate();report();

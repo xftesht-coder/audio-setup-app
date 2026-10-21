@@ -20,6 +20,17 @@ export function isWalkPositionClear(x, z, room = WALK_ROOM) {
   if (!Number.isFinite(x) || !Number.isFinite(z) || x < room.minX+r || x > room.maxX-r || z < room.minZ+r || z > room.maxZ-r) return false;
   return room.obstacles.every(o => Math.hypot(x-clamp(x,o.minX,o.maxX), z-clamp(z,o.minZ,o.maxZ)) >= r);
 }
+export function nearestWalkPosition(preferred, room = WALK_ROOM) {
+  if (isWalkPositionClear(preferred.x, preferred.z, room)) return { ...preferred };
+  let best = null, distance = Infinity;
+  // Find a safe fallback after an editable shelf, chassis or TV changes size.
+  for(let x=room.minX+room.radius+.01;x<=room.maxX-room.radius;x+=.05)
+    for(let z=room.minZ+room.radius+.01;z<=room.maxZ-room.radius;z+=.05) {
+      const d=(x-preferred.x)**2+(z-preferred.z)**2;
+      if(d<distance&&isWalkPositionClear(x,z,room)){best={x,z};distance=d;}
+    }
+  return best;
+}
 export function moveInRoom(position, dx, dz, room = WALK_ROOM) {
   let { x, z } = position;
   if (![x,z,dx,dz].every(Number.isFinite)) return { ...room.start };

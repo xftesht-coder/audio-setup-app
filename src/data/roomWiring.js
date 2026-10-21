@@ -137,27 +137,35 @@ function placedCablePaths(cable, layout) {
     // beams look weightless; the bend below is outside the furniture envelope.
     const edge=p=>[p[0],Math.max(p[1]+.06,layout.rear-.075),p[2]];
     const escape=p=>[p[0]+.012*(i?1:-1),rear+i*.016,Math.max(.045,p[2]-.055)];
+    const egress=p=>{
+      const points=[p];
+      const blockers=(layout.posts||[]).filter(post=>p[2]<post.top+radius&&post.y>p[1]&&post.y<edge(p)[1]&&Math.abs(post.x-p[0])<post.radius+radius+.012).sort((a,b)=>a.y-b.y);
+      for(const post of blockers) {
+        const clearance=post.radius+radius+.018,side=p[0]<post.x?-1:1, bx=post.x+side*clearance;
+        points.push([p[0],Math.max(p[1],post.y-clearance-.025),p[2]],[bx,post.y-clearance-.005,p[2]],[bx,post.y+clearance+.015,p[2]],[p[0],post.y+clearance+.045,p[2]]);
+      }
+      return [...points,edge(p),escape(p)];
+    };
     let knots, supports=[];
     if(speaker&&a&&b) {
       const lane=rear+i*.018, s=end[0]<0?-1:1;
       const low=.013+radius;
       const x1=start[0]+s*.14, x2=end[0]-s*.12, span=x2-x1;
       supports=[.30,.72].map(t=>[x1+span*t,lane,.039]);
-      knots=[start,edge(start),escape(start),[x1,lane,.10],
+      knots=[...egress(start),[x1,lane,.10],
         [x1,lane,low],supports[0],[x1+span*.52,lane+.015,low],supports[1],[x2,lane,low],
-        [end[0],lane,end[2]],[end[0],end[1]+.065,end[2]],end];
+        ...egress(end).reverse()];
     } else if(power&&a&&b) {
       const lane=rear+i*.014, floor=.009+radius;
       knots=[start,[start[0],start[1],start[2]+.07],[start[0]+.065,lane,.15],
         [start[0]+.09,lane,floor],[(start[0]+end[0])/2,lane+.025,floor],
-        [end[0]+.06,lane,floor],[end[0],lane,Math.max(.11,end[2]-.13)],escape(end),edge(end),
-        [end[0],end[1]+.045,end[2]],end];
+        [end[0]+.06,lane,floor],[end[0],lane,Math.max(.11,end[2]-.13)],...egress(end).reverse()];
     } else {
       const low=Math.max(.035,Math.min(start[2],end[2])-.10-i*.016);
-      knots=[start,edge(start),escape(start),
+      knots=[...egress(start),
         [start[0]-.025,rear+.04,Math.max(low,start[2]-.08)],
         [(start[0]+end[0])/2,rear+.07,low],
-        [end[0]+.025,rear+.04,Math.max(low,end[2]-.08)],escape(end),edge(end),end];
+        [end[0]+.025,rear+.04,Math.max(low,end[2]-.08)],...egress(end).reverse()];
     }
     return {points:sampleDrape(knots),radius,color:i?'#30302b':'#161b1c',start,end,startAxis:a?.axis||'Y',endAxis:b?.axis||'Y',adapter:power&&b&&b.connector!=='IEC',startPlug:!high,endPlug:true,supports};
   });

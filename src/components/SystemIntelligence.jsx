@@ -45,7 +45,7 @@ export default function SystemIntelligence() {
       </div>
       <aside className="intelligence-inspector" aria-label="Настройки проверки">
         <h2>Слушаем</h2><RoomComponentSummary /><RoomListeningControls />
-        <details className="intelligence-project"><summary>Проект и отчёт</summary><p>Комната, каталог и роутинг используют одну схему. Мебель и архивные примеры пока отдельно.</p><div className="intelligence-actions"><button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>↓ Скачать схему</button><button onClick={() => downloadJson('audio-setup-check.json', { ...report, ...roomSnapshot(s), electrical, createdAt: new Date().toISOString() })}>↓ Скачать отчёт</button></div></details>
+        <details className="intelligence-project"><summary>Проект и отчёт</summary><p>Комната, каталог и роутинг используют одну схему. Геометрия стойки проверяется в CAD; архивные примеры независимы.</p><div className="intelligence-actions"><button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>↓ Скачать схему</button><button onClick={() => downloadJson('audio-setup-check.json', { ...report, ...roomSnapshot(s), electrical, createdAt: new Date().toISOString() })}>↓ Скачать отчёт</button></div></details>
       </aside>
     </div>
     <footer className="workspace-footnote"><span>Изменения сохраняются в этом браузере · не управление реальными аппаратами</span><a href="https://github.com/xftesht-coder/audio-setup-app/blob/main/ROADMAP.md" target="_blank" rel="noreferrer">Roadmap ↗</a></footer>

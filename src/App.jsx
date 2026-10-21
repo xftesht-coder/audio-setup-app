@@ -24,7 +24,7 @@ export default function App() {
   if (isShareView) return <PageBoundary><Suspense fallback={<p className="page-loading" role="status">Открываем аудиосистему…</p>}><ShareView /></Suspense></PageBoundary>;
   const setSection = (next) => {
     setSectionState(next);
-    window.history.replaceState(null, '', `#${next}`);
+    window.location.hash = next;
   };
 
   return (

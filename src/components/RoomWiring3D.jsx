@@ -54,8 +54,9 @@ function MainsFeed({layout}) {
   },[x,y,wallX]);
   return <group><Lead path={path}/><mesh position={[wallX,.18,-1.086]}><boxGeometry args={[.075,.075,.008]}/><meshStandardMaterial color="#e5e1d7" roughness={.4}/></mesh></group>;
 }
-export default function RoomWiring3D({editing=false,device='freya',layout}) {
-  const {cables,selectedPort,selectedCable,pickPort,selectCable}=useRoomWiring();
+export default function RoomWiring3D({editing=false,device='freya',layout,previewCables}) {
+  const {cables:savedCables,selectedPort,selectedCable,pickPort,selectCable}=useRoomWiring();
+  const cables=previewCables || savedCables;
   const ports=layout?.ports||ROOM_PORTS,portMap=layout?.portMap||ROOM_PORT_MAP;
   return <group>
     {layout&&<MainsFeed layout={layout}/>}
