@@ -8,8 +8,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "test": "node --test"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs",
+    "test": "node --test",
+    "agent": "node scripts/agent-server.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.99.0",

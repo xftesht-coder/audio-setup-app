@@ -6,27 +6,27 @@ import { useRoomWiring } from '../store/roomWiringStore';
 import RoomListeningControls from './RoomListeningControls';
 import RoomComponentSummary from './RoomComponentSummary';
 import RoomElectrical from './RoomElectrical';
+import AgentWorkspace from './AgentWorkspace';
 import WorkspaceHeader from './WorkspaceHeader';
 import { assessRoomElectrical } from '../data/roomElectrical';
 import '../intelligence.css';
 
-const levels = { issue: 'Исправить', attention: 'Проверить', unknown: 'Нет данных' };
 const routeLabels = { possible: 'Путь по кабелям', ready: 'Входы совпадают', unknown: 'Уточнить входы', blocked: 'Другой вход', missing: 'Нет пути' };
 
 export default function SystemIntelligence() {
   const s = useRoomWiring(), { cables, listening } = s, { source, mode } = listening;
-  const [view, setView] = useState('routes');
+  const [view, setView] = useState(() => ['system', 'designer'].includes(new URLSearchParams(window.location.search).get('agent')) ? 'findings' : 'routes');
   const [mobilePanel, setMobilePanel] = useState(false);
   const report = useMemo(() => auditRoom(cables, source, listening), [cables, source, listening]);
   const electrical = useMemo(() => assessRoomElectrical(cables, listening), [cables, listening]);
   const issues = report.findings.filter(f => f.level === 'issue').length;
   const devices = [...new Set(report.routes.flatMap(r => r.path.flatMap(c => [ROOM_PORT_MAP[c.from].device, ROOM_PORT_MAP[c.to].device])))];
-  return <section className="system-intelligence intelligence-studio studio-page" aria-labelledby="intelligence-title" data-mobile-panel={mobilePanel}>
+  return <section className="system-intelligence intelligence-studio studio-page" aria-labelledby="intelligence-title" data-mobile-panel={mobilePanel} data-agent-view={view === 'findings'}>
     <WorkspaceHeader title="Проверка системы" id="intelligence-title" symbol="✓" subtitle="Соединения, рабочие входы и паспортные данные"><a href="#patch">Роутинг ↗</a><a href="#system">Заменить аппарат ↗</a></WorkspaceHeader>
     <div className="catalog-toolbar">
       <div className="workspace-segments" role="group" aria-label="Вид проверки">{[['routes', 'Пути'], ['electrical', 'Согласование'], ['findings', 'Замечания'], ['passports', 'Паспорта']].map(([id, label]) => <button key={id} aria-pressed={view === id} onClick={() => { setView(id); setMobilePanel(false); }}>{label}{id === 'findings' && <span>{report.findings.length}</span>}</button>)}</div>
       <div className="workspace-history"><button disabled={!s.past.length} onClick={s.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!s.future.length} onClick={s.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
-      <button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'К проверке' : 'Входы и режимы'}</button>
+      {view !== 'findings' && <button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'К проверке' : 'Входы и режимы'}</button>}
     </div>
     <div className="intelligence-workspace">
       <div className="intelligence-main">
@@ -39,14 +39,14 @@ export default function SystemIntelligence() {
             <p className="intelligence-notice">Проверка проекта не подтверждает включение и громкость аппаратов. Согласование оценивается отдельно по доступным паспортам.</p>
           </>}
           {view === 'electrical' && <RoomElectrical report={electrical} />}
-          {view === 'findings' && <><div className="workspace-section-heading"><h2>Основания и следующий шаг</h2><span>{issues} требуют исправления</span></div><div className="intelligence-findings">{report.findings.map(f => <article key={f.id} className={'finding-' + f.level}><span>{levels[f.level]}</span><h3>{f.title}</h3><p>{f.evidence}</p><p className="finding-next"><b>Дальше:</b> {f.next}</p></article>)}</div>{!report.findings.length && <p>Замечаний к текущей схеме нет.</p>}</>}
+          {view === 'findings' && <AgentWorkspace report={report} />}
           {view === 'passports' && <><div className="workspace-section-heading"><h2>Устройства в найденных путях</h2><span>{devices.length} аппаратов</span></div><div className="intelligence-references">{devices.length ? devices.map(id => { const d = ROOM_DEVICE_MAP[id]; return <article key={id}><h3>{d.name}</h3><p>{d.accuracy}</p>{d.source && <a href={d.source} target="_blank" rel="noreferrer">Источник ↗</a>}</article>; }) : <p>Полные пути пока не найдены.</p>}</div><p className="intelligence-notice">Электрические параметры и основания расчётов — во вкладке «Согласование». Неизвестные значения не подменяются данными похожих моделей.</p></>}
         </div>
       </div>
-      <aside className="intelligence-inspector" aria-label="Настройки проверки">
+      {view !== 'findings' && <aside className="intelligence-inspector" aria-label="Настройки проверки">
         <h2>Слушаем</h2><RoomComponentSummary /><RoomListeningControls />
         <details className="intelligence-project"><summary>Проект и отчёт</summary><p>Комната, каталог и роутинг используют одну схему. Геометрия стойки проверяется в CAD; архивные примеры независимы.</p><div className="intelligence-actions"><button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>↓ Скачать схему</button><button onClick={() => downloadJson('audio-setup-check.json', { ...report, ...roomSnapshot(s), electrical, createdAt: new Date().toISOString() })}>↓ Скачать отчёт</button></div></details>
-      </aside>
+      </aside>}
     </div>
     <footer className="workspace-footnote"><span>Изменения сохраняются в этом браузере · не управление реальными аппаратами</span><a href="https://github.com/xftesht-coder/audio-setup-app/blob/main/ROADMAP.md" target="_blank" rel="noreferrer">Roadmap ↗</a></footer>
   </section>;

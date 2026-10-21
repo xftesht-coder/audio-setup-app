@@ -21,3 +21,4 @@ yarn-error.log*
 .env*
 __pycache__/
 *.pyc
+.audio-agent/
