@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './index.css'
 import './roomService.css'
 import './studio.css'
+import './routingLiquid.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

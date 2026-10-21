@@ -22,7 +22,7 @@ export default function SystemIntelligence() {
   const issues = report.findings.filter(f => f.level === 'issue').length;
   const devices = [...new Set(report.routes.flatMap(r => r.path.flatMap(c => [ROOM_PORT_MAP[c.from].device, ROOM_PORT_MAP[c.to].device])))];
   return <section className="system-intelligence intelligence-studio studio-page" aria-labelledby="intelligence-title" data-mobile-panel={mobilePanel} data-agent-view={view === 'findings'}>
-    <WorkspaceHeader title="Проверка системы" id="intelligence-title" symbol="✓" subtitle="Соединения, рабочие входы и паспортные данные"><a href="#patch">Роутинг ↗</a><a href="#system">Заменить аппарат ↗</a></WorkspaceHeader>
+    <WorkspaceHeader title="Проверка системы" id="intelligence-title" symbol="✓" subtitle="Соединения, рабочие входы и паспортные данные"><a href="#patch">Роутинг ↗</a></WorkspaceHeader>
     <div className="catalog-toolbar">
       <div className="workspace-segments" role="group" aria-label="Вид проверки">{[['routes', 'Пути'], ['electrical', 'Согласование'], ['findings', 'Замечания'], ['passports', 'Паспорта']].map(([id, label]) => <button key={id} aria-pressed={view === id} onClick={() => { setView(id); setMobilePanel(false); }}>{label}{id === 'findings' && <span>{report.findings.length}</span>}</button>)}</div>
       <div className="workspace-history"><button disabled={!s.past.length} onClick={s.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!s.future.length} onClick={s.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
