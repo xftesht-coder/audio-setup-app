@@ -125,7 +125,7 @@ export default function RoomView3D({ view = 'room', walking = false, editing=fal
   const [status,setStatus]=useState('ready'),[ready,setReady]=useState(false),[position,setPosition]=useState(walkRoom.start);
   const evening=lighting==='evening';
   return <div className={`room-renderer ${walking?'is-walking':''}`}><Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [3.25, 2.45, 5.3], fov: 32, near: .03, far: 35 }}
-    fallback={<p className="room-loading">На этом устройстве доступен вид «Фото».</p>}>
+    fallback={<p className="room-loading">Интерактивная 3D-комната. Альтернативный вид — «Фото · архив».</p>}>
     <ContextLifecycle onUnavailable={onUnavailable} />
     <color attach="background" args={[evening?'#282a30':'#d6d2c8']} />
     <hemisphereLight args={[evening?'#7c94c9':'#edf3ff', '#b3a18b', evening?.22:.75]} />

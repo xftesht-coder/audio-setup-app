@@ -74,7 +74,7 @@ export default function CabinetPanel() {
   const [mobilePanel, setMobilePanel] = useState(false);
   const inspectorRef = useRef();
   useEffect(() => { if (inspectorRef.current) inspectorRef.current.scrollTop = 0; }, [mode]);
-  const changeMode = id => { setMode(id); setWorkspaceView(id === 'production' ? 'drawing' : 'model'); };
+  const changeMode = id => { setMode(id); setWorkspaceView(id === 'production' ? 'drawing' : 'model'); setMobilePanel(true); };
   const shelves = useMemo(() => sortedShelves(p), [p]);
   const routes = useMemo(() => routeAllCables(p), [p]);
   const issues = useMemo(() => [...validateConstruction(p), ...routes.flatMap(r => r.issues.map(message => ({ severity: 'error', message: `${r.cable.name}: ${message}` })))], [p, routes]);
@@ -94,7 +94,7 @@ export default function CabinetPanel() {
     };
     window.addEventListener('keydown', keydown); return () => window.removeEventListener('keydown', keydown);
   }, [undo, redo]);
-  return <section className="cabinet-workspace cad-workspace cabinet-studio studio-page" data-mobile-panel={mobilePanel}>
+  return <section className="cabinet-workspace cad-workspace cabinet-studio studio-page liquid-workspace" data-mobile-panel={mobilePanel}>
     <WorkspaceHeader title="Мастерская стойки" symbol="⊞" subtitle="Конструкция, размещение аппаратов и кабельные трассы">
       <div className="cad-actions"><label className="cad-variant-select">Вариант<select aria-label="Вариант стойки" value={state.activeVariant} onChange={e => { state.switchVariant(e.target.value); setWorkspaceView('model'); setMobilePanel(false); }}><option value="rack">Высокая стойка</option><option value="tv">TV 65″ · 2 уровня</option></select></label><button className="cad-button" onClick={() => downloadText('audio-rack.json', JSON.stringify(p, null, 2), 'application/json')}>Сохранить JSON</button><button className="cad-button" onClick={() => fileRef.current.click()}>Открыть</button></div>
       <input hidden ref={fileRef} type="file" accept=".json,application/json" onChange={async e => {
@@ -110,7 +110,7 @@ export default function CabinetPanel() {
         <div className="workspace-segments" role="group" aria-label="Рабочий вид стойки"><button aria-pressed={workspaceView === 'model'} onClick={() => setWorkspaceView('model')}>3D</button>{mode === 'production' && <button aria-pressed={workspaceView === 'drawing'} onClick={() => setWorkspaceView('drawing')}>Чертёж</button>}<button className={issues.length ? 'cad-check-warning' : ''} aria-pressed={workspaceView === 'checks'} onClick={() => setWorkspaceView('checks')}>Проверки <span>{issues.length}</span></button></div>
         {workspaceView === 'model' && <label className="cad-camera-select">Ракурс<select aria-label="Ракурс стойки" value={state.cameraView} onChange={e => state.view(e.target.value)}>{[['perspective', 'Перспектива'], ['front', 'Спереди'], ['rear', 'Сзади'], ['side', 'Сбоку'], ['top', 'Сверху']].map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>}
       </div>
-      {workspaceView === 'model' && <CabinetView3D />}
+      {workspaceView === 'model' && <CabinetView3D onInspect={() => setMobilePanel(true)} />}
       {workspaceView === 'checks' && <section className="cad-checks-panel" aria-label="Проверки стойки"><h2>{issues.length ? 'Замечания к компоновке · ' + issues.length : 'Геометрия: пересечений не найдено'}</h2><p className="cad-help">Проверяются отверстия, размещение аппаратов, заданные зазоры, длина и изгибы трасс. Размеры разъёмов и профили кабелей требуют измерений.</p><div className="cad-issue-list">{issues.map((issue, i) => <article key={i}><span>{issue.severity === 'error' ? 'Исправить' : 'Проверить'}</span><p>{issue.message}</p></article>)}</div><Group collapsible title="Питание системы"><PowerDistribution /></Group></section>}
       {workspaceView === 'drawing' && <div className="cad-drawing"><h2>{shelf.name} · карта сверловки</h2><div dangerouslySetInnerHTML={{ __html: panelSVG(p, shelf) }} /><p>DXF — 1:1 в миллиметрах. Все отверстия сквозные. Просмотр не задаёт допуски изготовления.</p></div>}
       {workspaceView === 'model' && <div className="cad-view-options">{[['showEquipment', 'Аппараты'], ['showCables', 'Кабели'], ['showDimensions', 'Размеры']].map(([key, label]) => <label key={key}><input type="checkbox" checked={state[key]} onChange={() => state.toggle(key)} />{label}</label>)}<label><input type="checkbox" checked={xray} onChange={() => setXray()} />X-ray</label><label><input type="checkbox" checked={exploded} onChange={() => setExploded()} />Разнести</label></div>}

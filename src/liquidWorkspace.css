@@ -1,0 +1,171 @@
+/* Shared chrome for the three workspaces. Scene materials remain physical. */
+.compact-shell {
+  --glass-chrome: linear-gradient(115deg, #ffffffc7, #f4fbfca8);
+  --glass-surface: #f8fcfce8;
+  --glass-edge: #ffffffdb;
+  --glass-line: #d5e3eb;
+  --glass-ink: #2e526b;
+  --glass-muted: #627f92;
+  --glass-shadow: inset 0 1px 0 #fff, 0 12px 35px #52778b0c;
+}
+.liquid-workspace .studio-heading { margin-bottom:10px }
+.liquid-workspace .studio-heading h1 { font-size:23px; letter-spacing:-.04em }
+.liquid-workspace .studio-symbol {
+  color:#316d8b; background:linear-gradient(135deg,#ffffffd9,#c1e0e9a3);
+  border:1px solid #fff; box-shadow:inset 0 1px 0 #fff,0 3px 10px #44627a0b;
+  border-radius:13px;
+}
+.compact-shell .liquid-workspace :is(.catalog-toolbar,.room-toolbar) {
+  min-height:50px; padding:8px 12px; gap:10px; border:1px solid var(--glass-edge);
+  border-bottom:0; border-radius:18px 18px 0 0; background:var(--glass-chrome);
+  box-shadow:inset 0 1px 0 #fff; backdrop-filter:blur(18px) saturate(1.3);
+}
+.compact-shell .liquid-workspace :is(.workspace-segments,.room-toolbar>[role=group],.agent-role-switch) {
+  padding:3px; gap:2px; border:1px solid #ffffffd4; border-radius:20px; background:#64859c0d;
+}
+.compact-shell .liquid-workspace :is(.workspace-segments,.room-toolbar>[role=group],.agent-role-switch)>button {
+  padding:7px 11px; font-size:11px; line-height:1.3; border:0; border-radius:16px; color:#567183;
+}
+.compact-shell .liquid-workspace :is(.workspace-segments,.room-toolbar>[role=group],.agent-role-switch)>button[aria-pressed=true] {
+  background:linear-gradient(#fff,#edf6fbd9); color:#235472;
+  box-shadow:0 2px 6px #33587517,inset 0 0 0 1px #fff;
+}
+.compact-shell .liquid-workspace .workspace-panel-toggle {
+  display:block; padding:8px 11px; min-height:32px; font-size:10px; white-space:nowrap;
+  border:1px solid var(--glass-edge); border-radius:16px; color:#375f7d; background:#ffffff8c;
+}
+.compact-shell .liquid-workspace .workspace-panel-toggle[aria-pressed=true] { background:#e3f0f7; border-color:#b9d0df }
+.compact-shell .liquid-workspace .workspace-history button { border-radius:12px; min-width:30px; min-height:30px }
+.compact-shell .liquid-workspace :is(.room-workspace.has-room-inspector,.intelligence-workspace,.cad-layout) {
+  grid-template-columns:minmax(0,1fr) 270px; grid-template-rows:minmax(0,1fr);
+  border:1px solid var(--glass-edge); border-radius:0 0 18px 18px; box-shadow:var(--glass-shadow);
+  background:#edf4f7; overflow:hidden;
+}
+.compact-shell .liquid-workspace[data-mobile-panel=false] :is(.room-workspace.has-room-inspector,.intelligence-workspace,.cad-layout),
+.compact-shell .liquid-workspace[data-agent-view=true] .intelligence-workspace { grid-template-columns:minmax(0,1fr) }
+.compact-shell .liquid-workspace[data-mobile-panel=false] :is(.room-scene-inspector,.room-inspector,.intelligence-inspector,.cad-inspector) { display:none }
+.compact-shell .liquid-workspace :is(.room-scene-inspector,.room-inspector,.intelligence-inspector,.cad-inspector) {
+  background:var(--glass-surface); border-color:var(--glass-line); padding:14px; color:var(--glass-ink);
+  min-height:0; max-height:none; overflow:auto; scrollbar-width:thin; overscroll-behavior:contain;
+}
+.compact-shell .liquid-workspace .room-inspector { padding:0 }
+.compact-shell .liquid-workspace :is(.patch-compact,.inspector-tabs) { background:transparent }
+.compact-shell .liquid-workspace .inspector-tabs { background:var(--glass-surface) }
+.compact-shell .liquid-workspace :is(.cad-button,.cad-downloads button,.intelligence-actions button) {
+  border:1px solid var(--glass-line); border-radius:12px; background:#ffffffc4; color:#3e6884; padding:7px 10px;
+}
+.compact-shell .liquid-workspace :is(select,input[type=number],input[type=text],textarea) {
+  border-color:var(--glass-line); border-radius:10px; background:#ffffffbd; color:var(--glass-ink);
+}
+.compact-shell .liquid-workspace :is(button,a,input,select,textarea,summary):focus-visible { outline:2px solid #246d9c; outline-offset:3px }
+.compact-shell .liquid-workspace .workspace-footnote { color:var(--glass-muted); padding-top:7px }
+.compact-shell .liquid-workspace :is(.cad-help,.scene-hint,.scene-mode-label,.intelligence-notice,.listening-note) { color:var(--glass-muted) }
+
+/* Room: camera presets stay on the scene, details open on demand. */
+.compact-shell .room-studio .room-toolbar>.room-fullscreen {
+  border:1px solid var(--glass-edge); border-radius:15px; background:#ffffff8c;
+  font-size:18px; padding:2px 10px; color:#456c86;
+}
+.compact-shell .room-studio .room-toolbar>.workspace-panel-toggle { margin-left:0 }
+.room-camera-dock { position:absolute; top:12px; left:12px; right:12px; z-index:3; display:flex; pointer-events:none }
+.room-camera-dock>[role=group] {
+  display:flex; gap:3px; max-width:100%; overflow:auto; pointer-events:auto;
+  padding:4px; border:1px solid var(--glass-edge); border-radius:20px;
+  background:#f7fcfcd4; backdrop-filter:blur(16px); box-shadow:0 3px 14px #34566d12;
+}
+.room-camera-dock button { padding:7px 12px; border-radius:16px; font-size:11px; white-space:nowrap; color:#4a6a80 }
+.room-camera-dock button[aria-pressed=true] { background:#fff; color:#215777; box-shadow:0 1px 5px #294e6614 }
+.compact-shell .room-studio .room-caption {
+  max-width:calc(100% - 24px); color:var(--glass-ink); background:#f9fdfde0; border:1px solid var(--glass-edge);
+  border-radius:14px; backdrop-filter:blur(16px); box-shadow:0 3px 14px #34566d12; padding:9px 12px;
+}
+.compact-shell .room-studio .room-caption span { color:#53758b }
+.compact-shell .room-studio .scene-facts { margin-top:12px; padding-top:10px }
+.compact-shell .room-studio .scene-facts dd { color:#44647b }
+.compact-shell .room-studio .scene-facts dt { color:#71889a }
+.compact-shell .room-studio .scene-links { gap:10px }
+.compact-shell .room-studio .room-specs[open] { background:#f8fcfce8; border:1px solid var(--glass-line); border-radius:14px; padding:12px }
+
+/* Checks: a readable overview, with technical detail behind disclosures. */
+.compact-shell .intelligence-studio .intelligence-main { background:linear-gradient(140deg,#f1f8fa,#eaf2f6) }
+.compact-shell .intelligence-studio .intelligence-summary { padding:11px 16px; background:#ffffff87; border-color:var(--glass-line) }
+.compact-shell .intelligence-studio .intelligence-summary>b { font-size:27px }
+.compact-shell .intelligence-studio .intelligence-content { padding:14px }
+.compact-shell .intelligence-studio[data-agent-view=true] .intelligence-content { padding:0 }
+.compact-shell .intelligence-studio :is(.intelligence-routes,.intelligence-references,.electrical-links) { gap:12px }
+.compact-shell .intelligence-studio :is(.intelligence-routes article,.intelligence-references article,.electrical-links article) {
+  padding:14px; background:var(--glass-surface); border:1px solid var(--glass-edge); border-radius:15px;
+  box-shadow:inset 0 1px 0 #fff,0 4px 18px #426a8110;
+}
+.compact-shell .intelligence-studio .intelligence-chain { color:#4b6b82; line-height:1.7; margin:8px 0 }
+.compact-shell .intelligence-studio .intelligence-routes header span { border-radius:10px; padding:4px 7px }
+.compact-shell .intelligence-studio .intelligence-routes ol { color:#526e82 }
+.route-open-link { display:inline-flex; align-items:center; margin-top:10px; padding:6px 10px; font-size:10px; border-radius:12px; border:1px solid #d0e2ed; background:#eaf4f9; color:#2c6486 }
+.route-cable-link { display:inline-block; margin-top:4px; color:#216b9c; text-decoration:underline; text-underline-offset:3px }
+.compact-shell .intelligence-studio :is(.room-current-components,.electrical-result) { border-radius:12px; background:#e7f1f6 }
+.compact-shell .intelligence-studio .electrical-missing { border-radius:12px; background:#fff5e6; color:#72552f }
+.compact-shell .intelligence-studio .agent-findings { background:#f2f8fa; border-color:var(--glass-line) }
+.compact-shell .intelligence-studio .agent-findings>button { border-radius:12px; margin-bottom:5px }
+.compact-shell .intelligence-studio .agent-findings>button.is-selected { background:#dfeef5; border-color:#abcbdc }
+.compact-shell .intelligence-studio :is(.agent-heading,.agent-context,.agent-composer,.agent-footer) { background:#f8fcfc; border-color:var(--glass-line) }
+.compact-shell .intelligence-studio .agent-chat { background:#f0f6f8 }
+.compact-shell .intelligence-studio :is(.agent-welcome,.agent-message,.agent-proposal) { border-radius:14px; border-color:var(--glass-line) }
+.compact-shell .intelligence-studio .agent-message-assistant { background:#ffffffed }
+.compact-shell .intelligence-studio .agent-message-user { background:#dfeff7 }
+.compact-shell .intelligence-studio .agent-composer textarea { border-radius:13px; background:#fff }
+
+/* Cabinet: same controls, clear measurements and uncluttered stage. */
+.compact-shell .cabinet-studio .cad-canvas-toolbar { padding:7px 12px; border-color:var(--glass-line); background:#ffffff91 }
+.compact-shell .cabinet-studio .cabinet-main { background:#edf4f6 }
+.compact-shell .cabinet-studio .cad-inspector :is(.cad-group,.cad-part-selector) { border-color:var(--glass-line) }
+.compact-shell .cabinet-studio .cad-field input { border-radius:9px; min-height:32px }
+.compact-shell .cabinet-studio .cad-group h2 { color:#355e78 }
+.compact-shell .cabinet-studio :is(.cad-view-options,.cad-stats) { background:#f6fbfbd9; border-color:var(--glass-line); padding:8px 12px }
+.compact-shell .cabinet-studio .cad-stats b { color:#335e77 }
+.compact-shell .cabinet-studio .cad-stats small { color:#637f92 }
+.compact-shell .cabinet-studio .cad-drawing { background:#f6fafb }
+.compact-shell .cabinet-studio .cad-issue-list article { border-radius:13px; background:#fffffff0; border-color:var(--glass-edge) }
+.compact-shell .cabinet-studio .cad-route-status { border-radius:12px }
+.compact-shell .cabinet-studio .cabinet-stage-hint { width:fit-content; max-width:calc(100% - 28px); margin:auto; padding:6px 10px; border-radius:12px; background:#f8fcfbd9; border:1px solid var(--glass-edge); color:#4c7186 }
+
+@media(max-width:1050px) {
+  .compact-shell .liquid-workspace :is(.catalog-toolbar,.room-toolbar) { gap:6px }
+  .compact-shell .liquid-workspace :is(.workspace-segments,.room-toolbar>[role=group])>button { padding:7px 9px }
+}
+@media(max-width:760px) {
+  .liquid-workspace .studio-heading h1 { font-size:20px }
+  .liquid-workspace .studio-symbol { width:32px; height:32px }
+  .compact-shell .liquid-workspace :is(.catalog-toolbar,.room-toolbar) { padding:7px 8px; border-radius:16px 16px 0 0; gap:6px }
+  .compact-shell .liquid-workspace :is(.room-workspace.has-room-inspector,.intelligence-workspace,.cad-layout) { grid-template-columns:minmax(0,1fr); border-radius:0 0 16px 16px }
+  .compact-shell .liquid-workspace :is(.room-scene-inspector,.room-inspector,.intelligence-inspector,.cad-inspector) { border-top:0; border-left:0 }
+  .compact-shell .liquid-workspace :is(.workspace-segments,.room-toolbar>[role=group])>button { font-size:11px; padding:7px 9px }
+  .compact-shell .liquid-workspace .workspace-panel-toggle { margin-left:auto; padding:7px 10px }
+  .compact-shell .room-studio .studio-heading-actions { width:auto; margin-left:auto }
+  .compact-shell .room-studio .room-toolbar>.room-fullscreen { margin-left:auto; padding:2px 9px }
+  .compact-shell .room-studio .room-toolbar>.workspace-panel-toggle { margin-left:0 }
+  .compact-shell .room-studio .room-toolbar>[role=group]:first-child { flex:1 0 100%; flex-wrap:nowrap; justify-content:space-between }
+  .compact-shell .room-studio .room-variant-select { font-size:0; gap:0 }
+  .compact-shell .room-studio .room-variant-select select { font-size:10px; width:112px; max-width:112px; padding:6px }
+  .room-camera-dock { top:8px; left:8px; right:8px }
+  .room-camera-dock button { font-size:10px; padding:6px 10px }
+  .compact-shell .room-studio .room-caption { left:8px; bottom:8px; padding:7px 10px; max-width:calc(100% - 16px) }
+  .compact-shell .intelligence-studio .intelligence-summary { padding:10px 12px }
+  .compact-shell .intelligence-studio .intelligence-content { padding:10px }
+  .compact-shell .liquid-workspace.intelligence-studio .catalog-toolbar { flex-wrap:wrap }
+  .compact-shell .intelligence-studio .catalog-toolbar>.workspace-segments { flex:1 0 100%; width:100% }
+  .compact-shell .intelligence-studio .catalog-toolbar>.workspace-segments>button { font-size:10px; padding:7px }
+  .compact-shell .intelligence-studio .intelligence-routes article { padding:12px }
+  .compact-shell .cabinet-studio .cad-toolbar .cad-modes { flex-basis:100% }
+  .compact-shell .cabinet-studio .cad-toolbar .cad-modes>button { font-size:10px; padding:7px }
+  .compact-shell .cabinet-studio .cad-actions .cad-button { font-size:10px; padding:6px 8px }
+  .compact-shell .cabinet-studio .cad-view-options { gap:10px }
+  .compact-shell .cabinet-studio .cad-canvas-toolbar { padding:7px 8px }
+}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more) {
+  .compact-shell { --glass-chrome:#f7fbfd; --glass-surface:#f8fbfd; --glass-edge:#aabfce; --glass-muted:#49687c }
+  .compact-shell .liquid-workspace :is(.catalog-toolbar,.room-toolbar,.room-caption),.room-camera-dock>[role=group] { backdrop-filter:none; background:#f7fbfd }
+}
+@supports not (backdrop-filter:blur(1px)) {
+  .compact-shell { --glass-chrome:#f5fafc }
+  .room-camera-dock>[role=group] { background:#f5fafc }
+}

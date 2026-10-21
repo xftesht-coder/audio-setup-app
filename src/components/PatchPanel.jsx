@@ -1,9 +1,10 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { ROOM_DEVICE_MAP, ROOM_PORT_MAP } from '../data/roomEquipment';
 import { auditRoom } from '../data/roomIntelligence';
 import { roomPatchRows } from '../data/roomPatchView';
 import { roomCableStyle } from '../data/roomRackLayout';
 import { routingTrace, ROUTING_NAMES } from '../data/routingScene';
+import { routingLocation } from '../data/routingNavigation';
 import { useRoomWiring } from '../store/roomWiringStore';
 import WorkspaceHeader from './WorkspaceHeader';
 import RoomPatchInspector from './RoomPatchInspector';
@@ -24,6 +25,22 @@ export default function PatchPanel() {
   const [kind, setKind] = useState('audio'), [query, setQuery] = useState(''), [target, setTarget] = useState('');
   const [mobilePanel, setMobilePanel] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [navigationNote, setNavigationNote] = useState('');
+  useEffect(() => {
+    const follow = () => {
+      if (!['', '#patch', '#system'].includes(window.location.hash.split('?')[0])) return;
+      const store = useRoomWiring.getState();
+      const location = routingLocation(window.location.hash, store.cables);
+      setTarget(location.target); setKind(location.kind); setQuery('');
+      setDevice(location.device || store.components.preamp || 'a90'); setInspectorTab('device');
+      setView(location.cable ? 'diagram' : 'volume');
+      setInspectorOpen(!!location.device); setMobilePanel(!!location.device);
+      setNavigationNote(location.missingCable ? 'Кабеля из ссылки уже нет в текущей схеме. Показаны актуальные подключения.' : '');
+      if (location.cable) store.selectCable(location.cable); else store.cancel();
+    };
+    follow(); window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
+  }, []);
   const report = useMemo(() => auditRoom(s.cables, s.listening.source, s.listening), [s.cables, s.listening]);
   const route = report.routes.find(r => r.id === target);
   const rows = useMemo(() => roomPatchRows(s.cables, { kind, query, path: route?.path ?? null }), [s.cables, kind, query, route]);
@@ -50,7 +67,7 @@ export default function PatchPanel() {
         {route && !route.wired && <p className="studio-route-warning">Полного пути от источника нет. <button onClick={clearFilters}>Найти разрыв во всей схеме</button></p>}
         {kind === 'audio' && <div className="routing-flow" aria-label="Выбранный сигнальный путь">{chain.map((id,i) => <span key={id}>{i > 0 && <i aria-hidden="true">→</i>}<button onClick={() => chooseDevice(id)}>{ROUTING_NAMES[id] || ROOM_DEVICE_MAP[id].name}</button></span>)}<small>{primary?.wired ? !target ? 'и остальные выходы' : routeLabels[primary.status] : 'полный путь не найден'}</small></div>}
         {view === 'volume' ? <Suspense fallback={<p className="routing-scene-empty" role="status">Готовим объёмную схему…</p>}><RoutingScene3D rows={rows} kind={kind} device={device} selectedCable={s.selectedCable} onDevice={chooseDevice} onCable={inspectCable} trace={trace} onFallback={() => setView('diagram')}/></Suspense> : view === 'diagram' ? <RoomRackView rows={rows} kind={kind} device={device} onDevice={chooseDevice} onCable={inspectCable} /> : <section className="studio-table" aria-label="Кабели общей схемы"><table className="patch-cable-table"><thead><tr><th scope="col">Соединение</th><th scope="col">Откуда</th><th scope="col">Куда</th><th scope="col">Действие</th></tr></thead><tbody>{rows.map(c => { const style = roomCableStyle(c); return <tr key={c.id} data-selected={s.selectedCable === c.id}><td><span className="patch-table-type"><i style={{ borderColor: style.color, borderTopStyle: style.dash ? 'dashed' : 'solid' }} />{style.name}</span></td><td>{c.fromLabel}</td><td>{c.toLabel}{c.loose && <small>Свободный конец</small>}{c.issue && <small>{c.issue}</small>}</td><td><button onClick={() => inspectCable(c)} aria-label={'Открыть кабель: ' + c.fromLabel + ' → ' + c.toLabel}>Выбрать</button></td></tr>; })}</tbody></table>{!rows.length && <p className="patch-empty">Кабели не найдены. <button onClick={clearFilters}>Сбросить фильтры</button></p>}</section>}
-        <div className="studio-status" role="status" aria-live="polite"><span>{s.message}</span>{s.selectedPort && <button onClick={s.cancel}>Отмена · Esc</button>}{(query || target || kind !== 'audio') && <button onClick={clearFilters}>Сбросить фильтры</button>}</div>
+        <div className="studio-status" role="status" aria-live="polite"><span>{navigationNote || s.message}</span>{navigationNote && <button onClick={() => setNavigationNote('')}>Понятно</button>}{s.selectedPort && <button onClick={s.cancel}>Отмена · Esc</button>}{(query || target || kind !== 'audio') && <button onClick={clearFilters}>Сбросить фильтры</button>}</div>
       </div>
       <div className="studio-inspector"><RoomPatchInspector device={device} onDevice={chooseDevice} compact section={inspectorTab} onSection={setInspectorTab} /></div>
     </div>

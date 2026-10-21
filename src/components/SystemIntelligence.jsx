@@ -9,6 +9,7 @@ import RoomElectrical from './RoomElectrical';
 import AgentWorkspace from './AgentWorkspace';
 import WorkspaceHeader from './WorkspaceHeader';
 import { assessRoomElectrical } from '../data/roomElectrical';
+import { routingHref } from '../data/routingNavigation';
 import '../intelligence.css';
 
 const routeLabels = { possible: 'Путь по кабелям', ready: 'Входы совпадают', unknown: 'Уточнить входы', blocked: 'Другой вход', missing: 'Нет пути' };
@@ -21,12 +22,12 @@ export default function SystemIntelligence() {
   const electrical = useMemo(() => assessRoomElectrical(cables, listening), [cables, listening]);
   const issues = report.findings.filter(f => f.level === 'issue').length;
   const devices = [...new Set(report.routes.flatMap(r => r.path.flatMap(c => [ROOM_PORT_MAP[c.from].device, ROOM_PORT_MAP[c.to].device])))];
-  return <section className="system-intelligence intelligence-studio studio-page" aria-labelledby="intelligence-title" data-mobile-panel={mobilePanel} data-agent-view={view === 'findings'}>
+  return <section className="system-intelligence intelligence-studio studio-page liquid-workspace" aria-labelledby="intelligence-title" data-mobile-panel={mobilePanel} data-agent-view={view === 'findings'}>
     <WorkspaceHeader title="Проверка системы" id="intelligence-title" symbol="✓" subtitle="Соединения, рабочие входы и паспортные данные"><a href="#patch">Роутинг ↗</a></WorkspaceHeader>
     <div className="catalog-toolbar">
       <div className="workspace-segments" role="group" aria-label="Вид проверки">{[['routes', 'Пути'], ['electrical', 'Согласование'], ['findings', 'Замечания'], ['passports', 'Паспорта']].map(([id, label]) => <button key={id} aria-pressed={view === id} onClick={() => { setView(id); setMobilePanel(false); }}>{label}{id === 'findings' && <span>{report.findings.length}</span>}</button>)}</div>
       <div className="workspace-history"><button disabled={!s.past.length} onClick={s.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!s.future.length} onClick={s.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
-      {view !== 'findings' && <button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'К проверке' : 'Входы и режимы'}</button>}
+      {view !== 'findings' && <button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'Закрыть панель' : 'Входы и режимы'}</button>}
     </div>
     <div className="intelligence-workspace">
       <div className="intelligence-main">
@@ -35,7 +36,7 @@ export default function SystemIntelligence() {
         </div>
         <div className="intelligence-content" key={view}>
           {view === 'routes' && <><div className="workspace-section-heading"><h2>От источника до акустики</h2><span>{ROOM_DEVICE_MAP[source].name}</span></div>
-            <div className="intelligence-routes">{report.routes.map(route => <article key={route.id} className={route.connected ? 'route-found' : 'route-missing'}><header><h3>{route.name}</h3><span>{routeLabels[route.status]}</span></header>{route.wired ? <><p className="intelligence-chain">{[source, ...route.path.map(c => ROOM_PORT_MAP[c.to].device)].map(id => ROOM_DEVICE_MAP[id].name).join(' → ')}</p>{route.inputs.length > 0 && <p className="intelligence-route-note">{route.status === 'blocked' ? 'Выбранный вход прерывает путь.' : 'Укажи рабочие входы для проверки.'}</p>}<details><summary>Разъёмы и кабели · {route.path.length}</summary><ol>{route.path.map(c => <li key={c.id}>{portLabel(c.from)}<br />→ {portLabel(c.to)}</li>)}</ol></details></> : <p>Проверь подключения «За стойкой». Неиспользуемую ветку можно оставить отключённой.</p>}</article>)}</div>
+            <div className="intelligence-routes">{report.routes.map(route => <article key={route.id} className={route.connected ? 'route-found' : 'route-missing'}><header><h3>{route.name}</h3><span>{routeLabels[route.status]}</span></header>{route.wired ? <><p className="intelligence-chain">{[source, ...route.path.map(c => ROOM_PORT_MAP[c.to].device)].map(id => ROOM_DEVICE_MAP[id].name).join(' → ')}</p>{route.inputs.length > 0 && <p className="intelligence-route-note">{route.status === 'blocked' ? 'Выбранный вход прерывает путь.' : 'Укажи рабочие входы для проверки.'}</p>}<details><summary>Разъёмы и кабели · {route.path.length}</summary><ol>{route.path.map(c => <li key={c.id}>{portLabel(c.from)}<br />→ {portLabel(c.to)}<br /><a className="route-cable-link" href={routingHref({ cable:c.id })} aria-label={'Открыть соединение: ' + portLabel(c.from) + ' → ' + portLabel(c.to)}>Открыть в роутинге ↗</a></li>)}</ol></details></> : <p>Проверь подключения «За стойкой». Неиспользуемую ветку можно оставить отключённой.</p>}<a className="route-open-link" href={routingHref({ target:route.id })} aria-label={'Показать путь: ' + route.name}>{route.wired ? 'Показать путь' : 'Найти разрыв'} ↗</a></article>)}</div>
             <p className="intelligence-notice">Проверка проекта не подтверждает включение и громкость аппаратов. Согласование оценивается отдельно по доступным паспортам.</p>
           </>}
           {view === 'electrical' && <RoomElectrical report={electrical} />}
