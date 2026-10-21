@@ -1,3 +1,4 @@
+import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import { useMemo } from 'react';
 import { ROOM_DEVICE_MAP, ROOM_PORT_MAP } from '../data/roomEquipment';
 import { ROOM_COMPONENTS } from '../data/roomComponents';
@@ -11,6 +12,7 @@ import '../roomReplacement.css';
 const cableText = c => c ? `${portLabel(c.from)} → ${portLabel(c.to)}` : 'Новый кабель';
 const name = id => ROOM_DEVICE_MAP[id]?.name || 'Не определён';
 export default function RoomSystemEditor({ compact = false, sidebar = false }) {
+  const history = useLiveSystemStore();
   const s = useRoomWiring(), p = s.replacement;
   const report = useMemo(() => auditRoom(s.cables, s.listening.source, s.listening), [s.cables, s.listening]);
   const choices = p?.choices || s.components;
@@ -34,7 +36,7 @@ export default function RoomSystemEditor({ compact = false, sidebar = false }) {
     </section>}
     {!compact && (sidebar ? <details className="editor-listening"><summary>Источник и рабочие входы</summary><RoomListeningControls /></details> : <RoomListeningControls />)}
     <div className="room-live-path" role="status"><b>Сейчас в схеме: {report.connected} / 4 пути</b><p>{report.routes.find(r => r.path.length)?.path.map((c, i) => `${i ? '' : name(ROOM_PORT_MAP[c.from].device) + ' → '}${name(ROOM_PORT_MAP[c.to].device)}`).join(' → ') || 'Полного пути к акустике нет.'}</p></div>
-    <div className="replacement-actions"><button disabled={!s.past.length} onClick={s.undo}>↶ Отменить в комнате</button><button disabled={!s.future.length} onClick={s.redo}>↷ Повторить в комнате</button>{!compact && <button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>Скачать схему комнаты</button>}<a href="#patch">Патч-панель ↗</a><a href="#intelligence">Проверить систему ↗</a></div>
+    <div className="replacement-actions"><button disabled={!history.past.length} onClick={history.undo}>↶ Отменить в комнате</button><button disabled={!history.future.length} onClick={history.redo}>↷ Повторить в комнате</button>{!compact && <button onClick={() => downloadJson('audio-setup-room-wiring.json', { ...roomSnapshot(s), createdAt: new Date().toISOString() })}>Скачать схему комнаты</button>}<a href="#patch">Патч-панель ↗</a><a href="#intelligence">Проверить систему ↗</a></div>
     <p className="replacement-message" role="status">{s.storageError || s.message}</p>
   </section>;
 }

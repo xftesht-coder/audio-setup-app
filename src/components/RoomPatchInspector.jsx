@@ -1,3 +1,4 @@
+import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ROOM_DEVICES, ROOM_DEVICE_MAP, ROOM_PORTS, ROOM_PORT_MAP } from '../data/roomEquipment';
 import { connectionCheck } from '../data/roomWiring';
@@ -10,6 +11,7 @@ import RoomSystemEditor from './RoomSystemEditor';
 const portName=id=>id?`${ROOM_DEVICE_MAP[ROOM_PORT_MAP[id].device].name} · ${ROOM_PORT_MAP[id].label}`:'Свободный конец';
 export default function RoomPatchInspector({device,onDevice,compact=false,section="device",onSection}) {
   const upload=useRef(null),[importError,setImportError]=useState(''),[importing,setImporting]=useState(false);
+  const history = useLiveSystemStore();
   const s=useRoomWiring(),d=ROOM_DEVICE_MAP[device];
   const report=useMemo(()=>auditRoom(s.cables,s.listening.source,s.listening),[s.cables,s.listening]);
   const visible=s.cables.filter(c=>ROOM_PORT_MAP[c.from]?.device===device||ROOM_PORT_MAP[c.to]?.device===device);
@@ -52,7 +54,7 @@ export default function RoomPatchInspector({device,onDevice,compact=false,sectio
     {compact&&section==='listening'&&<><h2 className="inspector-section-title">Источник и входы</h2><RoomListeningControls /><p className="patch-listening-status">{report.connected} / 4 путей · <a href="#intelligence">Подробнее ↗</a></p></>}
     {(!compact||section==='project')&&<>
       {compact&&<h2 className="inspector-section-title">Проект подключений</h2>}
-      <div className="patch-history"><button disabled={!s.past.length} onClick={s.undo}>↶ Отменить</button><button disabled={!s.future.length} onClick={s.redo}>↷ Повторить</button><button onClick={save}>Скачать схему</button></div>
+      <div className="patch-history"><button disabled={!history.past.length} onClick={history.undo}>↶ Отменить</button><button disabled={!history.future.length} onClick={history.redo}>↷ Повторить</button><button onClick={save}>Скачать схему</button></div>
       <div className="patch-history"><button disabled={importing} onClick={()=>upload.current?.click()}>{importing?'Читаем файл…':'Загрузить схему'}</button><a href="#intelligence">Проверить систему ↗</a></div>
       <input ref={upload} type="file" accept=".json,application/json" hidden onChange={restore} aria-label="Резервная копия комнаты" />
       <p className="patch-import-help">Загрузка заменяет состав, провода, источник, входы и режим Freya. Можно отменить. В копиях v1 входы не указаны — проверяем только кабели.</p>

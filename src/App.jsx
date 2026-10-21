@@ -3,6 +3,7 @@ import PowerDistribution from './components/PowerDistribution';
 import ListeningRoom from './components/ListeningRoom';
 import PageBoundary from './components/PageBoundary';
 import { APP_SECTIONS, sectionForHash } from './data/appSections';
+import LiveSystemVariants from './components/LiveSystemVariants';
 
 const Sidebar = lazy(() => import('./components/Sidebar'));
 const PatchPanel = lazy(() => import('./components/PatchPanel'));
@@ -32,6 +33,7 @@ export default function App() {
       <main className="app-main flex-1 min-w-0 p-4">
         <nav className="app-navigation" aria-label="Разделы Audio Setup">
           {APP_SECTIONS.map(([id,label]) => <button key={id} aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>{label}</button>)}
+          {section !== 'legacy-patch' && <LiveSystemVariants />}
         </nav>
 
         {section === 'legacy-patch' && <PowerDistribution />}

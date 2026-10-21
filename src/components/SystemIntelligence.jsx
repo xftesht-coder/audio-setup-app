@@ -1,3 +1,4 @@
+import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import { useMemo, useState } from 'react';
 import { auditRoom, portLabel } from '../data/roomIntelligence';
 import { ROOM_DEVICE_MAP, ROOM_PORT_MAP } from '../data/roomEquipment';
@@ -15,6 +16,7 @@ import '../intelligence.css';
 const routeLabels = { possible: 'Путь по кабелям', ready: 'Входы совпадают', unknown: 'Уточнить входы', blocked: 'Другой вход', missing: 'Нет пути' };
 
 export default function SystemIntelligence() {
+  const history = useLiveSystemStore();
   const s = useRoomWiring(), { cables, listening } = s, { source, mode } = listening;
   const [view, setView] = useState(() => ['system', 'designer'].includes(new URLSearchParams(window.location.search).get('agent')) ? 'findings' : 'routes');
   const [mobilePanel, setMobilePanel] = useState(false);
@@ -26,7 +28,7 @@ export default function SystemIntelligence() {
     <WorkspaceHeader title="Проверка системы" id="intelligence-title" symbol="✓" subtitle="Соединения, рабочие входы и паспортные данные"><a href="#patch">Роутинг ↗</a></WorkspaceHeader>
     <div className="catalog-toolbar">
       <div className="workspace-segments" role="group" aria-label="Вид проверки">{[['routes', 'Пути'], ['electrical', 'Согласование'], ['findings', 'Замечания'], ['passports', 'Паспорта']].map(([id, label]) => <button key={id} aria-pressed={view === id} onClick={() => { setView(id); setMobilePanel(false); }}>{label}{id === 'findings' && <span>{report.findings.length}</span>}</button>)}</div>
-      <div className="workspace-history"><button disabled={!s.past.length} onClick={s.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!s.future.length} onClick={s.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
+      <div className="workspace-history"><button disabled={!history.past.length} onClick={history.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!history.future.length} onClick={history.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
       {view !== 'findings' && <button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'Закрыть панель' : 'Входы и режимы'}</button>}
     </div>
     <div className="intelligence-workspace">

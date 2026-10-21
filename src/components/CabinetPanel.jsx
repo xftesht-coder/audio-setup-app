@@ -1,3 +1,4 @@
+import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CabinetView3D from './CabinetView3D';
 import MaterialPicker from './MaterialPicker';
@@ -66,7 +67,8 @@ function CableEditor({ state, route }) {
 
 export default function CabinetPanel() {
   const state = useWorkshopStore();
-  const { project: p, mode, selection, setMode, select, update, undo, redo } = state;
+  const { project: p, mode, selection, setMode, select, update } = state;
+  const history = useLiveSystemStore(), { undo, redo } = history;
   const { xray, exploded, setXray, setExploded } = useCabinetStore();
   const fileRef = useRef();
   const [importError, setImportError] = useState('');
@@ -103,7 +105,7 @@ export default function CabinetPanel() {
         e.target.value = '';
       }} />
     </WorkspaceHeader>
-    <div className="catalog-toolbar cad-toolbar"><nav className="cad-modes workspace-segments" aria-label="Разделы редактора">{[['structure', '01', 'Конструкция'], ...(p.television ? [['tv', 'TV', 'Телевизор']] : []), ['equipment', '02', 'Аппараты'], ['cables', '03', 'Кабели'], ['production', '04', 'Чертежи']].map(([id, no, label]) => <button key={id} aria-pressed={mode === id} onClick={() => changeMode(id)}><small>{no}</small>{label}</button>)}</nav><div className="workspace-history"><button disabled={!state.past.length} onClick={undo} aria-label="Отменить действие" title="Ctrl+Z">↶</button><button disabled={!state.future.length} onClick={redo} aria-label="Повторить действие" title="Ctrl+Y">↷</button></div><button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'Рабочий вид' : 'Параметры'}</button></div>
+    <div className="catalog-toolbar cad-toolbar"><nav className="cad-modes workspace-segments" aria-label="Разделы редактора">{[['structure', '01', 'Конструкция'], ...(p.television ? [['tv', 'TV', 'Телевизор']] : []), ['equipment', '02', 'Аппараты'], ['cables', '03', 'Кабели'], ['production', '04', 'Чертежи']].map(([id, no, label]) => <button key={id} aria-pressed={mode === id} onClick={() => changeMode(id)}><small>{no}</small>{label}</button>)}</nav><div className="workspace-history"><button disabled={!history.past.length} onClick={undo} aria-label="Отменить действие" title="Ctrl+Z">↶</button><button disabled={!history.future.length} onClick={redo} aria-label="Повторить действие" title="Ctrl+Y">↷</button></div><button className="workspace-panel-toggle" aria-pressed={mobilePanel} onClick={() => setMobilePanel(!mobilePanel)}>{mobilePanel ? 'Рабочий вид' : 'Параметры'}</button></div>
     {(state.editError || state.storageError || importError) && <p role="alert" className="cad-alert">{state.editError || state.storageError || importError}</p>}
     <div className="cabinet-layout cad-layout"><div className="cabinet-main">
       <div className="cad-canvas-toolbar">

@@ -6,6 +6,7 @@ import { roomCableStyle } from '../data/roomRackLayout';
 import { routingTrace, ROUTING_NAMES } from '../data/routingScene';
 import { routingLocation } from '../data/routingNavigation';
 import { useRoomWiring } from '../store/roomWiringStore';
+import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import WorkspaceHeader from './WorkspaceHeader';
 import RoomPatchInspector from './RoomPatchInspector';
 import RoomServiceLink from './RoomServiceLink';
@@ -20,6 +21,7 @@ const layers = { audio: 'Аудио', power: 'Питание', ground: 'GND', al
 
 export default function PatchPanel() {
   const s = useRoomWiring();
+  const history = useLiveSystemStore();
   const [device, setDevice] = useState(() => s.components.preamp || 'a90');
   const [view, setView] = useState('volume'), [inspectorTab, setInspectorTab] = useState('device');
   const [kind, setKind] = useState('audio'), [query, setQuery] = useState(''), [target, setTarget] = useState('');
@@ -58,7 +60,7 @@ export default function PatchPanel() {
       <div className="studio-segments" role="group" aria-label="Вид роутинга">{[['volume','Объём'],['diagram','Разъёмы'],['list','Кабели']].map(([id,label]) => <button key={id} aria-pressed={view === id} onClick={() => { setView(id); setMobilePanel(false); setInspectorOpen(false); }}>{label}</button>)}</div>
       <label className="routing-layer"><span className="sr-only">Слой схемы</span><select aria-label="Слой схемы" value={kind} onChange={e => {setKind(e.target.value);setTarget('');}}>{Object.entries(layers).map(([id,label]) => <option key={id} value={id}>{label}</option>)}</select></label>
       <label className="studio-search"><span aria-hidden="true">⌕</span><input type="search" aria-label="Найти кабель" value={query} onChange={e => setQuery(e.target.value)} placeholder="Аппарат или кабель" /></label>
-      <div className="studio-history"><button disabled={!s.past.length} onClick={s.undo} aria-label="Отменить действие" title="Отменить действие">↶</button><button disabled={!s.future.length} onClick={s.redo} aria-label="Повторить действие" title="Повторить действие">↷</button></div>
+      <div className="studio-history"><button disabled={!history.past.length} onClick={history.undo} aria-label="Отменить действие" title="Отменить изменение системы">↶</button><button disabled={!history.future.length} onClick={history.redo} aria-label="Повторить действие" title="Повторить изменение системы">↷</button></div>
       <button className="routing-panel-toggle" aria-pressed={inspectorOpen} onClick={() => {setInspectorOpen(!inspectorOpen);setMobilePanel(!inspectorOpen);}}>{inspectorOpen ? 'Закрыть панель' : 'Настройки'}</button>
     </div>
     <div className="studio-grid">
