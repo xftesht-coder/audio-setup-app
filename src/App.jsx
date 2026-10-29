@@ -9,19 +9,16 @@ const Sidebar = lazy(() => import('./components/Sidebar'));
 const PatchPanel = lazy(() => import('./components/PatchPanel'));
 const LegacyPatchPanel = lazy(() => import('./components/LegacyPatchPanel'));
 const CabinetPanel = lazy(() => import('./components/CabinetPanel'));
-const ShareView = lazy(() => import('./components/ShareView'));
 const SystemIntelligence = lazy(() => import('./components/SystemIntelligence'));
 const getSection = () => sectionForHash(window.location.hash);
 
 export default function App() {
   const [section, setSectionState] = useState(getSection);
-  const isShareView = new URLSearchParams(window.location.search).get('view') === 'share';
   useEffect(() => {
     const update = () => setSectionState(getSection());
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
   }, []);
-  if (isShareView) return <PageBoundary><Suspense fallback={<p className="page-loading" role="status">Открываем аудиосистему…</p>}><ShareView /></Suspense></PageBoundary>;
   const setSection = (next) => {
     setSectionState(next);
     window.location.hash = next;

@@ -3,7 +3,6 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useGLTF } from '@react-three/drei';
 import { LISTENING_ROOM } from '../data/listeningRoom';
 import { roomSceneLayout, sceneWalkRoom, ROOM_EQUIPMENT_IDS } from '../data/roomSceneLayout';
-import { useWorkshopStore } from '../stores/useWorkshopStore';
 import RackFrame from './RackFrame';
 import ShelfMesh from './ShelfMesh';
 import TelevisionModel from './TelevisionModel';
@@ -116,16 +115,15 @@ function Camera({ view, device, front, layout }) {
     minPolarAngle={.2} maxPolarAngle={Math.PI / 2 + (view==='service'?.25:-.015)} minAzimuthAngle={['cables','service','seat'].includes(view) ? -Infinity : -1.3} maxAzimuthAngle={['cables','service','seat'].includes(view) ? Infinity : 1.3} />;
 }
 
-export default function RoomView3D({ view = 'room', walking = false, editing=false, device='freya', front=false, lighting='day', onEdit, onUnavailable, previewScene = null }) {
+export default function RoomView3D({ view = 'room', walking = false, editing=false, device='freya', front=false, lighting='day', onEdit, onUnavailable, scene, wiring, fallback }) {
   const controller=useRef();
-  const savedProject=useWorkshopStore(s=>s.project);
-  const project=previewScene?.project || savedProject;
+  const project=scene.project;
   const layout=useMemo(()=>roomSceneLayout(project),[project]);
   const walkRoom=useMemo(()=>sceneWalkRoom(layout),[layout]);
   const [status,setStatus]=useState('ready'),[ready,setReady]=useState(false),[position,setPosition]=useState(walkRoom.start);
   const evening=lighting==='evening';
   return <div className={`room-renderer ${walking?'is-walking':''}`}><Canvas frameloop="demand" shadows="percentage" dpr={[1, 1.5]} camera={{ position: [3.25, 2.45, 5.3], fov: 32, near: .03, far: 35 }}
-    fallback={<p className="room-loading">Интерактивная 3D-комната. Альтернативный вид — «Фото · архив».</p>}>
+    fallback={fallback || <p className="room-loading">Интерактивная 3D-комната. Альтернативный вид — «Фото · архив».</p>}>
     <ContextLifecycle onUnavailable={onUnavailable} />
     <color attach="background" args={[evening?'#282a30':'#d6d2c8']} />
     <hemisphereLight args={[evening?'#7c94c9':'#edf3ff', '#b3a18b', evening?.22:.75]} />
@@ -144,7 +142,7 @@ export default function RoomView3D({ view = 'room', walking = false, editing=fal
       <Lightformer form="ring" intensity={evening?3:1.5} color="#ffe0b3" scale={[1.1, 1.1, 1]} position={[0, 2.3, .8]} rotation={[Math.PI / 2, 0, 0]} />
     </Environment>
     <Suspense fallback={<Html center><span className="room-loading" role="status">Загружаем комнату…</span></Html>}><RoomModel walking={walking} view={view} lighting={lighting} onReady={setReady} layout={layout}/>
-      <LiveFurniture layout={layout}/><RoomWiring3D previewCables={previewScene?.cables} editing={editing&&!front} device={device} layout={layout}/>
+      <LiveFurniture layout={layout}/><RoomWiring3D cables={scene.cables} wiring={wiring} editing={editing&&!front} device={device} layout={layout}/>
       <ContactShadows key={JSON.stringify([project,walking,view])} position={[0,.005,.56]} scale={[6,3.3]} opacity={.28} blur={2.6} far={1.8} resolution={512} frames={2} color="#493c2d"/>
       {walking ? <WalkCamera controller={controller} onStatus={setStatus} onPosition={setPosition} room={walkRoom}/> : <Camera view={view} device={device} front={front} layout={layout}/>}
     </Suspense>

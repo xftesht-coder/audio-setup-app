@@ -101,3 +101,10 @@
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more) {
   .live-variants-dialog { background:#f5fafc; backdrop-filter:none }
 }
+.live-share-link { margin-top: 12px; padding: 12px; border: 1px solid #c6dce7; border-radius: 12px; background: #eaf4f8; color: #365667; font-size: 12px; }
+.live-share-link > div:first-child { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.live-share-link p { margin: 8px 0; line-height: 1.6; }
+.live-share-link textarea { width: 100%; resize: vertical; min-height: 54px; max-height: 120px; font-size: 11px; padding: 8px; border: 1px solid #bdd2dd; border-radius: 8px; background: #ffffffbd; overflow-wrap: anywhere; }
+.live-share-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.live-share-actions a { font-size: 12px; text-decoration: underline; }
+.live-share-link small { font-size: 10px; color: #607d8a; }

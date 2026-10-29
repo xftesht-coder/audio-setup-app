@@ -1,27 +1,61 @@
-import ListeningRoom from './ListeningRoom';
-import SystemSummary from './SystemSummary';
-import { EQUIPMENT_PHYSICAL } from '../data/cabinetSpecs';
-import { DEVICE_SPECS } from '../data/devicePorts';
-import { AUDIO_MODELS, DEFAULT_SYSTEM_PLAN } from '../data/audioModels';
-import { systemPlanFromSearch } from '../data/systemMatching';
-import { POWER_STRIP } from '../data/powerDistribution';
+import { Component, lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { isLegacyShareHash, readLiveShare, sharedRoomScene } from '../data/liveShare';
+import { ROOM_DEVICE_MAP, ROOM_PORT_MAP } from '../data/roomEquipment';
+import { ROOM_DIMENSIONS } from '../data/roomSceneLayout';
+import { auditRoom, portLabel } from '../data/roomIntelligence';
+import { equipmentName } from '../data/equipmentProfiles';
+import { FREYA_MODES } from '../data/roomPassports';
+import '../shareSnapshot.css';
 
-const RACK_DEVICES = ['turntable', 'phono', 'streamer_wiim', 'dac_fiio', 'a90', 'rusich_a2'];
-export default function ShareView() {
-  const params = new URLSearchParams(window.location.search);
-  const sharedPlan = systemPlanFromSearch(window.location.search);
-  const invalid = params.has('system') && !sharedPlan;
-  const plan = sharedPlan || DEFAULT_SYSTEM_PLAN;
-  const name = params.get('name')?.trim().slice(0, 64);
-  return <main className="share-page">
-    <header className="share-heading"><p className="cabinet-eyebrow">AUDIO SETUP · LISTENING & PLANNING</p><h1>{name || 'Моя аудиосистема'}</h1><p>Место для музыки · AE320 в чёрном лаке · два серых REL Quake.</p></header>
-    <div className="share-grid"><section className="share-visual" aria-label="Визуализация комнаты"><ListeningRoom compact preview /></section>
-      <aside className="share-details">{invalid ? <section className="share-card" role="alert"><h2>Не удалось открыть этот вариант</h2><p>В ссылке повреждены данные или есть неизвестный аппарат. Попроси отправить её заново. Ниже — только общий проект комнаты.</p></section> : <SystemSummary plan={plan} />}
-        <section className="share-card share-gear"><p className="share-eyebrow">ВОСЕМЬ АППАРАТОВ · ПРОЕКТ СТОЙКИ</p><ul>{RACK_DEVICES.map(id => <li key={id}><b>{DEVICE_SPECS[id].name}{id === 'dac_fiio' ? ' · предзаказ' : ''}</b><span>{id === 'rusich_a2' ? '430 × 180 мм · глубина и масса уточняются' : `${EQUIPMENT_PHYSICAL[id].dims.w} × ${EQUIPMENT_PHYSICAL[id].dims.h} × ${EQUIPMENT_PHYSICAL[id].dims.d} мм`}</span></li>)}
-          {['schiit-freya_2', 'fiio-warmer-r2r'].map(id => { const model = AUDIO_MODELS[id]; return <li key={id}><b>{model.name} · {id.includes('freya') ? 'планируем' : 'кандидат'}</b><span>≈ {model.envelope.w} × {model.envelope.h} × {model.envelope.d} мм</span></li>; })}</ul>
-          <p className="share-note">Freya 2 сменит A90 в роли предусилителя. Bifrost 3 и WARMER остаются на полках для выбора ЦАПа; планируемые аппараты ещё не считаются купленными.</p></section>
-        <section className="share-power"><span aria-hidden="true">⏚</span><div><b>{POWER_STRIP.name}</b><small>8 розеток · кабель 3 м · все места зарезервированы</small></div></section>
-        <p className="share-note">Выбранный тракт передаётся в ссылке. Слева — независимая демонстрационная комната из восьми аппаратов: личные правки стойки и проводки в ссылку не входят. Кандидаты из каталога не добавляются в рендер автоматически.</p>
-      </aside></div>
+const RoomView3D = lazy(() => import('./RoomView3D'));
+const LegacyShareView = lazy(() => import('./LegacyShareView'));
+const routeStatus = { ready: 'Входы совпадают', possible: 'Путь по кабелям', missing: 'Нет пути', blocked: 'Другой вход', unknown: 'Вход не указан' };
+const sceneFallback = <p className="shared-scene-error" role="status">3D недоступно. Состав, размеры и подключения этого снимка доступны ниже.</p>;
+
+class SharedSceneBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? sceneFallback : this.props.children; }
+}
+
+function SnapshotView({ shared }) {
+  const [view, setView] = useState('room'), [unavailable, setUnavailable] = useState(false);
+  const { snapshot, name } = shared, { room, workshop } = snapshot;
+  const scene = useMemo(() => sharedRoomScene(snapshot), [snapshot]);
+  const audit = useMemo(() => auditRoom(room.cables, room.listening.source, room.listening), [room]);
+  const project = scene.project;
+  return <main className="shared-snapshot">
+    <header className="shared-heading"><div><small>AUDIO SETUP · СНИМОК · ТОЛЬКО ПРОСМОТР</small><h1>{name}</h1></div><span>{ROOM_DIMENSIONS.width} × {ROOM_DIMENSIONS.depth} м · {workshop.activeVariant === 'tv' ? 'ТВ · два уровня' : 'Высокая стойка'}</span></header>
+    <section className="shared-room" aria-label="Комната сохранённого варианта">
+      <div className="shared-camera" role="group" aria-label="Ракурс снимка">{[['room', 'Комната'], ['system', 'Стойка'], ['cables', 'Проводка']].map(([id, label]) => <button key={id} aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}</div>
+      <div className="shared-canvas"><SharedSceneBoundary>{unavailable ? sceneFallback : <Suspense fallback={<p className="shared-scene-error" role="status">Загружаем комнату из снимка…</p>}><RoomView3D scene={scene} view={view} onUnavailable={() => setUnavailable(true)} fallback={sceneFallback} /></Suspense>}</SharedSceneBoundary></div>
+      <p className="shared-camera-hint">Вращай мышью или пальцем · колесо / щипок — приблизить</p>
+    </section>
+    <details className="shared-details"><summary>Состав и подключения <span>{room.cables.length} кабелей · {project.width} × {project.depth} мм</span></summary>
+      <div className="shared-detail-body">
+        <p><b>Источник:</b> {ROOM_DEVICE_MAP[room.listening.source].name} → <b>ЦАП:</b> {ROOM_DEVICE_MAP[room.components.dac]?.name || 'Не выбран'} → <b>Предусилитель:</b> {ROOM_DEVICE_MAP[room.components.preamp]?.name || 'Не выбран'}</p>
+        <p><b>{project.name}</b> · {project.shelves.length} полок · {{ walnut: 'Орех', oak: 'Дуб', alder: 'Ольха' }[project.material]}. На полках: {project.equipment.map(equipmentName).join(' · ')}.</p>
+        <div className="shared-routes">{audit.routes.map(r => <span key={r.id}>{r.name} · <b>{routeStatus[r.status]}</b></span>)}</div>
+        <details><summary>Входы и проверка · {audit.findings.length} замечаний</summary><p>Режим: {room.listening.mode === 'selected' ? 'С выбранными входами' : 'Только пути по кабелям'}. Freya: {FREYA_MODES[room.listening.freyaMode]?.label || 'режим не указан'}.</p><ul>{Object.entries(room.listening.inputs).map(([id, port]) => <li key={id}>{ROOM_DEVICE_MAP[id].name} — {ROOM_PORT_MAP[port]?.label || 'Вход не указан'}</li>)}</ul><ul>{audit.findings.map(f => <li key={f.id}><b>{f.title}.</b> {f.evidence}</li>)}</ul></details>
+        <ul className="shared-cables" aria-label="Кабели сохранённого варианта">{room.cables.map(c => <li key={c.id}><span>{portLabel(c.from)}</span><span aria-hidden="true">→</span><span>{portLabel(c.to)}</span></li>)}</ul>
+        <p className="shared-note">Снимок показывает сохранённый проект. Планируемые устройства и неизвестные параметры не подтверждают наличие техники или электрическое согласование.</p>
+      </div>
+    </details>
+    <p className="shared-footer">Этот просмотр не меняет твои сохранённые варианты и настройки.</p>
   </main>;
+}
+
+export default function ShareView() {
+  const [hash, setHash] = useState(() => window.location.hash);
+  const [result, setResult] = useState(null);
+  useEffect(() => { const update = () => setHash(window.location.hash); window.addEventListener('hashchange', update); return () => window.removeEventListener('hashchange', update); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    if (!isLegacyShareHash(hash)) readLiveShare(hash).then(shared => { if (!cancelled) setResult({ hash, shared }); }, error => { if (!cancelled) setResult({ hash, error: error.message }); });
+    return () => { cancelled = true; };
+  }, [hash]);
+  if (isLegacyShareHash(hash)) return <Suspense fallback={<p className="page-loading">Открываем демонстрацию…</p>}><LegacyShareView /></Suspense>;
+  if (result?.hash !== hash) return <p className="page-loading" role="status">Читаем сохранённый вариант…</p>;
+  if (result.error) return <main className="shared-invalid" role="alert"><small>AUDIO SETUP</small><h1>Не удалось открыть вариант</h1><p>{result.error}</p><p>Твои настройки не изменены.</p></main>;
+  return <SnapshotView key={hash} shared={result.shared} />;
 }

@@ -21,6 +21,7 @@ class RoomBoundary extends Component {
 export default function ListeningRoom({ compact = false, preview = false }) {
   const [mode, setMode] = useState(() => !compact && new URLSearchParams(window.location.search).get('room') === 'patch' ? 'patch' : '3d');
   const savedVariant = useWorkshopStore(s => s.activeVariant);
+  const savedProject = useWorkshopStore(s => s.project);
   const [previewVariant, setPreviewVariant] = useState('rack');
   const previewScene = useMemo(() => preview ? createRoomPreview(previewVariant) : null, [preview, previewVariant]);
   const activeVariant = preview ? previewVariant : savedVariant;
@@ -30,7 +31,8 @@ export default function ListeningRoom({ compact = false, preview = false }) {
   const [view, setView] = useState('room');
   const [mobilePanel, setMobilePanel] = useState(false);
   const [lighting, setLighting] = useState('day');
-  const components = useRoomWiring(s => s.components);
+  const wiring = useRoomWiring();
+  const components = wiring.components;
   const [device,setDevice]=useState(() => components.preamp || 'freya');
   const [inspectorTab,setInspectorTab]=useState('device');
   const [front,setFront]=useState(false);
@@ -59,7 +61,7 @@ export default function ListeningRoom({ compact = false, preview = false }) {
       <button className="room-exit-fullscreen" onClick={()=>document.exitFullscreen?.()}>Выйти из полного экрана</button>
       {!compact && ['3d','photo'].includes(mode) && <div className="room-camera-dock">{cameraControls}</div>}
       <img className="room-poster" src={poster} alt={photoDetail ? 'Крупный план аппаратуры: металлические панели, лампы Freya и деревянная стойка' : photoCables ? 'Вид за стойкой: свободные кабельные петли, мягкие держатели и напольные опоры; задняя стена скрыта для осмотра' : 'Аудиосистема с чёрными глянцевыми AE320, двумя серыми REL Quake, белым ковром и двумя лампами в светлой комнате'} />
-      {interactive && !unavailable && <div className="room-canvas"><RoomBoundary><Suspense fallback={<p className="room-loading" role="status">Готовим 3D…</p>}><RoomView3D previewScene={previewScene} view={mode==='patch'?'service':view} walking={mode==='walk'} editing={mode==='patch'} device={device} front={front} lighting={lighting} onEdit={preview ? undefined : ()=>{setFront(false);setMode('patch');setMobilePanel(false);}} onUnavailable={() => setUnavailable(true)} /></Suspense></RoomBoundary></div>}
+      {interactive && !unavailable && <div className="room-canvas"><RoomBoundary><Suspense fallback={<p className="room-loading" role="status">Готовим 3D…</p>}><RoomView3D scene={previewScene || { project: savedProject, cables: wiring.cables }} wiring={preview ? undefined : wiring} view={mode==='patch'?'service':view} walking={mode==='walk'} editing={mode==='patch'} device={device} front={front} lighting={lighting} onEdit={preview ? undefined : ()=>{setFront(false);setMode('patch');setMobilePanel(false);}} onUnavailable={() => setUnavailable(true)} /></Suspense></RoomBoundary></div>}
       {unavailable && interactive && <p className="room-error" role="status">3D недоступно — показываем архив предыдущей комнаты. <button onClick={()=>setUnavailable(false)}>Повторить запуск 3D</button></p>}
       {!['walk','patch'].includes(mode) && <div className="room-caption"><b>{mode==='photo'?'Архив · предыдущая комната':photoDetail?'Аппаратура · фактуры и детали':mode==='3d'&&view==='seat'?'IKEA BACKABRO · светлый бежевый':view === 'cables' ? 'Свободные петли · напольные опоры' : 'AE320 · Piano Gloss Black'}</b><span>{photoDetail?'Лампы · шлифованный алюминий · дерево':mode==='3d'&&view==='seat'?'210 × 108 см · габарит владельца':view === 'cables' ? 'Общие выходы Rusich → AE320 + REL HIGH LEVEL' : lighting==='evening'?'Вечер · тёплые лампы и мягкие отражения':'День · боковой свет и натуральные фактуры'}</span></div>}
     </div>{!compact&&mode!=='patch'&&<aside className="room-scene-inspector" aria-label="Настройки сцены"><h2>Сцена</h2><p className="scene-mode-label">{mode==='photo'?'Архив Blender · прежняя планировка':mode==='walk'?'Прогулка · WASD / стрелки':'3D · текущая схема подключений'}</p>

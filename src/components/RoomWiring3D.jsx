@@ -3,7 +3,6 @@ import { Html, useGLTF } from '@react-three/drei';
 import { Curve, Vector3, TubeGeometry } from 'three';
 import { ROOM_PORTS, ROOM_PORT_MAP } from '../data/roomEquipment';
 import { cablePaths, connectionCheck, sampleDrape, toWeb } from '../data/roomWiring';
-import { useRoomWiring } from '../store/roomWiringStore';
 import { LISTENING_ROOM } from '../data/listeningRoom';
 
 class SampledCurve extends Curve {
@@ -54,9 +53,9 @@ function MainsFeed({layout}) {
   },[x,y,wallX]);
   return <group><Lead path={path}/><mesh position={[wallX,.18,-1.086]}><boxGeometry args={[.075,.075,.008]}/><meshStandardMaterial color="#e5e1d7" roughness={.4}/></mesh></group>;
 }
-export default function RoomWiring3D({editing=false,device='freya',layout,previewCables}) {
-  const {cables:savedCables,selectedPort,selectedCable,pickPort,selectCable}=useRoomWiring();
-  const cables=previewCables || savedCables;
+export default function RoomWiring3D({editing=false,device='freya',layout,cables,wiring}) {
+  const {selectedPort,selectedCable,pickPort,selectCable}=wiring || {};
+  editing = editing && !!wiring;
   const ports=layout?.ports||ROOM_PORTS,portMap=layout?.portMap||ROOM_PORT_MAP;
   return <group>
     {layout&&<MainsFeed layout={layout}/>}
