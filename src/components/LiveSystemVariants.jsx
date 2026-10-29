@@ -4,6 +4,8 @@ import { useLiveSystemStore } from '../stores/useLiveSystemStore';
 import { exportLiveVariants, MAX_LIVE_BYTES, MAX_VARIANTS, sameSystem } from '../data/liveSystem';
 import { downloadJson } from '../data/roomBackup';
 import { ROOM_DEVICE_MAP } from '../data/roomEquipment';
+import { routingHref } from '../data/routingNavigation';
+import LiveSystemComparison from './LiveSystemComparison';
 import '../liveSystem.css';
 
 function summary(snapshot) {
@@ -15,9 +17,18 @@ export default function LiveSystemVariants() {
   const s = useLiveSystemStore();
   const dialog = useRef(null), input = useRef(null), upload = useRef(null);
   const [name, setName] = useState(''), [error, setError] = useState(''), [renaming, setRenaming] = useState(null), [reading, setReading] = useState(false);
+  const [mode, setMode] = useState('library');
   const matched = s.variants.find(v => sameSystem(v.snapshot, s.current));
   const run = action => { try { const result = action(); setError(''); return result; } catch (e) { setError(e.message); return null; } };
-  const open = () => { dialog.current.showModal(); input.current.focus(); };
+  const open = () => { dialog.current.showModal(); input.current?.focus(); };
+  const inspect = (id, hint) => {
+    if (run(() => s.loadVariant(id))) {
+      dialog.current.close();
+      const href = routingHref(hint);
+      if (window.location.hash === href) window.dispatchEvent(new Event('hashchange'));
+      else window.location.hash = href;
+    }
+  };
   const save = e => {
     e.preventDefault();
     const result = run(() => renaming ? s.renameVariant(renaming, name) : s.saveVariant(name));
@@ -26,9 +37,11 @@ export default function LiveSystemVariants() {
   const exportCurrent = () => downloadJson('audio-current-system.json', exportLiveVariants([{ id: 'current-system', name: 'Текущая система', snapshot: s.current }]));
   return <>
     <button className="live-system-toggle" aria-haspopup="dialog" onClick={open} title={s.storageError || 'Снимки проводки, входов и стойки'}>{s.storageError ? 'Не сохранено' : 'Варианты'} <span>{s.storageError ? '!' : s.variants.length || '+'}</span></button>
-    {createPortal(<dialog ref={dialog} className="live-variants-dialog" aria-labelledby="live-variants-title">
-      <header><div><small>AUDIO SETUP · МОИ ВАРИАНТЫ</small><h2 id="live-variants-title">Сохранить систему целиком</h2></div><button aria-label="Закрыть варианты" onClick={() => dialog.current.close()}>×</button></header>
+    {createPortal(<dialog ref={dialog} className="live-variants-dialog" data-mode={mode} aria-labelledby="live-variants-title">
+      <header><div><small>AUDIO SETUP · МОИ ВАРИАНТЫ</small><h2 id="live-variants-title">{mode === 'compare' ? 'Что изменится в системе' : 'Сохранить систему целиком'}</h2></div><button aria-label="Закрыть варианты" onClick={() => dialog.current.close()}>×</button></header>
+      <div className="live-variant-modes" role="group" aria-label="Работа с вариантами"><button aria-pressed={mode === 'library'} onClick={() => setMode('library')}>Мои варианты</button><button aria-pressed={mode === 'compare'} onClick={() => setMode('compare')}>Сравнение</button></div>
       <div className="live-variants-body">
+        {mode === 'compare' ? <>{(error || s.storageError) && <p className="live-variant-error" role="alert">{error || s.storageError}</p>}<LiveSystemComparison variants={s.variants} onInspect={inspect} /></> : <>
         <section className="live-current" aria-label="Текущая система"><strong>{matched ? matched.name : 'Текущая система · новый вариант'}</strong><p>{summary(s.current)}</p><small>Проводка, источник, входы, состав и обе стойки с размерами, материалами и трассами кабелей.</small></section>
         <form className="live-save-form" onSubmit={save}><label htmlFor="live-variant-name">{renaming ? 'Новое название' : 'Название нового варианта'}</label><div><input ref={input} id="live-variant-name" value={name} onChange={e => setName(e.target.value)} maxLength={64} placeholder="Например: Сейчас · A90" required /><button type="submit">{renaming ? 'Переименовать' : 'Сохранить вариант'}</button>{renaming && <button type="button" onClick={() => { setRenaming(null); setName(''); }}>Отмена</button>}</div></form>
         <div className="live-variant-history"><button disabled={!s.past.length} onClick={s.undo}>↶ Отменить изменение</button><button disabled={!s.future.length} onClick={s.redo}>↷ Повторить</button><small>Общая история комнаты и стойки · до перезагрузки</small></div>
@@ -48,6 +61,7 @@ export default function LiveSystemVariants() {
           finally { setReading(false); e.target.value = ''; }
         }} />
         <p className="live-variant-note">Сохраняется в этом браузере. JSON — копия для другого устройства. Импорт добавляет варианты; текущую систему меняет только «Открыть». Переключатели реальных аппаратов меняются вручную.</p>
+        </>}
       </div>
     </dialog>, document.body)}
   </>;
